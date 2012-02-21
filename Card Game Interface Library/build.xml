@@ -5,7 +5,7 @@
 <project name="dreamer.card.game.library" default="netbeans" basedir=".">
     <description>Builds, tests, and runs the project dreamer.card.game.library.</description>
     <import file="nbproject/build-impl.xml"/>
-    <import file="${suite.dir}/project.common.xml"/>
+    <import file="../project.common.xml"/>
     <property file="nbproject/project.properties"/>
     
     <target name="netbeans">
