@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See commented blocks below for -->
+<!-- some examples of how to customize the build. -->
+<!-- (If you delete it and reopen the project it will be recreated.) -->
+<!-- By default, only the Clean and Build commands use this build script. -->
+<!-- Commands such as Run, Debug, and Test only use this build script if -->
+<!-- the Compile on Save feature is turned off for the project. -->
+<!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
+<!-- in the project's Project Properties dialog box.-->
+<project name="Magic_The_Gathering_Game" default="default" basedir=".">
+    <description>Builds, tests, and runs the project Magic The Gathering Game.</description>
+    <import file="nbproject/build-impl.xml"/>
+    <import file="../preparation.xml"/>
+    <property name="ant-contrib-filename" value="ant-contrib-1.0b3.jar"/>
+    <condition property="simple.libs.exists">
+        <available file="../../Simple Libs" type="dir"/>
+    </condition>
+    <!--
+
+    There exist several targets which are by default empty and which can be 
+    used for execution of your tasks. These targets are usually executed 
+    before and after some main targets. They are: 
+
+      -pre-init:                 called before initialization of project properties
+      -post-init:                called after initialization of project properties
+      -pre-compile:              called before javac compilation
+      -post-compile:             called after javac compilation
+      -pre-compile-single:       called before javac compilation of single file
+      -post-compile-single:      called after javac compilation of single file
+      -pre-compile-test:         called before javac compilation of JUnit tests
+      -post-compile-test:        called after javac compilation of JUnit tests
+      -pre-compile-test-single:  called before javac compilation of single JUnit test
+      -post-compile-test-single: called after javac compilation of single JUunit test
+      -pre-jar:                  called before JAR building
+      -post-jar:                 called after JAR building
+      -post-clean:               called after cleaning build products
+
+    (Targets beginning with '-' are not intended to be called on their own.)
+
+    Example of inserting an obfuscator after compilation could look like this:
+
+        <target name="-post-compile">
+            <obfuscate>
+                <fileset dir="${build.classes.dir}"/>
+            </obfuscate>
+        </target>
+
+    For list of available properties check the imported 
+    nbproject/build-impl.xml file. 
+
+
+    Another way to customize the build is by overriding existing main targets.
+    The targets of interest are: 
+
+      -init-macrodef-javac:     defines macro for javac compilation
+      -init-macrodef-junit:     defines macro for junit execution
+      -init-macrodef-debug:     defines macro for class debugging
+      -init-macrodef-java:      defines macro for class execution
+      -do-jar-with-manifest:    JAR building (if you are using a manifest)
+      -do-jar-without-manifest: JAR building (if you are not using a manifest)
+      run:                      execution of project 
+      -javadoc-build:           Javadoc generation
+      test-report:              JUnit report generation
+
+    An example of overriding the target for project execution could look like this:
+
+        <target name="run" depends="Magic_The_Gathering_Game-impl.jar">
+            <exec dir="bin" executable="launcher.exe">
+                <arg file="${dist.jar}"/>
+            </exec>
+        </target>
+
+    Notice that the overridden target depends on the jar target and not only on 
+    the compile target as the regular run target does. Again, for a list of available 
+    properties which you can use, check the target you are overriding in the
+    nbproject/build-impl.xml file. 
+
+    -->
+    <target name="clean" depends="Magic_The_Gathering_Game-impl.clean, -init-netbeans, -init-hudson">
+        <propertyselector property="dependencies" match="dependency\.(.*)" select="\1"/>
+        <for list="${dependencies}" param="dependency">
+            <sequential>
+                <if>
+                    <available file="${dependency.@{dependency}}/build.xml"/>
+                    <then>
+                        <clean-dependency-project path="${dependency.@{dependency}}"/>
+                    </then>
+                    <else>
+                        <echo>Unable to find dependency project at ${dependency.@{dependency}} for cleaning</echo>
+                    </else>
+                </if>
+            </sequential>
+        </for>
+    </target>
+    
+    <target name="-pre-compile" depends="-init-netbeans, -init-hudson">       
+        <propertyselector property="dependencies" match="dependency\.(.*)" select="\1"/>
+        <for list="${dependencies}" param="dependency">
+            <sequential>
+                <if>
+                    <available file="${dependency.@{dependency}}/nbproject/project.properties"/>
+                    <then>
+                        <property file="${dependency.@{dependency}}/nbproject/project.properties" prefix="@{dependency}.extension-lib"/>
+                        <length string="${@{dependency}.extension-lib.dist.dir}" property="@{dependency}.length.dist" />
+                        <math result="@{dependency}.length.dist" operand1="1" operation="+" operand2="${@{dependency}.length.dist}" datatype="int"/>
+                        <length string="${@{dependency}.extension-lib.dist.jar}" property="@{dependency}.length.dist.jar" />
+                        <substring text="${@{dependency}.extension-lib.dist.jar}" start="${@{dependency}.length.dist}" 
+                                   end="${@{dependency}.length.dist.jar}" property="@{dependency}.extension-lib.dist.jar" />
+                        <compile-dependency-project path="${dependency.@{dependency}}"/>
+                        <copy todir="../jWrestlingLibs" file="${dependency.@{dependency}}/dist/${@{dependency}.extension-lib.dist.jar}"/>
+                    </then>
+                    <else>
+                        <echo>Unable to find dependency project at ${dependency.@{dependency}}, using included libraries</echo>
+                    </else>
+                </if>
+            </sequential>
+        </for>
+        <!--Marauroa is an exceptional case since is not a normal NetBeans project-->
+        <if>
+            <available file="${marauroa.path}/build.xml"/>
+            <then>
+                <compile-dependency-project path="${marauroa.path}"/>
+                <copy todir="../jWrestlingLibs" 
+              file="${marauroa.path}/build-archive/marauroa.jar"/>
+            </then>
+        </if>
+    </target>
+</project>

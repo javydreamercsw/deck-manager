@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE module_updates PUBLIC "-//NetBeans//DTD Autoupdate Catalog 2.5//EN" "http://www.netbeans.org/dtds/autoupdate-catalog-2_5.dtd">
+<module_updates timestamp="02/09/20/21/02/2012">
+
+
+<module codenamebase="dreamer.card.game.library" distribution="dreamer-card-game-library.nbm" downloadsize="15016" homepage="" license="AD9FBBC9" moduleauthor="" needsrestart="false" releasedate="2012/02/21">
+    <manifest AutoUpdate-Show-In-Client="true" OpenIDE-Module="dreamer.card.game.library/0" OpenIDE-Module-Implementation-Version="120221" OpenIDE-Module-Java-Dependencies="Java &gt; 1.6" OpenIDE-Module-Name="Card Game Interface Library" OpenIDE-Module-Requires="org.openide.modules.ModuleFormat1" OpenIDE-Module-Specification-Version="1.0"/>
+    
+</module>
+
+<license name="AD9FBBC9">[NO LICENSE SPECIFIED]
+</license>
+</module_updates>
+

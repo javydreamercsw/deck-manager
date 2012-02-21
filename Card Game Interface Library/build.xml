@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See harness/README in the NetBeans platform -->
+<!-- for some information on what you could do (e.g. targets to override). -->
+<!-- If you delete this file and reopen the project it will be recreated. -->
+<project name="dreamer.card.game.library" default="netbeans" basedir=".">
+    <description>Builds, tests, and runs the project dreamer.card.game.library.</description>
+    <import file="nbproject/build-impl.xml"/>
+    <import file="${suite.dir}/project.common.xml"/>
+    <property file="nbproject/project.properties"/>
+    
+    <target name="netbeans">
+        <antcall target="CP.netbeans"/>
+    </target>
+    
+    <target name="clean">
+        <antcall target="CP.clean"/>
+    </target>
+    
+    <target name="create-update-center" depends="harness.taskdefs, nbm">
+        <mkdir dir="${update.dir}"/>
+        <pathfileset id="updater.jar">
+            <path refid="cluster.path.id"/>
+            <filename name="modules/ext/updater.jar"/>
+        </pathfileset>
+        <makeupdatedesc desc="${update.dir}/updates.xml" distbase="."
+                        automaticgrouping="true" uselicenseurl="${use.license.url.in.catalog}">
+            <fileset dir="./build">
+                <include name="*.nbm"/>
+                <include name="*.jar"/>
+            </fileset>
+            <updaterjar>
+                <resources refid="updater.jar"/>
+            </updaterjar>
+        </makeupdatedesc>
+        <!--Copy the files to the folder-->
+        <copy todir="${update.dir}">
+            <fileset dir="./build">
+                <include name="*.nbm"/>
+                <include name="*.jar"/>
+            </fileset>
+        </copy>
+    </target>
+</project>
