@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See harness/README in the NetBeans platform -->
+<!-- for some information on what you could do (e.g. targets to override). -->
+<!-- If you delete this file and reopen the project it will be recreated. -->
+<project name="dreamer.card.game.mtg.lib" default="netbeans" basedir=".">
+    <description>Builds, tests, and runs the project dreamer.card.game.mtg.lib.</description>
+    <import file="nbproject/build-impl.xml"/>
+    <import file="${suite.dir}/project.common.xml"/>
+    <property file="nbproject/project.properties"/>
+    
+    <target name="netbeans">
+        <antcall target="CP.netbeans"/>
+    </target>
+    
+    <target name="clean">
+        <antcall target="CP.clean"/>
+    </target>
+</project>
