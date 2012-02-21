@@ -3,3 +3,7 @@
 \.chg\..*$
 \.rej$
 \.conflict\~$
+syntax: glob
+build/*
+dist/*
+private/*
