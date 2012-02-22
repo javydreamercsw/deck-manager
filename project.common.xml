@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="CP" basedir=".">
     <import file="preparation.xml"/>
+    <import file="nbproject/platform.xml"/>
     
     <target name="netbeans" depends="-init-netbeans, -init-hudson">
         <propertyselector property="subprojects" match="original.project.dir(.*)" select="\1"/>
