@@ -10,11 +10,24 @@
 <project name="Magic_The_Gathering_Game" default="default" basedir=".">
     <description>Builds, tests, and runs the project Magic The Gathering Game.</description>
     <import file="nbproject/build-impl.xml"/>
-    <import file="../preparation.xml"/>
+    <property name="lib.dir" value="../../Simple Libs/tools"/>
     <property name="ant-contrib-filename" value="ant-contrib-1.0b3.jar"/>
     <condition property="simple.libs.exists">
-        <available file="../../Simple Libs" type="dir"/>
+        <available file="${lib.dir}../" type="dir"/>
     </condition>
+    
+    <scriptdef name="substring" language="javascript">
+        <attribute name="text" />
+        <attribute name="start" />
+        <attribute name="end" />
+        <attribute name="property" />
+     <![CDATA[
+       var text = attributes.get("text");
+       var start = attributes.get("start");
+       var end = attributes.get("end") || text.length;
+       project.setProperty(attributes.get("property"), text.substring(start, end));
+     ]]>
+    </scriptdef>
     <!--
 
     There exist several targets which are by default empty and which can be 
@@ -98,7 +111,12 @@
         <for list="${dependencies}" param="dependency">
             <sequential>
                 <if>
-                    <available file="${dependency.@{dependency}}/nbproject/project.properties"/>
+                    <and>
+                        <available file="${dependency.@{dependency}}/nbproject/project.properties"/>
+                        <not>
+                            <isset property="@{dependency}.compiled"/>
+                        </not>
+                    </and>
                     <then>
                         <property file="${dependency.@{dependency}}/nbproject/project.properties" prefix="@{dependency}.extension-lib"/>
                         <length string="${@{dependency}.extension-lib.dist.dir}" property="@{dependency}.length.dist" />
@@ -107,10 +125,11 @@
                         <substring text="${@{dependency}.extension-lib.dist.jar}" start="${@{dependency}.length.dist}" 
                                    end="${@{dependency}.length.dist.jar}" property="@{dependency}.extension-lib.dist.jar" />
                         <compile-dependency-project path="${dependency.@{dependency}}"/>
-                        <copy todir="../jWrestlingLibs" file="${dependency.@{dependency}}/dist/${@{dependency}.extension-lib.dist.jar}"/>
+                        <copy todir="lib" file="${dependency.@{dependency}}/dist/${@{dependency}.extension-lib.dist.jar}"/>
+                        <property name="@{dependency}.compiled" value=""/>
                     </then>
                     <else>
-                        <echo>Unable to find dependency project at ${dependency.@{dependency}}, using included libraries</echo>
+                        <echo>Skiping...</echo>
                     </else>
                 </if>
             </sequential>
@@ -121,8 +140,106 @@
             <then>
                 <compile-dependency-project path="${marauroa.path}"/>
                 <copy todir="../jWrestlingLibs" 
-              file="${marauroa.path}/build-archive/marauroa.jar"/>
+                      file="${marauroa.path}/build-archive/marauroa.jar"/>
             </then>
         </if>
     </target>
+    
+    <target name="-check-env" depends="-getAntContribJar">
+        <condition property="isNetbeans">
+            <not>
+                <isset property="Hudson"/>
+            </not>
+        </condition>
+        <property name="xmltasks-loc" value="${lib.dir}/xmltask.jar"/>
+        <available file="${xmltasks-loc}" property="xmltasks.present"/>
+        <fail unless="xmltasks.present" message="The xmltasks jar doesn't exist at: ${xmltasks-loc}, can't build. Check your settings!" />
+        <taskdef name="xmltask" 
+                 classname="com.oopsconsultancy.xmltask.ant.XmlTask">
+            <classpath>
+                <pathelement location="${xmltasks-loc}"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <target name="-getAntContribJar">
+        <fileset id="ant-contrib-jar" dir="${lib.dir}">
+            <include name="ant-contrib-*.jar" />
+        </fileset>
+        <pathconvert property="ant-contrib-jar" refid="ant-contrib-jar" pathsep="," />
+        <basename property="ant-contrib-filename" file="${ant-contrib-jar}"/>
+    </target>
+
+    <target name="-init-netbeans" depends="-check-env" if="isNetbeans">
+        <echo>Configuring ant-contrib for Netbeans use...</echo>
+        <property name="ant-contrib-loc" value="${lib.dir}/${ant-contrib-filename}"/>
+        <available file="${ant-contrib-loc}" property="ant-contrib.present"/>
+        <fail unless="ant-contrib.present" message="The ant-contrib jar doesn't exist at: ${ant-contrib-loc}, can't build. Check your settings!" />
+        <!--We are in not Hudson-->
+        <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+            <classpath>
+                <pathelement location="${ant-contrib-loc}"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <target name="-init-hudson" depends="-check-env" unless="isNetbeans">
+        <echo>Configuring ant-contrib for Hudson use...</echo>
+        <!--Import Hudson environment variables-->
+        <property environment="env"/>
+        <property name="ant-contrib-loc" value="${env.ANT_HOME}/lib/${ant-contrib-filename}"/>
+        <available file="${ant-contrib-loc}" property="ant-contrib.present"/>
+        <fail unless="ant-contrib.present" message="The ant-contrib jar doesn't exist at: ${ant-contrib-loc}, can't build. Check your settings!" />
+        <!--Define it. For some reason the approach in -init-netbeans doesn't work in Hudson.-->
+        <taskdef name="for" classname="net.sf.antcontrib.logic.ForTask">
+            <classpath>
+                <pathelement location="${ant-contrib-loc}"/>
+            </classpath>
+        </taskdef>
+        <taskdef name="propertyregex" classname="net.sf.antcontrib.property.RegexTask">
+            <classpath>
+                <pathelement location="${ant-contrib-loc}"/>
+            </classpath>
+        </taskdef>
+        <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask">
+            <classpath>
+                <pathelement location="${ant-contrib-loc}"/>
+            </classpath>
+        </taskdef>
+        <taskdef name="math" classname="net.sf.antcontrib.math.MathTask">
+            <classpath>
+                <pathelement location="${ant-contrib-loc}"/>
+            </classpath>
+        </taskdef>
+        <taskdef name="var" classname="net.sf.antcontrib.property.Variable">
+            <classpath>
+                <pathelement location="${ant-contrib-loc}"/>
+            </classpath>
+        </taskdef>
+        <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach">
+            <classpath>
+                <pathelement location="${ant-contrib-loc}"/>
+            </classpath>
+        </taskdef>
+    </target>
+    
+    <macrodef name="clean-dependency-project">
+        <attribute name="path"/>
+        <sequential>
+            <echo message="Cleaning @{path}"/>
+            <ant dir="@{path}" usenativebasedir="true"
+                 target="clean" inheritall="false" inheritrefs="false"/>
+            <echo message="Done cleaning @{path}"/>
+        </sequential>
+    </macrodef>
+    
+    <macrodef name="compile-dependency-project">
+        <attribute name="path"/>
+        <sequential>
+            <echo message="Compiling @{path}"/>
+            <ant dir="@{path}" usenativebasedir="true"
+                 target="jar" inheritall="false" inheritrefs="false"/>
+            <echo message="Done compiling @{path}"/>
+        </sequential>
+    </macrodef>
 </project>
