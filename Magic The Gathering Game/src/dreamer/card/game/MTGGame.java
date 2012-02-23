@@ -1,8 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package mtg.card;
+package dreamer.card.game;
 
 import dreamer.card.game.DefaultCardGame;
 import dreamer.card.game.ICardGame;
@@ -28,6 +24,8 @@ public class MTGGame extends DefaultCardGame {
         
         creatureAttribs.add("power");
         creatureAttribs.add("toughness");
+        attribs.put("rarity", rarities);
+        attribs.put("creature", creatureAttribs);
     }
 
     @Override
@@ -39,9 +37,5 @@ public class MTGGame extends DefaultCardGame {
     public void init() {
         super.init();
         //Add the magic specific stuff
-        //Create Rarities
-        createAttributes("rarity", rarities);
-        //Create power and toughness
-        createAttributes("creature", creatureAttribs);
     }
 }
