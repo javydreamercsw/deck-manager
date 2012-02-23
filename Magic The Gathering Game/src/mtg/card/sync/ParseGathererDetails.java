@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import mtg.card.IMagicCard;
@@ -239,7 +241,9 @@ public class ParseGathererDetails extends ParseGathererPage {
                     }
                 }
                 if (html == null) {
-                    System.err.println("Problems parsing card - cannot find matching name " + card.getCardId());
+                    Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.WARNING,
+                            "Problems parsing card - cannot find matching name " 
+                            + card.getCardId());
                     return;
                 }
                 extractField(cardN, null, html2, MagicCardField.ID, cardIdPattern, false);
@@ -248,7 +252,8 @@ public class ParseGathererDetails extends ParseGathererPage {
                     ((ICardModifiable) card).setObjectByField(MagicCardField.FLIPID, String.valueOf(pairId));
                 }
             } else if (sides == 0) {
-                System.err.println("Problems parsing card " + card.getCardId());
+                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.WARNING,
+                        "Problems parsing card " + card.getCardId());
                 return;
             }
             // name update

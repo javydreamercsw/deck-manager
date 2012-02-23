@@ -36,7 +36,7 @@
                                   value="${original.project.dir@{subproject}}/dist/${extension-lib@{subproject}.dist.jar}"/>
                         <echo message="Building ${original.project.dir@{subproject}}"/>
                         <ant dir="${original.project.dir@{subproject}}" usenativebasedir="true"
-                             target="jar" inheritall="false" inheritrefs="false"/>
+                             target="jar" inheritall="true" inheritrefs="false"/>
                         <echo message="Done building ${original.project.dir@{subproject}}"/>
                         <copy todir="../build/cluster/modules/ext/extension" file="${original.project@{subproject}.jar}"/>
                     </then>
@@ -46,7 +46,7 @@
         <antcall target="projectized-common.netbeans"/>
     </target>
     
-    <target name="clean" depends="projectized-common.clean,-init-netbeans, -init-hudson">
+    <target name="clean" depends="-init-netbeans, -init-hudson">
         
         <propertyselector property="subprojects" match="original.project.dir(.*)" select="\1"/>
         <for list="${subprojects}" param="subproject">
@@ -56,7 +56,7 @@
                     <then>
                         <echo message="Cleaning ${original.project.dir@{subproject}}"/>
                         <ant dir="${original.project.dir@{subproject}}" usenativebasedir="true"
-                             target="clean" inheritall="false" inheritrefs="false"/>
+                             target="clean" inheritall="true" inheritrefs="false"/>
                         <echo message="Done cleaning ${original.project.dir@{subproject}}"/>
                     </then>
                 </if>

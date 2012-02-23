@@ -2,12 +2,15 @@ package mtg.card.sync;
 
 import dreamer.card.game.ICardField;
 import dreamer.card.game.storage.ICardStore;
+import dreamer.card.game.storage.IDataBaseManager;
 import dreamer.card.game.storage.IStorage;
 import dreamer.card.game.storage.IStorageContainer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import mtg.card.IMagicCard;
 import mtg.card.MagicCard;
 import mtg.card.MagicCardField;
@@ -42,7 +45,8 @@ public class UpdateCardsFromWeb {
                 IMagicCard card = iter.next();
                 MagicCard magicCard = card.getBase();
                 // load individual card
-                System.out.println("Updating card " + (i+1) + " of " + size);
+                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.FINE,
+                        "Updating card " + (i + 1) + " of " + size);
                 try {
                     rulParser.parseSingleCard(card, fieldMaps);
                     if (loadText) {
@@ -63,12 +67,14 @@ public class UpdateCardsFromWeb {
                             linfoParser.load();
                             if (magicDb.getCard(newMagicCard.getCardId()) == null) {
                                 magicDb.add(newMagicCard);
-                                 System.err.println("Added " + newMagicCard.getName());
+                                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.FINE,
+                                        "Added " + newMagicCard.getName());
                             }
                         }
                     }
                 } catch (IOException e) {
-//					Activator.log("Cannot load card " + e.getMessage() + " " + card.getCardId());
+                    Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.SEVERE,
+                            "Cannot load card " + e.getMessage() + " " + card.getCardId());
                 }
                 magicDb.update(magicCard);
                 if (loadImage) {
