@@ -4,6 +4,7 @@
  */
 package mtg.card.seller;
 
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -34,5 +35,6 @@ public class SellerSuite {
     @After
     public void tearDown() throws Exception {
     }
+    private static final Logger LOG = Logger.getLogger(SellerSuite.class.getName());
     
 }

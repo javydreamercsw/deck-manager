@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import mtg.card.IMagicCard;
@@ -111,7 +112,6 @@ public class ParseGathererLegality extends ParseGathererPage {
         parser.setCardId(id);
         parser.load();
         Map<String, String> cardLegality = parser.getLegalityMap();
-        System.err.println(cardLegality);
     }
 
     @Override
@@ -148,7 +148,6 @@ public class ParseGathererLegality extends ParseGathererPage {
                             String legal = matcher.group(1).trim();
                             legalityMap.put(format, legal);
                         } else {
-                            System.err.println("? " + row);
                         }
                     }
                 }
@@ -164,4 +163,5 @@ public class ParseGathererLegality extends ParseGathererPage {
     protected String getUrl() {
         return LEGALITY_QUERY_URL_BASE + getCardId();
     }
+    private static final Logger LOG = Logger.getLogger(ParseGathererLegality.class.getName());
 }

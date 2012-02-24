@@ -76,4 +76,7 @@ public class FilterHelper {
         // TODO add the rest
         return ids;
     }
+
+    private FilterHelper() {
+    }
 }

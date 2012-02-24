@@ -4,11 +4,8 @@
  */
 package mtg.card.sync;
 
-import java.io.File;
-import java.net.URL;
-import mtg.card.IMagicCard;
+import java.util.logging.Logger;
 import org.junit.*;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -40,9 +37,9 @@ public class CardCacheTest {
      */
     @Test
     public void testSetCachhingEnabled() {
-        System.out.println("Test caching");
         CardCache.setCachingEnabled(true);
         CardCache.setLoadingEnabled(true);
         //TODO
     }
+    private static final Logger LOG = Logger.getLogger(CardCacheTest.class.getName());
 }

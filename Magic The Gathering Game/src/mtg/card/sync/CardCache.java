@@ -235,4 +235,7 @@ public class CardCache {
         }
         return false;
     }
+
+    private CardCache() {
+    }
 }

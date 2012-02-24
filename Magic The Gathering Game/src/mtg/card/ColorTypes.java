@@ -4,6 +4,7 @@ import dreamer.card.game.ISearchableProperty;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.logging.Logger;
 
 public class ColorTypes implements ISearchableProperty {
 
@@ -58,4 +59,5 @@ public class ColorTypes implements ISearchableProperty {
     public String getNameById(String id) {
         return (String) this.names.get(id);
     }
+    private static final Logger LOG = Logger.getLogger(ColorTypes.class.getName());
 }

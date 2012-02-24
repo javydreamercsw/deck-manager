@@ -3,9 +3,8 @@ package mtg.card.storage;
 import dreamer.card.game.ICardHandler;
 import dreamer.card.game.storage.ICardStore;
 import dreamer.card.game.storage.IFilteredCardStore;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Logger;
 import mtg.card.MagicException;
 
 /**
@@ -83,4 +82,5 @@ public class CardHolder implements ICardHandler {
 //            throw new MagicException(e);
 //        }
     }
+    private static final Logger LOG = Logger.getLogger(CardHolder.class.getName());
 }

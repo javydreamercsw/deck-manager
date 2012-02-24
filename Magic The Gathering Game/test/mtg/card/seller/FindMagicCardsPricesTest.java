@@ -49,7 +49,6 @@ public class FindMagicCardsPricesTest {
      */
     @Test
     public void testGetName() {
-        System.out.println("getName");
         FindMagicCardsPrices instance = new FindMagicCardsPrices();
         String result = instance.getName();
         assertTrue(result != null);
@@ -60,7 +59,6 @@ public class FindMagicCardsPricesTest {
      */
     @Test
     public void testGetURL() {
-        System.out.println("getURL");
         FindMagicCardsPrices instance = new FindMagicCardsPrices();
         URL result = instance.getURL();
         assertTrue(result != null);
@@ -68,10 +66,10 @@ public class FindMagicCardsPricesTest {
 
     /**
      * Test of updateStore method, of class FindMagicCardsPrices.
+     * @throws Exception 
      */
     @Test
     public void testUpdateStore_3args() throws Exception {
-        System.out.println("updateStore");
         try {
             FindMagicCardsPrices prices = new FindMagicCardsPrices();
             MagicFilteredCardStore<IMagicCard> fstore = new MagicFilteredCardStore<IMagicCard>() {
@@ -93,11 +91,11 @@ public class FindMagicCardsPricesTest {
             while (iterator.hasNext()) {
                 MagicCard temp = (MagicCard) iterator.next();
                 System.out.println(temp.toString());
-                System.out.println("Prize: $" + temp.getDbPrice());
             }
         } catch (Exception ex) {
             Logger.getLogger(FindMagicCardsPrices.class.getName()).log(Level.SEVERE, null, ex);
             fail();
         }
     }
+    private static final Logger LOG = Logger.getLogger(FindMagicCardsPricesTest.class.getName());
 }

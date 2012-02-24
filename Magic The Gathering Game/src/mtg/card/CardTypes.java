@@ -2,6 +2,7 @@ package mtg.card;
 
 import dreamer.card.game.ISearchableProperty;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class CardTypes implements ISearchableProperty {
@@ -110,4 +111,5 @@ public class CardTypes implements ISearchableProperty {
         }
         return names2;
     }
+    private static final Logger LOG = Logger.getLogger(CardTypes.class.getName());
 }

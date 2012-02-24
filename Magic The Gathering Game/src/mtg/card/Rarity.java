@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.logging.Logger;
 
 public class Rarity implements ISearchableProperty {
 
@@ -82,4 +83,5 @@ public class Rarity implements ISearchableProperty {
         }
         return i2 - i1;
     }
+    private static final Logger LOG = Logger.getLogger(Rarity.class.getName());
 }

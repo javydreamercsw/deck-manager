@@ -4,6 +4,7 @@ import dreamer.card.game.ICardHandler;
 import dreamer.card.game.storage.ICardStore;
 import dreamer.card.game.storage.IFilteredCardStore;
 import java.util.Properties;
+import java.util.logging.Logger;
 import mtg.card.MagicFilteredCardStore;
 
 /**
@@ -74,4 +75,5 @@ public class MagicCardHandler implements ICardHandler {
     public ICardStore getDBStore() {
         return dbStore.getCardStore();
     }
+    private static final Logger LOG = Logger.getLogger(MagicCardHandler.class.getName());
 }

@@ -46,10 +46,10 @@ public class ParseMtgFanaticPricesTest {
 
     /**
      * Test of updateStore method, of class ParseMtgFanaticPrices.
+     * @throws Exception 
      */
     @Test
     public void testUpdateStore() throws Exception {
-        System.out.println("updateStore");
          ParseMtgFanaticPrices item = new ParseMtgFanaticPrices();
         item.parseSets();
         HashMap<String, Float> res = item.parse("383");
@@ -74,7 +74,6 @@ public class ParseMtgFanaticPricesTest {
             while (iterator.hasNext()) {
                 MagicCard temp = (MagicCard) iterator.next();
                 System.out.println(temp.toString());
-                System.out.println("Prize: $" + temp.getDbPrice());
             }
         } catch (Exception ex) {
             Logger.getLogger(FindMagicCardsPrices.class.getName()).log(Level.SEVERE, null, ex);
@@ -86,7 +85,6 @@ public class ParseMtgFanaticPricesTest {
      */
     @Test
     public void testGetName() {
-        System.out.println("getName");
         ParseMtgFanaticPrices instance = new ParseMtgFanaticPrices();
         String result = instance.getName();
         assertTrue(result != null);
@@ -97,9 +95,9 @@ public class ParseMtgFanaticPricesTest {
      */
     @Test
     public void testGetURL() {
-        System.out.println("getURL");
         ParseMtgFanaticPrices instance = new ParseMtgFanaticPrices();
         URL result = instance.getURL();
         assertTrue(result != null);
     }
+    private static final Logger LOG = Logger.getLogger(ParseMtgFanaticPricesTest.class.getName());
 }

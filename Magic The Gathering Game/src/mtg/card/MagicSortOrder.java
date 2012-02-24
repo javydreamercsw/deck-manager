@@ -2,6 +2,7 @@ package mtg.card;
 
 import dreamer.card.game.AbstractSortOrder;
 import dreamer.card.game.ICardField;
+import java.util.logging.Logger;
 
 @SuppressWarnings("serial")
 public class MagicSortOrder extends AbstractSortOrder {
@@ -18,4 +19,5 @@ public class MagicSortOrder extends AbstractSortOrder {
         }
         sortOrder.push(elem);
     }
+    private static final Logger LOG = Logger.getLogger(MagicSortOrder.class.getName());
 }

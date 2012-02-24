@@ -20,7 +20,6 @@ public abstract class ParseGathererPage {
     public void load() throws IOException {
         URL url = new URL(getUrl());
         InputStream openStream = url.openStream();
-        System.out.println(url.toString());
         BufferedReader st = new BufferedReader(new InputStreamReader(openStream, UTF_8));
         String tempHtml = CardFileUtils.readFileAsString(st);
         st.close();

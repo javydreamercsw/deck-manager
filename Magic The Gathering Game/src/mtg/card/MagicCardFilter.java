@@ -3,6 +3,7 @@ package mtg.card;
 import dreamer.card.game.*;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import mtg.card.MagicCardFilter.SearchToken.TokenType;
 
@@ -523,7 +524,7 @@ public class MagicCardFilter implements ICardFilter {
         } else if (FilterHelper.OWNERSHIP.equals(requestedId)) {
             res = BinaryExpr.fieldEquals(MagicCardFieldPhysical.OWNERSHIP, value);
         } else if (FilterHelper.LANG.equals(requestedId)) {
-            if (value.equals("")) {
+            if (value.isEmpty()) {
                 res = TRUE;
             } else if (value.equals(Languages.Language.ENGLISH.getLang())) {
                 res = BinaryExpr.fieldEquals(MagicCardField.LANG, null);
@@ -755,4 +756,5 @@ public class MagicCardFilter implements ICardFilter {
     public void setNoSort() {
         sortOrder.clear();
     }
+    private static final Logger LOG = Logger.getLogger(MagicCardFilter.class.getName());
 }

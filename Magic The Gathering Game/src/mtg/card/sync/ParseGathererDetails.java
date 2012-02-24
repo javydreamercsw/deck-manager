@@ -170,7 +170,6 @@ public class ParseGathererDetails extends ParseGathererPage {
                 card2.setText(card.getOracleText());
                 if (magicDb != null && magicDb.getCard(card2.getCardId()) == null) {
                     magicDb.add(card2);
-                    System.err.println("Added " + card2.getName() + " " + id + " " + set + " " + rarity);
                 }
             }
         }
@@ -241,9 +240,7 @@ public class ParseGathererDetails extends ParseGathererPage {
                     }
                 }
                 if (html == null) {
-                    Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.WARNING,
-                            "Problems parsing card - cannot find matching name " 
-                            + card.getCardId());
+                    Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.WARNING, "Problems parsing card - cannot find matching name {0}", card.getCardId());
                     return;
                 }
                 extractField(cardN, null, html2, MagicCardField.ID, cardIdPattern, false);
@@ -252,15 +249,13 @@ public class ParseGathererDetails extends ParseGathererPage {
                     ((ICardModifiable) card).setObjectByField(MagicCardField.FLIPID, String.valueOf(pairId));
                 }
             } else if (sides == 0) {
-                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.WARNING,
-                        "Problems parsing card " + card.getCardId());
+                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.WARNING, "Problems parsing card {0}", card.getCardId());
                 return;
             }
             // name update
             if (nameOrig == null) {
                 extractField(card, fieldMapFilter, html0, MagicCardField.NAME, titleNamePattern, true);
             } else if (!nameOrig.equals(nameTitle)) {
-                System.err.println("Name is not set: " + nameOrig + ", title " + nameTitle + ", card " + nameCur);
             }
             // extractField(card, fieldMapFilter, html, MagicCardField.NAME, cardAltPattern, true);
             // monitor.worked(1);
@@ -304,6 +299,6 @@ public class ParseGathererDetails extends ParseGathererPage {
         ParseGathererDetails parser = new ParseGathererDetails();
         parser.setCard(card);
         parser.load();
-        System.err.println(card.getArtist() + " " + card.getCommunityRating() + " " + card.getCollNumber());
     }
+    private static final Logger LOG = Logger.getLogger(ParseGathererDetails.class.getName());
 }

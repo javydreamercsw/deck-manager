@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class ParseSetLegality extends ParseGathererPage {
@@ -65,7 +66,6 @@ public class ParseSetLegality extends ParseGathererPage {
             eds.save();
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
         }
     }
 
@@ -81,7 +81,7 @@ public class ParseSetLegality extends ParseGathererPage {
         ParseSetLegality parser = new ParseSetLegality("Modern");
         parser.load();
         for (String format : getFormats()) {
-            System.err.println(format);
         }
     }
+    private static final Logger LOG = Logger.getLogger(ParseSetLegality.class.getName());
 }

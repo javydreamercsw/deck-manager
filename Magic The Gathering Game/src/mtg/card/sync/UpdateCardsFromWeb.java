@@ -2,7 +2,6 @@ package mtg.card.sync;
 
 import dreamer.card.game.ICardField;
 import dreamer.card.game.storage.ICardStore;
-import dreamer.card.game.storage.IDataBaseManager;
 import dreamer.card.game.storage.IStorage;
 import dreamer.card.game.storage.IStorageContainer;
 import java.io.IOException;
@@ -45,8 +44,7 @@ public class UpdateCardsFromWeb {
                 IMagicCard card = iter.next();
                 MagicCard magicCard = card.getBase();
                 // load individual card
-                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.FINE,
-                        "Updating card " + (i + 1) + " of " + size);
+                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.FINE, "Updating card {0} of {1}", new Object[]{i + 1, size});
                 try {
                     rulParser.parseSingleCard(card, fieldMaps);
                     if (loadText) {
@@ -67,14 +65,12 @@ public class UpdateCardsFromWeb {
                             linfoParser.load();
                             if (magicDb.getCard(newMagicCard.getCardId()) == null) {
                                 magicDb.add(newMagicCard);
-                                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.FINE,
-                                        "Added " + newMagicCard.getName());
+                                Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.FINE, "Added {0}", newMagicCard.getName());
                             }
                         }
                     }
                 } catch (IOException e) {
-                    Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.SEVERE,
-                            "Cannot load card " + e.getMessage() + " " + card.getCardId());
+                    Logger.getLogger(UpdateCardsFromWeb.class.getName()).log(Level.SEVERE, "Cannot load card {0} {1}", new Object[]{e.getMessage(), card.getCardId()});
                 }
                 magicDb.update(magicCard);
                 if (loadImage) {
@@ -87,4 +83,5 @@ public class UpdateCardsFromWeb {
             storage.save();
         }
     }
+    private static final Logger LOG = Logger.getLogger(UpdateCardsFromWeb.class.getName());
 }
