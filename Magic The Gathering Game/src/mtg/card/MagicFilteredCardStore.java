@@ -8,6 +8,7 @@ import dreamer.card.game.storage.AbstractFilteredCardStore;
 import dreamer.card.game.storage.ICardStore;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 /**
  * Class that implements IFilteredCardStore, it is only contains filtered
@@ -90,4 +91,5 @@ public class MagicFilteredCardStore<T> extends AbstractFilteredCardStore {
     public ICardStore getCardStore() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    private static final Logger LOG = Logger.getLogger(MagicFilteredCardStore.class.getName());
 }

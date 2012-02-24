@@ -7,6 +7,7 @@ import dreamer.card.game.ICardModifiable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import mtg.card.MagicCardFilter.TextValue;
 
@@ -461,4 +462,5 @@ public class MagicCardPhisical implements IMagicCard, ICardCountable, ICardModif
     public int compareTo(Object o) {
         return new MagicCardComparator().compare(this, o);
     }
+    private static final Logger LOG = Logger.getLogger(MagicCardPhisical.class.getName());
 }

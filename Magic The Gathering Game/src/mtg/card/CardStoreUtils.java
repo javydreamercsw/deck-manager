@@ -14,6 +14,7 @@ import dreamer.card.game.CardGroup;
 import dreamer.card.game.ICardCountable;
 import dreamer.card.game.storage.ICardStore;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * @author Alena
@@ -59,7 +60,6 @@ public final class CardStoreUtils {
             } else if (cost >= 7) {
                 bars[7] += count;
             } else {
-                System.err.println("mana curve: cost:" + elem.getCost()); //$NON-NLS-1$
             }
         }
         return bars;
@@ -166,9 +166,7 @@ public final class CardStoreUtils {
             }
             String name = Colors.getColorName(elem.getCost());
             String[] split = name.split("-"); //$NON-NLS-1$
-            for (String c : split) {
-                colors.add(c);
-            }
+            colors.addAll(Arrays.asList(split));
         }
         return colors;
     }
@@ -183,9 +181,7 @@ public final class CardStoreUtils {
             }
             String name = Colors.getColorName(elem.getCost());
             String[] split = name.split("-"); //$NON-NLS-1$
-            for (String c : split) {
-                colors.add(c);
-            }
+            colors.addAll(Arrays.asList(split));
         }
         for (Iterator iterator = Colors.getInstance().getNames().iterator(); iterator.hasNext();) {
             String c = (String) iterator.next();
@@ -292,4 +288,5 @@ public final class CardStoreUtils {
         }
         return root;
     }
+    private static final Logger LOG = Logger.getLogger(CardStoreUtils.class.getName());
 }

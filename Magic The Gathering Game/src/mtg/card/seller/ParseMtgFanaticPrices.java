@@ -15,6 +15,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -132,7 +133,6 @@ public class ParseMtgFanaticPrices implements IStoreUpdator, IPriceProvider {
         if (set.endsWith(" Edition")) {
             return parseSets.get(set.replaceAll(" Edition", ""));
         }
-        System.err.println("Cannot find prices for " + set);
         return null;
     }
 
@@ -171,7 +171,7 @@ public class ParseMtgFanaticPrices implements IStoreUpdator, IPriceProvider {
                     if (rowEnd.matcher(line).find()) {
                         break;
                     }
-                    row = row + line;
+                    row += line;
                 }
                 processRow(row, res);
             }
@@ -189,7 +189,6 @@ public class ParseMtgFanaticPrices implements IStoreUpdator, IPriceProvider {
                     float f = Float.parseFloat(price);
                     res.put(name, f);
                 } catch (NumberFormatException e) {
-                    return;
                 }
             }
         }
@@ -240,4 +239,5 @@ public class ParseMtgFanaticPrices implements IStoreUpdator, IPriceProvider {
             return null;
         }
     }
+    private static final Logger LOG = Logger.getLogger(ParseMtgFanaticPrices.class.getName());
 }

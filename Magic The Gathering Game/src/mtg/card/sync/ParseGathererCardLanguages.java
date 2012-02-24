@@ -13,6 +13,7 @@
 package mtg.card.sync;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,7 +48,6 @@ public class ParseGathererCardLanguages extends ParseGathererPage {
         parser.setCardId(153981);
         parser.setLanguage("Russian");
         parser.load();
-        System.err.println(parser.getLangCardId());
     }
 
     public void setLanguage(String string) {
@@ -90,4 +90,5 @@ public class ParseGathererCardLanguages extends ParseGathererPage {
     public int getLangCardId() {
         return langId;
     }
+    private static final Logger LOG = Logger.getLogger(ParseGathererCardLanguages.class.getName());
 }

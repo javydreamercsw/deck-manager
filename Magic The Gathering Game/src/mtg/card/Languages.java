@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.logging.Logger;
 
 public class Languages implements ISearchableProperty {
 
@@ -101,4 +102,5 @@ public class Languages implements ISearchableProperty {
         }
         throw new IllegalArgumentException("Language Not Found");
     }
+    private static final Logger LOG = Logger.getLogger(Languages.class.getName());
 }

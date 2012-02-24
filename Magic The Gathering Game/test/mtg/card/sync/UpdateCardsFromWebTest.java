@@ -8,6 +8,7 @@ import dreamer.card.game.ICardField;
 import dreamer.card.game.storage.MemoryCardStore;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 import mtg.card.IMagicCard;
 import mtg.card.MagicCard;
 import mtg.card.MagicCardField;
@@ -43,7 +44,6 @@ public class UpdateCardsFromWebTest {
      */
     @Test
     public void testUpdateStore_4args() throws Exception {
-        System.out.println("updateStore");
         MagicCard card = new MagicCard();
         card.setSet("Time Spiral");
         card.setName("Amrou Scout");
@@ -61,4 +61,5 @@ public class UpdateCardsFromWebTest {
         UpdateCardsFromWeb instance = new UpdateCardsFromWeb();
         instance.updateStore(card, fieldMaps, lang, fstore);
     }
+    private static final Logger LOG = Logger.getLogger(UpdateCardsFromWebTest.class.getName());
 }

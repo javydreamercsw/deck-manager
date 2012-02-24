@@ -2,6 +2,7 @@ package mtg.card;
 
 import dreamer.card.game.ISearchableProperty;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class Colors implements ISearchableProperty {
 
@@ -194,4 +195,5 @@ public class Colors implements ISearchableProperty {
         String manas[] = res.split("\\}");
         return manas;
     }
+    private static final Logger LOG = Logger.getLogger(Colors.class.getName());
 }

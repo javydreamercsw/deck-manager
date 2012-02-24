@@ -3,6 +3,7 @@ package mtg.card;
 import dreamer.card.game.ICardField;
 import dreamer.card.game.ICardModifiable;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.ImageIcon;
@@ -287,7 +288,6 @@ public class MagicCard implements IMagicCard, ICardModifiable {
                 setProperty(MagicCardField.OTHER_PART, other);
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -661,4 +661,5 @@ public class MagicCard implements IMagicCard, ICardModifiable {
     public int compareTo(Object o) {
         return new MagicCardComparator().compare(this, o);
     }
+    private static final Logger LOG = Logger.getLogger(MagicCard.class.getName());
 }

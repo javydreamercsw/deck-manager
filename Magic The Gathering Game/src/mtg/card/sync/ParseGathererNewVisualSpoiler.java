@@ -130,7 +130,6 @@ public class ParseGathererNewVisualSpoiler {
         }
         TextPrinter.printHeader(IMagicCard.DEFAULT, out);
         for (String string : urls) {
-            System.err.println("Loading " + string);
             loadUrl(new URL(string), createOutputHandler(out, options));
         }
         out.close();
@@ -169,10 +168,9 @@ public class ParseGathererNewVisualSpoiler {
         try {
             countCards = 0;
             if (from.startsWith("http:")) {
-                // http://ww2.wizards.com/gatherer/index.aspx?setfilter=All%20sets&colorfilter=White&output=Spoiler
                 int i = 0;
                 boolean lastPage = false;
-                while (lastPage == false && i < 2000 ) {
+                while (lastPage == false && i < 2000) {
                     URL url = new URL(from + "&page=" + i);
                     lastPage = loadUrl(url, handler);
                     i++;
@@ -268,11 +266,13 @@ public class ParseGathererNewVisualSpoiler {
             } else {
                 // other printings
                 MagicCard card2 = (MagicCard) card.clone();
-                card2.setId(setId);
-                card2.setSet(edition);
-                card2.setRarity(rarity.trim());
-                handler.edition(ed);
-                handler.handleSecondary(card, card2);
+                if (card2 != null) {
+                    card2.setId(setId);
+                    card2.setSet(edition);
+                    card2.setRarity(rarity.trim());
+                    handler.edition(ed);
+                    handler.handleSecondary(card, card2);
+                }
             }
         }
         // print
@@ -319,7 +319,6 @@ public class ParseGathererNewVisualSpoiler {
 
     public static void printBytes(byte[] array, String name) {
         for (int k = 0; k < array.length; k++) {
-            System.out.println(name + "[" + k + "] = " + "0x" + UnicodeFormatter.byteToHex(array[k]));
         }
     }
 
@@ -337,6 +336,9 @@ public class ParseGathererNewVisualSpoiler {
             byte hi = (byte) (c >>> 8);
             byte lo = (byte) (c & 0xff);
             return byteToHex(hi) + byteToHex(lo);
+        }
+
+        private UnicodeFormatter() {
         }
     } // class
     private static String LONG_MINUS;
@@ -403,5 +405,8 @@ public class ParseGathererNewVisualSpoiler {
             }
         }
         parseFileOrUrl(url, file, options);
+    }
+
+    private ParseGathererNewVisualSpoiler() {
     }
 }

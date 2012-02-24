@@ -4,6 +4,7 @@ import dreamer.card.game.ISearchableProperty;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.logging.Logger;
 
 public class SuperTypes implements ISearchableProperty {
 
@@ -56,4 +57,5 @@ public class SuperTypes implements ISearchableProperty {
     public String getNameById(String id) {
         return (String) this.names.get(id);
     }
+    private static final Logger LOG = Logger.getLogger(SuperTypes.class.getName());
 }

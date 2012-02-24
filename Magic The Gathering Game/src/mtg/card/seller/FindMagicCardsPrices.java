@@ -17,6 +17,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -94,7 +95,6 @@ public class FindMagicCardsPrices implements IStoreUpdator, IPriceProvider {
                                 try {
                                     price = parseSingleCard(id, card);
                                 } catch (IOException e) {
-                                    System.err.println("Cannot load card " + e.getMessage() + " " + set);
                                 }
                             }
                             if (price > 0) {
@@ -132,7 +132,6 @@ public class FindMagicCardsPrices implements IStoreUpdator, IPriceProvider {
                 return t12;
             }
         }
-        System.err.println("Cannot find prices for " + set);
         return null;
     }
 
@@ -282,4 +281,5 @@ public class FindMagicCardsPrices implements IStoreUpdator, IPriceProvider {
     public void updateStore(IFilteredCardStore<ISellableCard> fstore) throws IOException {
         updateStore(fstore.getCardStore(), fstore, fstore.getSize());
     }
+    private static final Logger LOG = Logger.getLogger(FindMagicCardsPrices.class.getName());
 }

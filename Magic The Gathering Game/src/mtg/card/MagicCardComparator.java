@@ -3,6 +3,7 @@ package mtg.card;
 import dreamer.card.game.ICard;
 import dreamer.card.game.ICardComparator;
 import dreamer.card.game.ICardField;
+import java.util.logging.Logger;
 
 class MagicCardComparator implements ICardComparator {
 
@@ -127,4 +128,5 @@ class MagicCardComparator implements ICardComparator {
         // System.identityHashCode(o2));
         return 0;
     }
+    private static final Logger LOG = Logger.getLogger(MagicCardComparator.class.getName());
 }

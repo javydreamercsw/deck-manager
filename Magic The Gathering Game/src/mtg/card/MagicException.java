@@ -10,6 +10,8 @@
  */
 package mtg.card;
 
+import java.util.logging.Logger;
+
 public class MagicException extends RuntimeException {
 
     private static final long serialVersionUID = 242374882L;
@@ -29,4 +31,5 @@ public class MagicException extends RuntimeException {
     public MagicException(Throwable cause) {
         super(cause);
     }
+    private static final Logger LOG = Logger.getLogger(MagicException.class.getName());
 }

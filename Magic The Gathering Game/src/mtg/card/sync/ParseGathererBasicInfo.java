@@ -13,6 +13,7 @@
 package mtg.card.sync;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 import mtg.card.MagicCard;
 
 /**
@@ -39,8 +40,14 @@ public class ParseGathererBasicInfo extends ParseGathererDetails {
         ParseGathererBasicInfo parser = new ParseGathererBasicInfo();
         parser.setCard(card);
         parser.load();
-        System.out.println(card.getName());
-        System.out.println(card.getType());
-        System.out.println(card.getOracleText());
+        System.out.println("Name: "+card.getName());
+        System.out.println("Card Type: "+card.getType());
+        System.out.println("Oracle Text: "+card.getOracleText());
+        System.out.println("Card ID: "+card.getCardId());
+        System.out.println("Artist: "+card.getArtist());
+        System.out.println("Community Rating: "+card.getCommunityRating());
+        System.out.println("Cost: "+card.getCost());
+        System.out.println("Part: "+card.getPart());
     }
+    private static final Logger LOG = Logger.getLogger(ParseGathererBasicInfo.class.getName());
 }
