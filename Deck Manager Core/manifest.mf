@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+OpenIDE-Module: dreamer.card.game.core/0
+OpenIDE-Module-Implementation-Version: 1
+OpenIDE-Module-Install: dreamer/card/game/core/Installer.class
+OpenIDE-Module-Layer: dreamer/card/game/core/layer.xml
+OpenIDE-Module-Localizing-Bundle: dreamer/card/game/core/Bundle.properties
+
