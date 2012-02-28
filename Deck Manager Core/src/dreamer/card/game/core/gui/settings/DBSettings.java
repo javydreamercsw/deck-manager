@@ -4,9 +4,9 @@
  */
 package dreamer.card.game.core.gui.settings;
 
-import javax.swing.JComboBox;
-import org.netbeans.api.db.explorer.ConnectionManager;
-import org.netbeans.api.db.explorer.support.DatabaseExplorerUIs;
+//import javax.swing.JComboBox;
+//import org.netbeans.api.db.explorer.ConnectionManager;
+//import org.netbeans.api.db.explorer.support.DatabaseExplorerUIs;
 
 /**
  *
@@ -63,7 +63,7 @@ public class DBSettings extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void dbTargetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dbTargetActionPerformed
-        DatabaseExplorerUIs.connect(new JComboBox(), ConnectionManager.getDefault());
+//        DatabaseExplorerUIs.connect(new JComboBox(), ConnectionManager.getDefault());
     }//GEN-LAST:event_dbTargetActionPerformed
 
     /**
@@ -95,6 +95,7 @@ public class DBSettings extends javax.swing.JDialog {
 
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 DBSettings dialog = new DBSettings(new javax.swing.JFrame(), true);
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
