@@ -101,19 +101,20 @@ class MTGUpdater extends UpdateRunnable {
                 SetUpdateData setData = it.next();
                 totalPages += setData.getPagesInSet();
             }
-            LOG.log(Level.FINE, "Pages to update: {0}", totalPages);
+            LOG.log(Level.INFO, "Pages to update: {0}", totalPages);
             setSize(totalPages);
             for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
                 SetUpdateData setData = it.next();
                 Edition edition = setData.getEdition();
                 Lookup.getDefault().lookup(IDataBaseManager.class).createCardSet(mtg, setData.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
-                LOG.log(Level.FINE, "Created set: {0}", setData.getName());
+                LOG.log(Level.INFO, "Created set: {0}", setData.getName());
                 String mess = "Updating set: " + setData.getName();
-                LOG.log(Level.FINE, mess);
+                LOG.log(Level.INFO, mess);
                 updateProgressMessage(mess);
                 setCurrentSet(setData.getName());
                 createCardsForSet(setData.getUrl());
             }
+            reportDone();
         } catch (IllegalStateException ex) {
             LOG.log(Level.WARNING, null, ex);
         } catch (IOException ex) {
@@ -134,7 +135,7 @@ class MTGUpdater extends UpdateRunnable {
      * @param from URL containing pages for the set
      */
     private void createCardsForSet(String from) throws MalformedURLException, IOException {
-        LOG.log(Level.FINE, "Retrieving from url: {0}", from);
+        LOG.log(Level.INFO, "Retrieving from url: {0}", from);
         int i = 0;
         boolean lastPage = false;
         while (lastPage == false) {

@@ -48,6 +48,11 @@ public interface IProgressAction extends Runnable {
     void reportProgress(int amount);
     
     /**
+     * Report you are done
+     */
+    void reportDone();
+    
+    /**
      * Update the progress message
      * @param message progress message
      */
