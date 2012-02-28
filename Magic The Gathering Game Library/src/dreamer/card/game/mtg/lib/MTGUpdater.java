@@ -114,6 +114,8 @@ class MTGUpdater extends UpdateRunnable {
                 setCurrentSet(setData.getName());
                 createCardsForSet(setData.getUrl());
             }
+        } catch (IllegalStateException ex) {
+            LOG.log(Level.WARNING, null, ex);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
@@ -223,90 +225,94 @@ class MTGUpdater extends UpdateRunnable {
     }
 
     private void parseRecord(String line) throws Exception {
-        MagicCard card = new MagicCard();
-        // split by td
-        String[] rows = line.split("<td");
-        String[] fields = rows[2].split("<span|<div");
-        String id = getMatch(idPattern, fields[3]);
-        card.setId(id);
-        card.setName(getMatch(namePattern, fields[3]));
-        String cost = getMatch(spanPattern, fields[4]);
-        card.setCost(cost);
-        String type = getMatch(spanPattern, fields[6]);
-        String powerCombo = type;
-        String pow = getMatch(powPattern, powerCombo, 1).replaceFirst("/", "");
-        String tou = getMatch(powPattern, powerCombo, 2);
-        type = type.replaceAll("\\(.*", "").trim();
-        card.setType(type);
-        String text = fixText(getMatch(divPattern, fields[7]));
-        card.setOracleText(text);
-        card.setPower(pow);
-        card.setToughness(tou);
-        String[] sets = rows[3].split("<a onclick");
-        for (String set : sets) {
-            String edition = getMatch(setPattern, set, 1);
-            String rarity = getMatch(setPattern, set, 2);
-            String setId = getMatch(idPattern, set, 1);
-            if (edition.length() <= 1) {
-                continue;
-            }
-            edition = edition.trim();
-            HashMap parameters = new HashMap();
-            List result;
-            CardType ct = null;
-            Card c = null;
-            if (id.equals(setId)) {
-                card.setSet(edition);
-                card.setRarity(rarity.trim());
-                //Handle card type, it might be new
-                parameters.put("name", type);
-                try {
-                    result = Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardType.findByName", parameters);
-                    if (result.isEmpty()) {
-                        ct = Lookup.getDefault().lookup(IDataBaseManager.class).createCardType(type);
-                    } else {
-                        ct = (CardType) result.get(0);
+        try {
+            MagicCard card = new MagicCard();
+            // split by td
+            String[] rows = line.split("<td");
+            String[] fields = rows[2].split("<span|<div");
+            String id = getMatch(idPattern, fields[3]);
+            card.setId(id);
+            card.setName(getMatch(namePattern, fields[3]));
+            String cost = getMatch(spanPattern, fields[4]);
+            card.setCost(cost);
+            String type = getMatch(spanPattern, fields[6]);
+            String powerCombo = type;
+            String pow = getMatch(powPattern, powerCombo, 1).replaceFirst("/", "");
+            String tou = getMatch(powPattern, powerCombo, 2);
+            type = type.replaceAll("\\(.*", "").trim();
+            card.setType(type);
+            String text = fixText(getMatch(divPattern, fields[7]));
+            card.setOracleText(text);
+            card.setPower(pow);
+            card.setToughness(tou);
+            String[] sets = rows[3].split("<a onclick");
+            for (String set : sets) {
+                String edition = getMatch(setPattern, set, 1);
+                String rarity = getMatch(setPattern, set, 2);
+                String setId = getMatch(idPattern, set, 1);
+                if (edition.length() <= 1) {
+                    continue;
+                }
+                edition = edition.trim();
+                HashMap parameters = new HashMap();
+                List result;
+                CardType ct = null;
+                Card c = null;
+                if (id.equals(setId)) {
+                    card.setSet(edition);
+                    card.setRarity(rarity.trim());
+                    //Handle card type, it might be new
+                    parameters.put("name", type);
+                    try {
+                        result = Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardType.findByName", parameters);
+                        if (result.isEmpty()) {
+                            ct = Lookup.getDefault().lookup(IDataBaseManager.class).createCardType(type);
+                        } else {
+                            ct = (CardType) result.get(0);
+                        }
+                    } catch (Exception ex) {
+                        LOG.log(Level.SEVERE, null, ex);
                     }
-                } catch (Exception ex) {
-                    LOG.log(Level.SEVERE, null, ex);
-                }
-                //Create the card
-                try {
-                    c = Lookup.getDefault().lookup(IDataBaseManager.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
-                } catch (PreexistingEntityException ex) {
-                    //Do nothing
-                    return;
-                } catch (Exception ex) {
-                    LOG.log(Level.SEVERE, null, ex);
-                }
-                //Add the card attributes
-                try {
-                    HashMap<String, String> attributes = new HashMap<String, String>();
-                    attributes.put("Rarity", card.getRarity());
-                    attributes.put("Cost", card.getCost());
-                    attributes.put("Color Type", card.getColorType());
-                    attributes.put("Language", card.getLanguage());
-                    attributes.put("Part", card.getPart());
-                    attributes.put("Power", card.getPower());
-                    attributes.put("Rulings", card.getRulings());
-                    attributes.put("Toughness", card.getToughness());
-                    attributes.put("Type", card.getType());
-                    Lookup.getDefault().lookup(IDataBaseManager.class).addAttributesToCard(c, attributes);
-                    increaseProgress();
-                } catch (Exception ex) {
-                    LOG.log(Level.SEVERE, null, ex);
-                }
-                //Add it to the set
-            } else {
-                // other printings
-                MagicCard card2 = (MagicCard) card.clone();
-                if (card2 != null) {
-                    card2.setId(setId);
-                    card2.setSet(edition);
-                    card2.setRarity(rarity.trim());
-                    throw new Exception("Is this used?");
+                    //Create the card
+                    try {
+                        c = Lookup.getDefault().lookup(IDataBaseManager.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
+                    } catch (PreexistingEntityException ex) {
+                        //Do nothing
+                        return;
+                    } catch (Exception ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    //Add the card attributes
+                    try {
+                        HashMap<String, String> attributes = new HashMap<String, String>();
+                        attributes.put("Rarity", card.getRarity());
+                        attributes.put("Cost", card.getCost());
+                        attributes.put("Color Type", card.getColorType());
+                        attributes.put("Language", card.getLanguage());
+                        attributes.put("Part", card.getPart());
+                        attributes.put("Power", card.getPower());
+                        attributes.put("Rulings", card.getRulings());
+                        attributes.put("Toughness", card.getToughness());
+                        attributes.put("Type", card.getType());
+                        Lookup.getDefault().lookup(IDataBaseManager.class).addAttributesToCard(c, attributes);
+                        increaseProgress();
+                    } catch (Exception ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    //Add it to the set
+                } else {
+                    // other printings
+                    MagicCard card2 = (MagicCard) card.clone();
+                    if (card2 != null) {
+                        card2.setId(setId);
+                        card2.setSet(edition);
+                        card2.setRarity(rarity.trim());
+                        throw new Exception("Is this used?");
+                    }
                 }
             }
+        } catch (IllegalStateException e) {
+            LOG.log(Level.WARNING, null, e);
         }
     }
 
