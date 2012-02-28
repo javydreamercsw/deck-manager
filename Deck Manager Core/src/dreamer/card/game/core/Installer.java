@@ -29,8 +29,8 @@ public class Installer extends ModuleInstall {
                 dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD, "test");
                 dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, "org.h2.Driver");
                 dbProperties.put(PersistenceUnitProperties.JDBC_USER, "card_manager");
-                DatabaseConnection conn;
                 OutputHandler.select("Output");
+                DatabaseConnection conn;
                 if (ConnectionManager.getDefault().getConnections().length == 0) {
                     try {
                         conn = DatabaseConnection.create(findSqlServerDriver("org.h2.Driver", "H2"),
