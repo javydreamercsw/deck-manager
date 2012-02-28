@@ -1,4 +1,5 @@
 Manifest-Version: 1.0
+AutoUpdate-Show-In-Client: true
 OpenIDE-Module: dreamer.card.game.mtg.lib/0
 OpenIDE-Module-Implementation-Version: 1
 OpenIDE-Module-Localizing-Bundle: dreamer/card/game/mtg/lib/Bundle.properties

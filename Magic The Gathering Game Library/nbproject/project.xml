@@ -71,6 +71,7 @@
             <public-packages>
                 <package>com.reflexit.magiccards.core</package>
                 <package>dreamer.card.game</package>
+                <package>dreamer.card.game.mtg.lib</package>
                 <package>mtg.card</package>
                 <package>mtg.card.data</package>
                 <package>mtg.card.seller</package>

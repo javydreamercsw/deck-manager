@@ -2,6 +2,8 @@ package dreamer.card.game.core;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
@@ -17,6 +19,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     private RequestProcessor.Task theTask = null;
     private IProgressAction runnable;
     private final ProgressHandle ph;
+    private static final Logger LOG = Logger.getLogger(GameUpdateAction.class.getName());
 
     public GameUpdateAction(IProgressAction runnable) {
         RP = new RequestProcessor("Updater", 1, false);
@@ -27,6 +30,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     @Override
     public void actionPerformed(ActionEvent e) {
         if (runnable != null) {
+            final long start = System.currentTimeMillis();
             runnable.addListener(this);
             theTask = RP.create(runnable);
             theTask.addTaskListener(new TaskListener() {
@@ -35,6 +39,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
                     //Make sure that we get rid of the ProgressHandle
                     //when the task is finished
                     ph.finish();
+                    LOG.log(Level.INFO, "Updating database took: {0}", Tool.elapsedTime(start));
                 }
             });
             //start the progresshandle the progress UI will show 500s after
