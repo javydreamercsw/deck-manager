@@ -16,7 +16,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -78,8 +77,7 @@ class MTGUpdater extends UpdateRunnable {
             HashMap parameters = new HashMap();
             parameters.put("name", game.getName());
             Game mtg = (Game) Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("Game.findByName", parameters).get(0);
-            HashMap<String, String> toUpdate = new HashMap<String, String>();
-            HashMap<String, Editions.Edition> setInfo = new HashMap<String, Editions.Edition>();
+            ArrayList<SetUpdateData> data = new ArrayList<SetUpdateData>();
             for (Iterator iterator = editions.iterator(); iterator.hasNext();) {
                 Editions.Edition edition = (Editions.Edition) iterator.next();
                 String from = source + edition.getName().replaceAll(" ", "+") + "%22%5d";
@@ -87,31 +85,34 @@ class MTGUpdater extends UpdateRunnable {
                 parameters.clear();
                 parameters.put("name", edition.getName());
                 List result = Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardSet.findByName", parameters);
-                int amount = 0;
+                long amount = 0;
                 if (!result.isEmpty()) {
                     CardSet set = (CardSet) result.get(0);
                     parameters.clear();
                     parameters.put("gameId", set.getCardSetPK().getGameId());
-                    amount = (Integer) Lookup.getDefault().lookup(IDataBaseManager.class).createdQuery("SELECT count(c) FROM CardSet c WHERE c.cardSetPK.gameId = :gameId", parameters).get(0);
+                    amount = (Long) Lookup.getDefault().lookup(IDataBaseManager.class).createdQuery("SELECT count(c) FROM CardSet c WHERE c.cardSetPK.gameId = :gameId", parameters).get(0);
                 }
                 if (result.isEmpty() || amount < urlAmount) {
-                    setInfo.put(edition.getName(), edition);
-                    toUpdate.put(edition.getName(), from);
+                    data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
                 }
             }
-            LOG.log(Level.INFO, "Sets to update: {0}", toUpdate.size());
-            setSize(toUpdate.size());
-            for (Iterator<Entry<String, String>> it = toUpdate.entrySet().iterator(); it.hasNext();) {
-                Entry<String, String> entry = it.next();
-                Edition edition = setInfo.get(entry.getKey());
-                Lookup.getDefault().lookup(IDataBaseManager.class).createCardSet(mtg, entry.getKey(), edition.getMainAbbreviation(), edition.getReleaseDate());
-                LOG.log(Level.FINE, "Created set: {0}", entry.getKey());
-                String mess = "Updating set: " + entry.getKey();
+            int totalPages = 0;
+            for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
+                SetUpdateData setData = it.next();
+                totalPages += setData.getPagesInSet();
+            }
+            LOG.log(Level.FINE, "Pages to update: {0}", totalPages);
+            setSize(totalPages);
+            for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
+                SetUpdateData setData = it.next();
+                Edition edition = setData.getEdition();
+                Lookup.getDefault().lookup(IDataBaseManager.class).createCardSet(mtg, setData.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
+                LOG.log(Level.FINE, "Created set: {0}", setData.getName());
+                String mess = "Updating set: " + setData.getName();
                 LOG.log(Level.FINE, mess);
                 updateProgressMessage(mess);
-                setCurrentSet(entry.getKey());
-                createCardsForSet(entry.getValue());
-                increaseProgress();
+                setCurrentSet(setData.getName());
+                createCardsForSet(setData.getUrl());
             }
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -291,6 +292,7 @@ class MTGUpdater extends UpdateRunnable {
                     attributes.put("Toughness", card.getToughness());
                     attributes.put("Type", card.getType());
                     Lookup.getDefault().lookup(IDataBaseManager.class).addAttributesToCard(c, attributes);
+                    increaseProgress();
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, null, ex);
                 }
