@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package mtg.card.seller;
 
 import dreamer.card.game.storage.ICardStore;

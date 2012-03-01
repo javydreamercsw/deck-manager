@@ -64,7 +64,7 @@
         <echo>Installing plug-ins from ../netbeans</echo>
         <mkdir dir="${nbplatform.active.dir}/extra"/>
         <autoupdate todir="${nbplatform.active.dir}/extra">
-            <nbms dir="../netbeans">
+            <nbms dir="netbeans">
                 <include name="*.nbm"/>
             </nbms>
             <modules includes=".+"/>

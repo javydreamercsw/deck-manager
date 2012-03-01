@@ -3,6 +3,7 @@ package dreamer.card.game;
 import dreamer.card.game.storage.IDataBaseManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 import org.junit.*;
 import org.openide.util.Lookup;
@@ -41,9 +42,16 @@ public class MTGGameTest {
     @Test
     public void testUpdateDatabase() {
         try {
-            MTGGame instance = new MTGGame();
-            instance.init();
-            instance.updateDatabase();
+            final MTGGame instance = new MTGGame();
+            synchronized (instance) {
+                instance.init();
+                Runnable updateRunnable = instance.getUpdateRunnable();
+                updateRunnable.run();
+                updateRunnable.wait();
+                assertFalse(Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardSet.findAll").isEmpty());
+                assertFalse(Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("Card.findAll").isEmpty());
+                assertFalse(Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardAttribute.findAll").isEmpty());
+            }
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

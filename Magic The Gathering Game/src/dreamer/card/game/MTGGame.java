@@ -1,6 +1,6 @@
 package dreamer.card.game;
 
-import java.util.logging.Logger;
+import mtg.card.sync.MTGCardCache;
 
 /**
  *
@@ -8,7 +8,11 @@ import java.util.logging.Logger;
  */
 public class MTGGame extends DefaultCardGame {
 
-    private static final Logger LOG = Logger.getLogger(MTGGame.class.getName());
+    private MTGCardCache cache;
+
+    public MTGGame() {
+        cache = new MTGCardCache();
+    }
 
     @Override
     public String getName() {
@@ -17,6 +21,13 @@ public class MTGGame extends DefaultCardGame {
 
     @Override
     public Runnable getUpdateRunnable() {
-        return null;
+        return getCache().getCacheTask();
+    }
+
+    /**
+     * @return the cache
+     */
+    public MTGCardCache getCache() {
+        return cache;
     }
 }

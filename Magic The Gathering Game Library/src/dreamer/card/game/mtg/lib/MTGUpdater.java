@@ -45,6 +45,7 @@ class MTGUpdater extends UpdateRunnable {
     private final static Charset UTF_8 = Charset.forName("utf-8");
     private final static Map manaMap = new LinkedHashMap();
     private static final Logger LOG = Logger.getLogger(MTGUpdater.class.getName());
+    protected final String source = "http://gatherer.wizards.com/Pages/Search/Default.aspx?output=standard&set=%5b%22";
 
     static {
         manaMap.put("\\Q{500}", "{0.5}");
@@ -69,8 +70,8 @@ class MTGUpdater extends UpdateRunnable {
     @Override
     public void run() {
         try {
-            String source = "http://gatherer.wizards.com/Pages/Search/Default.aspx?output=standard&set=%5b%22";
             //Get the sets
+            updateProgressMessage("Gathering stats before start processing...");
             ParseGathererSets parser = new ParseGathererSets();
             parser.load();
             Collection<Editions.Edition> editions = Editions.getInstance().getEditions();
@@ -79,6 +80,7 @@ class MTGUpdater extends UpdateRunnable {
             //Add as subtask
             Game mtg = (Game) Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("Game.findByName", parameters).get(0);
             ArrayList<SetUpdateData> data = new ArrayList<SetUpdateData>();
+            updateProgressMessage("Calculating amount of pages to process...");
             for (Iterator iterator = editions.iterator(); iterator.hasNext();) {
                 Editions.Edition edition = (Editions.Edition) iterator.next();
                 String from = source + edition.getName().replaceAll(" ", "+") + "%22%5d";
@@ -135,7 +137,7 @@ class MTGUpdater extends UpdateRunnable {
      *
      * @param from URL containing pages for the set
      */
-    private void createCardsForSet(String from) throws MalformedURLException, IOException {
+    protected void createCardsForSet(String from) throws MalformedURLException, IOException {
         LOG.log(Level.FINE, "Retrieving from url: {0}", from);
         int i = 0;
         boolean lastPage = false;
@@ -278,6 +280,7 @@ class MTGUpdater extends UpdateRunnable {
                     //Create the card
                     try {
                         c = Lookup.getDefault().lookup(IDataBaseManager.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
+                        increaseProgress();
                     } catch (PreexistingEntityException ex) {
                         //Do nothing
                         return;
@@ -296,8 +299,8 @@ class MTGUpdater extends UpdateRunnable {
                         attributes.put("Rulings", card.getRulings());
                         attributes.put("Toughness", card.getToughness());
                         attributes.put("Type", card.getType());
+                        attributes.put("CardId", "" + card.getCardId());
                         Lookup.getDefault().lookup(IDataBaseManager.class).addAttributesToCard(c, attributes);
-                        increaseProgress();
                     } catch (Exception ex) {
                         LOG.log(Level.SEVERE, null, ex);
                     }
