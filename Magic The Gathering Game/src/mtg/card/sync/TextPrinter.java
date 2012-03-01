@@ -35,7 +35,4 @@ public class TextPrinter {
         }
         return buf.toString();
     }
-
-    private TextPrinter() {
-    }
 }
