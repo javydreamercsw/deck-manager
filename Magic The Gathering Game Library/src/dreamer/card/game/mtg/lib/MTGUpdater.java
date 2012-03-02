@@ -77,7 +77,6 @@ class MTGUpdater extends UpdateRunnable {
             Collection<Editions.Edition> editions = Editions.getInstance().getEditions();
             HashMap parameters = new HashMap();
             parameters.put("name", game.getName());
-            //Add as subtask
             Game mtg = (Game) Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("Game.findByName", parameters).get(0);
             ArrayList<SetUpdateData> data = new ArrayList<SetUpdateData>();
             updateProgressMessage("Calculating amount of pages to process...");
