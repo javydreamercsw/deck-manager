@@ -17,6 +17,7 @@ import dreamer.card.game.storage.cache.CannotDetermineSetAbbriviation;
 import dreamer.card.game.storage.cache.ICardCache;
 import dreamer.card.game.storage.database.persistence.Card;
 import dreamer.card.game.storage.database.persistence.CardSet;
+import dreamer.card.game.storage.database.persistence.controller.CardJpaController;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
@@ -30,6 +31,8 @@ import org.openide.util.lookup.ServiceProvider;
  */
 @ServiceProvider(service = ICardCache.class)
 public class MTGCardCache extends AbstractCardCache {
+
+    private static final Logger LOG = Logger.getLogger(MTGCardCache.class.getName());
 
     @Override
     public URL createSetImageRemoteURL(String editionAbbr, String rarity) throws MalformedURLException {
@@ -64,36 +67,39 @@ public class MTGCardCache extends AbstractCardCache {
         @Override
         public void run() {
             while (true) {
-                Card card = null;
+                Card card;
                 synchronized (getCardImageQueue()) {
                     if (getCardImageQueue().size() > 0) {
                         card = getCardImageQueue().iterator().next();
                         getCardImageQueue().remove(card);
+                        //Update with database
+                        card = new CardJpaController(Lookup.getDefault().lookup(IDataBaseManager.class).getEntityManagerFactory()).findCard(card.getCardPK());
+                        LOG.log(Level.INFO, "Processing card: {0}", card.getName());
+                        if (card.getCardSetList().isEmpty()) {
+                            LOG.log(Level.SEVERE, "No card sets defined for card: {0}", card.getName());
+                        } else {
+                            for (CardSet cs : card.getCardSetList()) {
+                                LOG.log(Level.INFO, "Processing set: {0} for card: {1}",
+                                        new Object[]{cs.getName(), card.getName()});
+                                try {
+                                    URL url = createRemoteImageURL(card, cs);
+                                    downloadAndSaveImage(card, cs, url, isLoadingEnabled(), true);
+                                } catch (CannotDetermineSetAbbriviation e) {
+                                    LOG.log(Level.SEVERE, "Looks like the set: " + cs.getName() + " is not properly created. It is missing the abbreviation", e);
+                                    return;
+                                } catch (Exception e) {
+                                    LOG.log(Level.SEVERE, null, e);
+                                    return;
+                                } finally {
+                                    getCardImageQueue().notifyAll();
+                                }
+                            }
+                        }
                     } else {
                         try {
-                            sleep(100);
+                            Thread.currentThread().sleep(100);
                         } catch (InterruptedException ex) {
-                            Logger.getLogger(MTGCardCache.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    if (card != null) {
-                        for (CardSet cs : card.getCardSetList()) {
-                            try {
-                                URL url = createRemoteImageURL(card, cs);
-                                synchronized (card) {
-                                    try {
-                                        downloadAndSaveImage(card, cs, url, isLoadingEnabled(), true);
-                                    } catch (Exception e) {
-                                        continue;
-                                    } finally {
-                                        card.notifyAll();
-                                    }
-                                }
-                            } catch (MalformedURLException ex) {
-                                Logger.getLogger(MTGCardCache.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (CannotDetermineSetAbbriviation ex) {
-                                Logger.getLogger(MTGCardCache.class.getName()).log(Level.SEVERE, null, ex);
-                            }
+                            LOG.log(Level.SEVERE, null, ex);
                         }
                     }
                 }

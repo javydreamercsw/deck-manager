@@ -14,11 +14,8 @@ package mtg.card.sync;
 
 import dreamer.card.game.Editions;
 import dreamer.card.game.Editions.Edition;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,14 +78,4 @@ public class ParseGathererSets extends ParseGathererPage {
     protected String getUrl() {
         return SET_QUERY_URL_BASE;
     }
-
-    public static void main(String[] args) throws IOException {
-        ParseGathererSets parser = new ParseGathererSets();
-        parser.load();
-        Collection<Edition> editions = Editions.getInstance().getEditions();
-        for (Iterator iterator = editions.iterator(); iterator.hasNext();) {
-            Edition edition = (Edition) iterator.next();
-        }
-    }
-    private static final Logger LOG = Logger.getLogger(ParseGathererSets.class.getName());
 }
