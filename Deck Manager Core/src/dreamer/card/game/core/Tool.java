@@ -2,6 +2,7 @@ package dreamer.card.game.core;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import javax.swing.JDialog;
@@ -10,6 +11,7 @@ import org.joda.time.Period;
 
 /**
  * Various commonly used operations.
+ *
  * @author Javier A. Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
 public final class Tool {
@@ -19,6 +21,7 @@ public final class Tool {
 
     /**
      * Calculates how many instances of the what strings exists within where.
+     *
      * @param where String to search
      * @param what What to search
      * @return Amount of instances
@@ -35,6 +38,7 @@ public final class Tool {
 
     /**
      * Convert an exception into a string
+     *
      * @param ex
      * @return exception as a string
      */
@@ -46,6 +50,7 @@ public final class Tool {
 
     /**
      * Convert an error into a string
+     *
      * @param ex
      * @return error as a string
      */
@@ -57,6 +62,7 @@ public final class Tool {
 
     /**
      * Centralize component on the middle of screen
+     *
      * @param component
      */
     public static void centralizeDialog(JDialog component) {
@@ -74,6 +80,7 @@ public final class Tool {
 
     /**
      * Calculated elapsed time from provided long to current time
+     *
      * @param start
      * @return elapsed time
      */
@@ -124,5 +131,23 @@ public final class Tool {
             sb.append(period.getMillis()).append(" milliseconds");
         }
         return sb.toString().isEmpty() ? "Negligible" : sb.toString();
+    }
+
+    /**
+     * Delete a folder and all its contents
+     *
+     * @param folder Folder to delete
+     */
+    public static void deleteFolder(File folder) {
+        if (folder.exists() && folder.isDirectory()) {
+            for (File temp : folder.listFiles()) {
+                if (temp.isDirectory()) {
+                    deleteFolder(temp);
+                } else {
+                    temp.delete();
+                }
+            }
+            folder.delete();
+        }
     }
 }
