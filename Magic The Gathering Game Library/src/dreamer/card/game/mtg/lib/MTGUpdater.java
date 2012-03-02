@@ -96,7 +96,10 @@ class MTGUpdater extends UpdateRunnable {
                     amount = (Long) Lookup.getDefault().lookup(IDataBaseManager.class).createdQuery("SELECT count(c) FROM CardSet c WHERE c.cardSetPK.gameId = :gameId", parameters).get(0);
                 }
                 if (result.isEmpty() || amount < urlAmount) {
+                    LOG.log(Level.FINE, "Adding set: {0} to processing list", edition.getName());
                     data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
+                } else {
+                    LOG.log(Level.FINE, "Skipping processing of set: {0}", edition.getName());
                 }
             }
             int totalPages = 0;
@@ -280,12 +283,13 @@ class MTGUpdater extends UpdateRunnable {
                     //Create the card
                     try {
                         c = Lookup.getDefault().lookup(IDataBaseManager.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
+                        LOG.log(Level.FINE, "Created card: {0}", c.getName());
                         increaseProgress();
                     } catch (PreexistingEntityException ex) {
                         //Do nothing
-                        return;
                     } catch (Exception ex) {
                         LOG.log(Level.SEVERE, null, ex);
+                        return;
                     }
                     //Add the card attributes
                     try {
