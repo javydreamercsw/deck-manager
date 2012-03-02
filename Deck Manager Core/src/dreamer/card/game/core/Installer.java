@@ -28,7 +28,7 @@ public class Installer extends ModuleInstall {
                 dbProperties.put(PersistenceUnitProperties.TARGET_DATABASE, "org.eclipse.persistence.platform.database.H2Platform");
                 dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD, "test");
                 dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, "org.h2.Driver");
-                dbProperties.put(PersistenceUnitProperties.JDBC_USER, "card_manager");
+                dbProperties.put(PersistenceUnitProperties.JDBC_USER, "deck_manager");
                 OutputHandler.select("Output");
                 DatabaseConnection conn;
                 if (ConnectionManager.getDefault().getConnections().length == 0) {
