@@ -86,7 +86,6 @@ public class MTGUpdater extends UpdateRunnable {
             }
             ArrayList<SetUpdateData> data = new ArrayList<SetUpdateData>();
             updateProgressMessage("Calculating amount of pages to process...");
-            //TODO: looks like this calcualtion is worng
             try {
                 for (Iterator iterator = editions.iterator(); iterator.hasNext();) {
                     if (!dbError) {
@@ -305,8 +304,8 @@ public class MTGUpdater extends UpdateRunnable {
                 edition = edition.trim();
                 HashMap parameters = new HashMap();
                 List result;
-                CardType ct = null;
-                Card c = null;
+                CardType ct;
+                Card c;
                 if (id.equals(setId)) {
                     card.setSet(edition);
                     card.setRarity(rarity.trim());
@@ -328,7 +327,6 @@ public class MTGUpdater extends UpdateRunnable {
                         c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
                         LOG.log(Level.FINE, "Created card: {0}", c.getName());
                         Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
-                        increaseProgress();
                     }catch (DBException ex) {
                         LOG.log(Level.SEVERE, null, ex);
                         return;
@@ -363,6 +361,7 @@ public class MTGUpdater extends UpdateRunnable {
                     }
                 }
             }
+            increaseProgress();
         } catch (IllegalStateException e) {
             LOG.log(Level.WARNING, null, e);
         }
