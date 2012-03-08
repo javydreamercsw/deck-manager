@@ -1,6 +1,6 @@
 package dreamer.card.game;
 
-import mtg.card.sync.MTGCardCache;
+import com.reflexit.magiccards.core.model.DefaultCardGame;
 
 /**
  *
@@ -8,26 +8,8 @@ import mtg.card.sync.MTGCardCache;
  */
 public class MTGGame extends DefaultCardGame {
 
-    private MTGCardCache cache;
-
-    public MTGGame() {
-        cache = new MTGCardCache();
-    }
-
     @Override
     public String getName() {
         return "Magic the Gathering";
-    }
-
-    @Override
-    public Runnable getUpdateRunnable() {
-        return getCache().getCacheTask();
-    }
-
-    /**
-     * @return the cache
-     */
-    public MTGCardCache getCache() {
-        return cache;
     }
 }

@@ -1,8 +1,8 @@
 package mtg.card.sync;
 
-import dreamer.card.game.ICardHandler;
-import dreamer.card.game.storage.ICardStore;
-import dreamer.card.game.storage.IFilteredCardStore;
+import com.reflexit.magiccards.core.model.ICardHandler;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import java.util.Properties;
 import java.util.logging.Logger;
 import mtg.card.MagicFilteredCardStore;

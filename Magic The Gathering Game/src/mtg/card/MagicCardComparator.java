@@ -1,8 +1,8 @@
 package mtg.card;
 
-import dreamer.card.game.ICard;
-import dreamer.card.game.ICardComparator;
-import dreamer.card.game.ICardField;
+import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardComparator;
+import com.reflexit.magiccards.core.model.ICardField;
 import java.util.logging.Logger;
 
 class MagicCardComparator implements ICardComparator {

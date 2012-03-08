@@ -1,8 +1,8 @@
 package mtg.card.sync;
 
+import com.reflexit.magiccards.core.model.Editions;
+import com.reflexit.magiccards.core.model.Editions.Edition;
 import com.sun.istack.NotNull;
-import dreamer.card.game.Editions;
-import dreamer.card.game.Editions.Edition;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -91,4 +91,20 @@ public abstract class UpdateRunnable implements IProgressAction {
             listener.changeMessage(message);
         }
     }
+    
+    @Override
+    public void reportSuspendProgress() {
+        for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
+            UpdateProgressListener listener = it.next();
+            listener.suspend();
+        }
+    }
+    
+    @Override
+    public void reportResumeProgress(){
+        for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
+            UpdateProgressListener listener = it.next();
+            listener.resume();
+        }
+    }
 }

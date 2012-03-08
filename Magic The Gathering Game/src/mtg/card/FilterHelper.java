@@ -1,6 +1,6 @@
 package mtg.card;
 
-import dreamer.card.game.Editions;
+import com.reflexit.magiccards.core.model.Editions;
 import java.util.ArrayList;
 import java.util.Collection;
 

@@ -10,9 +10,9 @@
  */
 package mtg.card;
 
-import dreamer.card.game.CardGroup;
-import dreamer.card.game.ICardCountable;
-import dreamer.card.game.storage.ICardStore;
+import com.reflexit.magiccards.core.model.CardGroup;
+import com.reflexit.magiccards.core.model.ICardCountable;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
 import java.util.*;
 import java.util.logging.Logger;
 

@@ -1,6 +1,6 @@
 package dreamer.card.game.mtg.lib;
 
-import dreamer.card.game.Editions;
+import com.reflexit.magiccards.core.model.Editions;
 
 public class SetUpdateData {
 

@@ -1,6 +1,6 @@
 package mtg.card.sync;
 
-import dreamer.card.game.CardFileUtils;
+import com.reflexit.magiccards.core.model.CardFileUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

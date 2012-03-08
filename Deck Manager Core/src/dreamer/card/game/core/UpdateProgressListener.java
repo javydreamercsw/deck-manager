@@ -28,4 +28,14 @@ public interface UpdateProgressListener {
      * @param message
      */
     public void changeMessage(String message);
+
+    /**
+     * Suspend progress for this task
+     */
+    public void suspend();
+    
+    /**
+     * Resume progress for this task
+     */
+    public void resume();
 }

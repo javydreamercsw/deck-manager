@@ -1,12 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package mtg.card.seller;
 
-import dreamer.card.game.storage.ICardStore;
-import dreamer.card.game.storage.MemoryCardStorage;
-import dreamer.card.game.storage.MemoryCardStore;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.core.model.storage.MemoryCardStorage;
+import com.reflexit.magiccards.core.model.storage.MemoryCardStore;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.logging.Level;

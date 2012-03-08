@@ -1,6 +1,6 @@
 package mtg.card;
 
-import dreamer.card.game.ICardField;
+import com.reflexit.magiccards.core.model.ICardField;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;

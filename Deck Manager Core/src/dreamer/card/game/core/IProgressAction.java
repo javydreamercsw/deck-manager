@@ -57,4 +57,14 @@ public interface IProgressAction extends Runnable {
      * @param message progress message
      */
     void updateProgressMessage(String message);
+    
+    /**
+     * Report that the task is suspended
+     */
+    void reportSuspendProgress();
+    
+    /**
+     * Report that the task is resumed
+     */
+    void reportResumeProgress();
 }
