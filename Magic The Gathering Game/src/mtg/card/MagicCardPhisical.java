@@ -1,9 +1,9 @@
 package mtg.card;
 
-import dreamer.card.game.ICard;
-import dreamer.card.game.ICardCountable;
-import dreamer.card.game.ICardField;
-import dreamer.card.game.ICardModifiable;
+import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardCountable;
+import com.reflexit.magiccards.core.model.ICardField;
+import com.reflexit.magiccards.core.model.ICardModifiable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -157,6 +157,11 @@ public class MagicCardPhisical implements IMagicCard, ICardCountable, ICardModif
     @Override
     public String getSet() {
         return this.card.getSet();
+    }
+    
+    @Override
+    public void setSet(String set) {
+        this.card.setSet(set);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package dreamer.card.game.mtg.lib;
 
-import dreamer.card.game.ICardGame;
+import com.reflexit.magiccards.core.model.ICardGame;
 import dreamer.card.game.MTGGame;
 import java.util.logging.Logger;
 import org.openide.util.lookup.ServiceProvider;

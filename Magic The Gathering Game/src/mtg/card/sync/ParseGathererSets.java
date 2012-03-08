@@ -12,8 +12,8 @@
  */
 package mtg.card.sync;
 
-import dreamer.card.game.Editions;
-import dreamer.card.game.Editions.Edition;
+import com.reflexit.magiccards.core.model.Editions;
+import com.reflexit.magiccards.core.model.Editions.Edition;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.regex.Matcher;

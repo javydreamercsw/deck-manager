@@ -1,6 +1,6 @@
 package mtg.card;
 
-import dreamer.card.game.ISearchableProperty;
+import com.reflexit.magiccards.core.model.ISearchableProperty;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;

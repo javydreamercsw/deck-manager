@@ -1,7 +1,7 @@
 package dreamer.card.game.core;
 
 import com.dreamer.outputhandler.OutputHandler;
-import dreamer.card.game.ICardGame;
+import com.reflexit.magiccards.core.model.ICardGame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.logging.Level;
@@ -37,8 +37,6 @@ final class GameInitializationAction implements ActionListener {
                 OutputHandler.output("Output", "Initializing game: " + game.getName());
                 game.init();
                 LOG.log(Level.INFO, "Done!");
-                OutputHandler.output("Output", "Initializing game: " + game.getName() + " done!");
-                ph.progress("Updating database for game: " + game.getName() + ", please wait...");
             }
         };
         theTask = RP.create(runnable);

@@ -1,7 +1,7 @@
 package mtg.card;
 
-import dreamer.card.game.AbstractSortOrder;
-import dreamer.card.game.ICardField;
+import com.reflexit.magiccards.core.model.AbstractSortOrder;
+import com.reflexit.magiccards.core.model.ICardField;
 import java.util.logging.Logger;
 
 @SuppressWarnings("serial")

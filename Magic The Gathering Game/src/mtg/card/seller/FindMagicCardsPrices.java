@@ -1,13 +1,13 @@
 package mtg.card.seller;
 
-import dreamer.card.game.Editions;
-import dreamer.card.game.ICard;
-import dreamer.card.game.ISellableCard;
-import dreamer.card.game.price.IPriceProvider;
-import dreamer.card.game.price.IStoreUpdator;
-import dreamer.card.game.storage.ICardStore;
-import dreamer.card.game.storage.IFilteredCardStore;
-import dreamer.card.game.storage.IStorage;
+import com.reflexit.magiccards.core.model.Editions;
+import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ISellableCard;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
+import com.reflexit.magiccards.core.model.storage.IStorage;
+import com.reflexit.magiccards.core.seller.price.IPriceProvider;
+import com.reflexit.magiccards.core.seller.price.IStoreUpdater;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FindMagicCardsPrices implements IStoreUpdator, IPriceProvider {
+public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
 
     String baseURL;
     String cardURL;

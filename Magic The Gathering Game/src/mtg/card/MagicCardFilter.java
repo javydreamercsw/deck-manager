@@ -1,6 +1,6 @@
 package mtg.card;
 
-import dreamer.card.game.*;
+import com.reflexit.magiccards.core.model.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;

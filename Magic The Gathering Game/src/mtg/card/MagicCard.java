@@ -1,7 +1,7 @@
 package mtg.card;
 
-import dreamer.card.game.ICardField;
-import dreamer.card.game.ICardModifiable;
+import com.reflexit.magiccards.core.model.ICardField;
+import com.reflexit.magiccards.core.model.ICardModifiable;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -121,6 +121,7 @@ public class MagicCard implements IMagicCard, ICardModifiable {
         return this.edition;
     }
 
+    @Override
     public void setSet(String setName) {
         this.edition = setName.intern();
     }

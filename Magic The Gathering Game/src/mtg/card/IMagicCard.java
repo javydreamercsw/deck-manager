@@ -1,8 +1,8 @@
 package mtg.card;
 
-import dreamer.card.game.ICard;
-import dreamer.card.game.ICardField;
-import dreamer.card.game.ISellableCard;
+import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardField;
+import com.reflexit.magiccards.core.model.ISellableCard;
 import mtg.card.MagicCardFilter.TextValue;
 
 public interface IMagicCard extends ISellableCard {

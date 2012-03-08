@@ -1,11 +1,11 @@
 package mtg.card;
 
-import dreamer.card.game.CardGroup;
-import dreamer.card.game.ICard;
-import dreamer.card.game.ICardField;
-import dreamer.card.game.ICardFilter;
-import dreamer.card.game.storage.AbstractFilteredCardStore;
-import dreamer.card.game.storage.ICardStore;
+import com.reflexit.magiccards.core.model.CardGroup;
+import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardField;
+import com.reflexit.magiccards.core.model.ICardFilter;
+import com.reflexit.magiccards.core.model.storage.AbstractFilteredCardStore;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Logger;

@@ -20,6 +20,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     private IProgressAction runnable;
     private final ProgressHandle ph;
     private static final Logger LOG = Logger.getLogger(GameUpdateAction.class.getName());
+    private int currentProgress = 0;
 
     public GameUpdateAction(IProgressAction runnable) {
         RP = new RequestProcessor("Updater", 1, false);
@@ -51,7 +52,8 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
 
     @Override
     public void reportProgress(int amount) {
-        ph.progress(amount);
+        currentProgress = amount;
+        ph.progress(currentProgress);
     }
 
     @Override
@@ -67,5 +69,15 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     @Override
     public void changeMessage(String message) {
         ph.progress(message);
+    }
+
+    @Override
+    public void resume() {
+        ph.progress(currentProgress);
+    }
+
+    @Override
+    public void suspend() {
+        ph.suspend(null);
     }
 }

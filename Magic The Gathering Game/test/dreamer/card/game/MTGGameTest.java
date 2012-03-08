@@ -1,6 +1,6 @@
 package dreamer.card.game;
 
-import dreamer.card.game.storage.IDataBaseManager;
+import com.reflexit.magiccards.core.model.storage.IDataBaseCardStorage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static org.junit.Assert.assertFalse;
@@ -21,7 +21,7 @@ public class MTGGameTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        Lookup.getDefault().lookup(IDataBaseManager.class).setPU("Card_Game_Interface_TestPU");
+        Lookup.getDefault().lookup(IDataBaseCardStorage.class).setPU("Card_Game_Interface_TestPU");
     }
 
     @AfterClass
@@ -48,9 +48,9 @@ public class MTGGameTest {
                 Runnable updateRunnable = instance.getUpdateRunnable();
                 updateRunnable.run();
                 updateRunnable.wait();
-                assertFalse(Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardSet.findAll").isEmpty());
-                assertFalse(Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("Card.findAll").isEmpty());
-                assertFalse(Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardAttribute.findAll").isEmpty());
+                assertFalse(Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll").isEmpty());
+                assertFalse(Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findAll").isEmpty());
+                assertFalse(Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardAttribute.findAll").isEmpty());
             }
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);

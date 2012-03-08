@@ -1,16 +1,14 @@
 package dreamer.card.game.mtg.lib;
 
-import dreamer.card.game.Editions;
-import dreamer.card.game.Editions.Edition;
+import com.reflexit.magiccards.core.model.Editions;
+import com.reflexit.magiccards.core.model.Editions.Edition;
+import com.reflexit.magiccards.core.model.storage.db.DBException;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
+import com.reflexit.magiccards.core.storage.database.*;
+import com.reflexit.magiccards.core.storage.database.controller.CardSetJpaController;
+import com.reflexit.magiccards.core.storage.database.controller.exceptions.NonexistentEntityException;
 import dreamer.card.game.MTGGame;
 import dreamer.card.game.core.UpdateRunnable;
-import dreamer.card.game.storage.IDataBaseManager;
-import dreamer.card.game.storage.database.persistence.Card;
-import dreamer.card.game.storage.database.persistence.CardSet;
-import dreamer.card.game.storage.database.persistence.CardType;
-import dreamer.card.game.storage.database.persistence.Game;
-import dreamer.card.game.storage.database.persistence.controller.CardSetJpaController;
-import dreamer.card.game.storage.database.persistence.controller.exceptions.PreexistingEntityException;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -29,7 +27,7 @@ import org.openide.util.Lookup;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-class MTGUpdater extends UpdateRunnable {
+public class MTGUpdater extends UpdateRunnable {
 
     private String currentSet = "";
     private final MTGRCPGame game;
@@ -46,6 +44,8 @@ class MTGUpdater extends UpdateRunnable {
     private final static Map manaMap = new LinkedHashMap();
     private static final Logger LOG = Logger.getLogger(MTGUpdater.class.getName());
     protected final String source = "http://gatherer.wizards.com/Pages/Search/Default.aspx?output=standard&set=%5b%22";
+    private CardSet set;
+    private boolean dbError = false;
 
     static {
         manaMap.put("\\Q{500}", "{0.5}");
@@ -77,29 +77,45 @@ class MTGUpdater extends UpdateRunnable {
             Collection<Editions.Edition> editions = Editions.getInstance().getEditions();
             HashMap parameters = new HashMap();
             parameters.put("name", game.getName());
-            Game mtg = (Game) Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("Game.findByName", parameters).get(0);
+            Game mtg = null;
+            try {
+                mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).get(0);
+            } catch (DBException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                dbError = true;
+            }
             ArrayList<SetUpdateData> data = new ArrayList<SetUpdateData>();
             updateProgressMessage("Calculating amount of pages to process...");
-            for (Iterator iterator = editions.iterator(); iterator.hasNext();) {
-                Editions.Edition edition = (Editions.Edition) iterator.next();
-                String from = source + edition.getName().replaceAll(" ", "+") + "%22%5d";
-                int urlAmount = checkAmountOfPagesForSet(from);
-                parameters.clear();
-                parameters.put("name", edition.getName());
-                List result = Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardSet.findByName", parameters);
-                long amount = 0;
-                if (!result.isEmpty()) {
-                    CardSet set = (CardSet) result.get(0);
-                    parameters.clear();
-                    parameters.put("gameId", set.getCardSetPK().getGameId());
-                    amount = (Long) Lookup.getDefault().lookup(IDataBaseManager.class).createdQuery("SELECT count(c) FROM CardSet c WHERE c.cardSetPK.gameId = :gameId", parameters).get(0);
+            //TODO: looks like this calcualtion is worng
+            try {
+                for (Iterator iterator = editions.iterator(); iterator.hasNext();) {
+                    if (!dbError) {
+                        Editions.Edition edition = (Editions.Edition) iterator.next();
+                        String from = source + edition.getName().replaceAll(" ", "+") + "%22%5d";
+                        int urlAmount = checkAmountOfPagesForSet(from);
+                        parameters.clear();
+                        parameters.put("name", edition.getName());
+                        List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
+                        long amount = 0;
+                        if (!result.isEmpty()) {
+                            set = (CardSet) result.get(0);
+                            parameters.clear();
+                            parameters.put("gameId", set.getCardSetPK().getGameId());
+                            amount = (Long) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery("SELECT count(c) FROM CardSet c WHERE c.cardSetPK.gameId = :gameId", parameters).get(0);
+                        }
+                        if (result.isEmpty() || amount < urlAmount) {
+                            LOG.log(Level.FINE, "Adding set: {0} to processing list", edition.getName());
+                            data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
+                        } else {
+                            LOG.log(Level.FINE, "Skipping processing of set: {0}", edition.getName());
+                        }
+                    } else {
+                        break;
+                    }
                 }
-                if (result.isEmpty() || amount < urlAmount) {
-                    LOG.log(Level.FINE, "Adding set: {0} to processing list", edition.getName());
-                    data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
-                } else {
-                    LOG.log(Level.FINE, "Skipping processing of set: {0}", edition.getName());
-                }
+            } catch (DBException e) {
+                LOG.log(Level.SEVERE, null, e);
+                dbError = true;
             }
             int totalPages = 0;
             for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
@@ -108,24 +124,44 @@ class MTGUpdater extends UpdateRunnable {
             }
             LOG.log(Level.FINE, "Pages to update: {0}", totalPages);
             setSize(totalPages);
+            //Update card cache
+            MTGCardCache.setCachingEnabled(true);
+            MTGCardCache.setLoadingEnabled(true);
+            File cacheDir = new File(System.getProperty("user.home")
+                    + System.getProperty("file.separator")
+                    + ".Deck Manager"
+                    + System.getProperty("file.separator") + "cache");
+            //Create game cache dir
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs();
+            }
+            MTGCardCache.setCacheDir(cacheDir);
+            LOG.log(Level.FINE, "Updating cache at: {0}", cacheDir.getAbsolutePath());
             for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
-                SetUpdateData setData = it.next();
-                Edition edition = setData.getEdition();
-                Lookup.getDefault().lookup(IDataBaseManager.class).createCardSet(mtg, setData.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
-                LOG.log(Level.FINE, "Created set: {0}", setData.getName());
-                String mess = "Updating set: " + setData.getName();
-                LOG.log(Level.FINE, mess);
-                updateProgressMessage(mess);
-                setCurrentSet(setData.getName());
-                createCardsForSet(setData.getUrl());
+                if (!dbError) {
+                    SetUpdateData setData = it.next();
+                    Edition edition = setData.getEdition();
+                    set = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(mtg, setData.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
+                    LOG.log(Level.FINE, "Created set: {0}", setData.getName());
+                    String mess = "Updating set: " + setData.getName();
+                    LOG.log(Level.FINE, mess);
+                    updateProgressMessage(mess);
+                    setCurrentSet(setData.getName());
+                    createCardsForSet(setData.getUrl());
+                } else {
+                    break;
+                }
+            }
+            for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findAll").iterator(); it.hasNext();) {
+                Card card = (Card) it.next();
+                MTGCardCache.getCardImageQueue().add(card);
             }
             reportDone();
-        } catch (IllegalStateException ex) {
-            LOG.log(Level.WARNING, null, ex);
+        } catch (DBException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            dbError = true;
         } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            Exceptions.printStackTrace(ex);
         }
     }
 
@@ -138,19 +174,26 @@ class MTGUpdater extends UpdateRunnable {
      * Create pages from set url
      *
      * @param from URL containing pages for the set
+     * @throws MalformedURLException
+     * @throws IOException
      */
     protected void createCardsForSet(String from) throws MalformedURLException, IOException {
         LOG.log(Level.FINE, "Retrieving from url: {0}", from);
         int i = 0;
         boolean lastPage = false;
         while (lastPage == false) {
-            URL url = new URL(from + "&page=" + i);
-            lastPage = loadUrl(url);
-            i++;
+            try {
+                URL url = new URL(from + "&page=" + i);
+                lastPage = loadUrl(url);
+                i++;
+            } catch (NonexistentEntityException ex) {
+                Exceptions.printStackTrace(ex);
+                break;
+            }
         }
     }
 
-    private boolean loadUrl(URL url) throws IOException {
+    private boolean loadUrl(URL url) throws IOException, NonexistentEntityException {
         InputStream openStream = url.openStream();
         BufferedReader st = new BufferedReader(new InputStreamReader(openStream, UTF_8));
         boolean res = processFile(st);
@@ -180,7 +223,7 @@ class MTGUpdater extends UpdateRunnable {
         return amount;
     }
 
-    private boolean processFile(BufferedReader st) throws IOException {
+    private boolean processFile(BufferedReader st) throws IOException, NonexistentEntityException {
         String line = "";
         int state = 0;
         boolean lastPage = false;
@@ -202,7 +245,7 @@ class MTGUpdater extends UpdateRunnable {
                     parseRecord(tr);
                     cards = true;
                     continue;
-                } catch (Exception ex) {
+                } catch (DBException ex) {
                     Logger.getLogger(MTGGame.class.getName()).log(Level.SEVERE, null, ex);
                     throw new IOException(ex);
                 }
@@ -215,14 +258,14 @@ class MTGUpdater extends UpdateRunnable {
                 //Delete it from database
                 HashMap properties = new HashMap();
                 properties.put("name", getCurrentSet());
-                List result = Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardSet.findByName", properties);
+                List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", properties);
                 if (!result.isEmpty()) {
-                    CardSet set = (CardSet) result.get(0);
-                    CardSetJpaController controller = new CardSetJpaController(Lookup.getDefault().lookup(IDataBaseManager.class).getEntityManagerFactory());
-                    controller.destroy(set.getCardSetPK());
+                    CardSet temp = (CardSet) result.get(0);
+                    CardSetJpaController controller = new CardSetJpaController(((DataBaseCardStorage) Lookup.getDefault().lookup(IDataBaseCardStorage.class)).getEntityManagerFactory());
+                    controller.destroy(temp.getCardSetPK());
                 }
                 return true;
-            } catch (Exception ex) {
+            } catch (DBException ex) {
                 Exceptions.printStackTrace(ex);
                 return true;
             }
@@ -230,7 +273,7 @@ class MTGUpdater extends UpdateRunnable {
         return lastPage;
     }
 
-    private void parseRecord(String line) throws Exception {
+    private void parseRecord(String line) throws DBException {
         try {
             MagicCard card = new MagicCard();
             // split by td
@@ -252,10 +295,10 @@ class MTGUpdater extends UpdateRunnable {
             card.setPower(pow);
             card.setToughness(tou);
             String[] sets = rows[3].split("<a onclick");
-            for (String set : sets) {
-                String edition = getMatch(setPattern, set, 1);
-                String rarity = getMatch(setPattern, set, 2);
-                String setId = getMatch(idPattern, set, 1);
+            for (String temp : sets) {
+                String edition = getMatch(setPattern, temp, 1);
+                String rarity = getMatch(setPattern, temp, 2);
+                String setId = getMatch(idPattern, temp, 1);
                 if (edition.length() <= 1) {
                     continue;
                 }
@@ -270,23 +313,23 @@ class MTGUpdater extends UpdateRunnable {
                     //Handle card type, it might be new
                     parameters.put("name", type);
                     try {
-                        result = Lookup.getDefault().lookup(IDataBaseManager.class).namedQuery("CardType.findByName", parameters);
+                        result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardType.findByName", parameters);
                         if (result.isEmpty()) {
-                            ct = Lookup.getDefault().lookup(IDataBaseManager.class).createCardType(type);
+                            ct = (CardType) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardType(type);
                         } else {
                             ct = (CardType) result.get(0);
                         }
-                    } catch (Exception ex) {
+                    } catch (DBException ex) {
                         LOG.log(Level.SEVERE, null, ex);
+                        return;
                     }
                     //Create the card
                     try {
-                        c = Lookup.getDefault().lookup(IDataBaseManager.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
+                        c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
                         LOG.log(Level.FINE, "Created card: {0}", c.getName());
+                        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
                         increaseProgress();
-                    } catch (PreexistingEntityException ex) {
-                        //Do nothing
-                    } catch (Exception ex) {
+                    }catch (DBException ex) {
                         LOG.log(Level.SEVERE, null, ex);
                         return;
                     }
@@ -303,9 +346,10 @@ class MTGUpdater extends UpdateRunnable {
                         attributes.put("Toughness", card.getToughness());
                         attributes.put("Type", card.getType());
                         attributes.put("CardId", "" + card.getCardId());
-                        Lookup.getDefault().lookup(IDataBaseManager.class).addAttributesToCard(c, attributes);
-                    } catch (Exception ex) {
+                        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributesToCard(c, attributes);
+                    } catch (DBException ex) {
                         LOG.log(Level.SEVERE, null, ex);
+                        return;
                     }
                     //Add it to the set
                 } else {
@@ -315,7 +359,7 @@ class MTGUpdater extends UpdateRunnable {
                         card2.setId(setId);
                         card2.setSet(edition);
                         card2.setRarity(rarity.trim());
-                        throw new Exception("Is this used?");
+                        throw new DBException("Is this used?");
                     }
                 }
             }

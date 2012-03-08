@@ -4,7 +4,6 @@
     <import file="nbproject/platform.xml"/>
     
     <target name="netbeans" depends="-init-netbeans, -init-hudson">
-        <antcall target="clean"/>
         <propertyselector property="subprojects" match="original.project.dir(.*)" select="\1"/>
         <for list="${subprojects}" param="subproject">
             <sequential>
