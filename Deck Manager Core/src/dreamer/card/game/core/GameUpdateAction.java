@@ -21,6 +21,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     private final ProgressHandle ph;
     private static final Logger LOG = Logger.getLogger(GameUpdateAction.class.getName());
     private int currentProgress = 0;
+    private boolean finished = false;
 
     public GameUpdateAction(IProgressAction runnable) {
         RP = new RequestProcessor("Updater", 1, false);
@@ -39,7 +40,9 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
                 public void taskFinished(org.openide.util.Task task) {
                     //Make sure that we get rid of the ProgressHandle
                     //when the task is finished
-                    ph.finish();
+                    if (!finished) {
+                        ph.finish();
+                    }
                     LOG.log(Level.INFO, "Updating database took: {0}", Tool.elapsedTime(start));
                 }
             });
@@ -59,6 +62,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     @Override
     public void reportDone() {
         ph.finish();
+        finished = true;
     }
 
     @Override
