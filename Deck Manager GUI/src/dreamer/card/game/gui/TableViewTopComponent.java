@@ -1,10 +1,20 @@
 package dreamer.card.game.gui;
 
+import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardGame;
+import dreamer.card.game.core.ICardDataManager;
+import java.util.ArrayList;
+import java.util.Iterator;
+import javax.swing.ActionMap;
+import javax.swing.text.DefaultEditorKit;
+import org.dreamer.event.bus.EventBusListener;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
+import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.OutlineView;
+import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 
@@ -26,15 +36,28 @@ preferredID = "TableViewTopComponent")
     "CTL_TableViewTopComponent=TableView Window",
     "HINT_TableViewTopComponent=This is a TableView window"
 })
-public final class TableViewTopComponent extends TopComponent implements ExplorerManager.Provider {
+public final class TableViewTopComponent extends TopComponent
+        implements ExplorerManager.Provider, EventBusListener<ICard> {
 
     private final ExplorerManager mgr = new ExplorerManager();
+    private RootNode root;
 
     public TableViewTopComponent() {
         initComponents();
+        updateGameList();
         setName(Bundle.CTL_TableViewTopComponent());
         setToolTipText(Bundle.HINT_TableViewTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
+        ActionMap map = getActionMap();
+        map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(getExplorerManager()));
+        map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(getExplorerManager()));
+        map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(getExplorerManager()));
+        map.put("delete", ExplorerUtils.actionDelete(getExplorerManager(), true));
+
+        associateLookup(ExplorerUtils.createLookup(getExplorerManager(), getActionMap()));
+        root = new RootNode(new ICardChildFactory());
+        getExplorerManager().setRootContext(root);
+        getExplorerManager().getRootContext().setDisplayName("Available Cards");
     }
 
     /**
@@ -46,6 +69,16 @@ public final class TableViewTopComponent extends TopComponent implements Explore
     private void initComponents() {
 
         jScrollPane2 = new OutlineView();
+        gameSelection = new javax.swing.JComboBox();
+        jLabel1 = new javax.swing.JLabel();
+
+        gameSelection.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                gameSelectionActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(TableViewTopComponent.class, "TableViewTopComponent.jLabel1.text")); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -53,18 +86,37 @@ public final class TableViewTopComponent extends TopComponent implements Explore
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(gameSelection, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addGap(0, 0, 0))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 278, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(gameSelection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void gameSelectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_gameSelectionActionPerformed
+        if (!gameSelection.getSelectedItem().toString().equals(Lookup.getDefault().lookup(ICardDataManager.class).getCurrentGame())
+                && !gameSelection.getSelectedItem().toString().isEmpty()) {
+            Lookup.getDefault().lookup(ICardDataManager.class).setCurrentGame(gameSelection.getSelectedItem().toString());
+            root.refresh();
+        }
+    }//GEN-LAST:event_gameSelectionActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox gameSelection;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane2;
     // End of variables declaration//GEN-END:variables
 
@@ -93,5 +145,20 @@ public final class TableViewTopComponent extends TopComponent implements Explore
     @Override
     public ExplorerManager getExplorerManager() {
         return mgr;
+    }
+
+    private void updateGameList() {
+        final ArrayList<String> gameNames = new ArrayList<String>();
+        gameNames.add("");
+        for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
+            ICardGame game = it.next();
+            gameNames.add(game.getName());
+        }
+        gameSelection.setModel(new javax.swing.DefaultComboBoxModel(gameNames.toArray(new String[gameNames.size()])));
+    }
+
+    @Override
+    public void notify(ICard card) {
+        System.out.println("Added card: " + card.getName());
     }
 }
