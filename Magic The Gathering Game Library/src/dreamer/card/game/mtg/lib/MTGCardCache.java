@@ -51,8 +51,10 @@ public class MTGCardCache extends AbstractCardCache {
         if (editionAbbr == null) {
             throw new CannotDetermineSetAbbriviation(edtn);
         }
+        Integer cardId = Integer.valueOf(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(icard, "CardId"));
+        LOG.log(Level.INFO, "Retireving Card id: {0}", cardId);
         return ParseGathererNewVisualSpoiler.createImageURL(
-                Integer.valueOf(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(icard, "CardId")), editionAbbr);
+                cardId, editionAbbr);
     }
 
     @Override
@@ -64,6 +66,7 @@ public class MTGCardCache extends AbstractCardCache {
 
         @Override
         public void run() {
+            reportSuspendProgress();
             while (true) {
                 Card card;
                 synchronized (getCardImageQueue()) {
@@ -80,7 +83,8 @@ public class MTGCardCache extends AbstractCardCache {
                             if (card.getCardSetList().isEmpty()) {
                                 LOG.log(Level.SEVERE, "No card sets defined for card: {0}", card.getName());
                             } else {
-                                for (CardSet cs : card.getCardSetList()) {
+                                for (Iterator<CardSet> it2 = card.getCardSetList().iterator(); it2.hasNext();) {
+                                    CardSet cs = it2.next();
                                     String message = "Processing set: " + cs.getName() + " for card: " + card.getName() + "";
                                     LOG.log(Level.INFO, message);
                                     updateProgressMessage(message);
