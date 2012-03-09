@@ -1,5 +1,6 @@
 package dreamer.card.game.mtg.lib;
 
+import com.reflexit.magiccards.core.cache.ICacheData;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
@@ -95,11 +96,14 @@ public class MTGRCPGameTest {
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardsToSet((List<Card>) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findAll"), cs);
             MTGCardCache.setCachingEnabled(true);
             MTGCardCache.setLoadingEnabled(true);
-            MTGCardCache.setCacheDir(testDir);
+            for (Iterator<ICardCache> it = instance.getCardCacheImplementations().iterator(); it.hasNext();) {
+                ICardCache cache = it.next();
+                cache.setCacheDir(testDir);
+            }
             System.out.println("Test cache dir at: " + testDir.getAbsolutePath());
             for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findAll").iterator(); it.hasNext();) {
                 Card card = (Card) it.next();
-                MTGCardCache.getCardImageQueue().add(card);
+                Lookup.getDefault().lookup(ICacheData.class).add(card);
             }
             System.out.println("Downloading card images...");
             Thread thread = new Thread(Lookup.getDefault().lookup(ICardCache.class).getCacheTask());

@@ -1,5 +1,7 @@
 package dreamer.card.game.mtg.lib;
 
+import com.reflexit.magiccards.core.cache.ICacheData;
+import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
@@ -20,8 +22,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import mtg.card.MagicCard;
 import mtg.card.sync.ParseGathererSets;
-import org.openide.DialogDisplayer;
-import org.openide.NotifyDescriptor;
 import org.openide.modules.Places;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
@@ -49,7 +49,6 @@ public class MTGUpdater extends UpdateRunnable {
     protected final String source = "http://gatherer.wizards.com/Pages/Search/Default.aspx?output=standard&set=%5b%22";
     private CardSet set;
     private boolean dbError = false;
-    private ArrayList<Card> newCards = new ArrayList<Card>();
 
     static {
         manaMap.put("\\Q{500}", "{0.5}");
@@ -160,7 +159,10 @@ public class MTGUpdater extends UpdateRunnable {
                 if (!cacheDir.exists()) {
                     cacheDir.mkdirs();
                 }
-                MTGCardCache.setCacheDir(cacheDir);
+                for (Iterator<ICardCache> it = game.getCardCacheImplementations().iterator(); it.hasNext();) {
+                    ICardCache cache = it.next();
+                    cache.setCacheDir(cacheDir);
+                }
                 if (totalPages > 0) {
                     for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
                         if (!dbError) {
@@ -186,11 +188,6 @@ public class MTGUpdater extends UpdateRunnable {
                             break;
                         }
                     }
-                }
-                //Add the cards just added to the image queue
-                for (Iterator it = newCards.iterator(); it.hasNext();) {
-                    Card card = (Card) it.next();
-                    MTGCardCache.getCardImageQueue().add(card);
                 }
             }
             reportDone();
@@ -232,6 +229,7 @@ public class MTGUpdater extends UpdateRunnable {
 
     private boolean loadUrl(URL url) throws IOException, NonexistentEntityException {
         InputStream openStream = url.openStream();
+        LOG.log(Level.INFO, "Loading from: {0}", url.toString());
         BufferedReader st = new BufferedReader(new InputStreamReader(openStream, UTF_8));
         boolean res = processFile(st);
         st.close();
@@ -368,8 +366,12 @@ public class MTGUpdater extends UpdateRunnable {
                     } else {
                         try {
                             c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
-                            newCards.add(c);
                             LOG.log(Level.FINE, "Created card: {0}", c.getName());
+                            if(set == null){
+                                parameters.clear();
+                                parameters.put("name", card.getSet());
+                                set = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters).get(0);
+                            }
                             Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
                         } catch (DBException ex) {
                             LOG.log(Level.SEVERE, null, ex);
@@ -393,15 +395,17 @@ public class MTGUpdater extends UpdateRunnable {
                         LOG.log(Level.SEVERE, null, ex);
                         return;
                     }
-                    //Add it to the set
+                    parameters.clear();
+                    parameters.put("name", card.getName());
+                    c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
+                    //Add to caching list
+                    Lookup.getDefault().lookup(ICacheData.class).add(card);
                 } else {
-                    // other printings
-                    MagicCard card2 = (MagicCard) card.clone();
-                    if (card2 != null) {
-                        card2.setId(setId);
-                        card2.setSet(edition);
-                        card2.setRarity(rarity.trim());
-                        throw new DBException("Is this used?");
+                    if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition)) {
+                        LOG.log(Level.INFO, "Set: {0} exists, maybe we should add it there?", edition);
+                    } else {
+                        LOG.log(Level.INFO, "Is this a printing for card: {0} ID: {1} Set: {2}?",
+                                new Object[]{card.getName(), id, edition});
                     }
                 }
             }
