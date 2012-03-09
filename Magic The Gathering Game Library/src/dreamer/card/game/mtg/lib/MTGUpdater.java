@@ -103,7 +103,7 @@ public class MTGUpdater extends UpdateRunnable {
                 parameters.put("name", edition.getName());
                 temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
                 if (temp.isEmpty()) {
-                    LOG.log(Level.INFO, "Unable to find set: {0}", edition.getName());
+                    LOG.log(Level.WARNING, "Unable to find set: {0}", edition.getName());
                     setsToLoad.add(edition);
                 }
             }
