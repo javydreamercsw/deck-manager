@@ -1,6 +1,7 @@
 package dreamer.card.game;
 
 import com.reflexit.magiccards.core.model.DefaultCardGame;
+import java.awt.Image;
 
 /**
  *
@@ -11,5 +12,10 @@ public class MTGGame extends DefaultCardGame {
     @Override
     public String getName() {
         return "Magic the Gathering";
+    }
+
+    @Override
+    public Image getBackCardIcon() {
+        return null;
     }
 }
