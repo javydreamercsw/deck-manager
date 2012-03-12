@@ -1,6 +1,6 @@
 package dreamer.card.game;
 
-import com.reflexit.magiccards.core.model.storage.IDataBaseCardStorage;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static org.junit.Assert.assertFalse;
