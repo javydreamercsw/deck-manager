@@ -1,7 +1,7 @@
 package dreamer.card.game.gui;
 
-import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardSet;
+import com.reflexit.magiccards.core.model.IGame;
 import dreamer.card.game.core.ICardDataManager;
 import java.beans.IntrospectionException;
 import java.util.List;
@@ -14,24 +14,24 @@ import org.openide.util.Lookup;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public class ICardChildFactory extends ChildFactory<ICard> {
+public class ICardSetChildFactory extends ChildFactory<ICardSet> {
 
-    private final ICardSet set;
+    private final IGame game;
 
-    ICardChildFactory(ICardSet set) {
-        this.set = set;
+    public ICardSetChildFactory(IGame game) {
+        this.game = game;
     }
 
     @Override
-    protected boolean createKeys(List<ICard> toPopulate) {
-        toPopulate.addAll(Lookup.getDefault().lookup(ICardDataManager.class).getCardsForSet(set));
+    protected boolean createKeys(List<ICardSet> list) {
+        list.addAll(Lookup.getDefault().lookup(ICardDataManager.class).getSetsForGame(getGame()));
         return true;
     }
 
     @Override
-    protected Node createNodeForKey(ICard card) {
+    protected Node createNodeForKey(ICardSet set) {
         try {
-            return new ICardNode(card, set);
+            return new ICardSetNode(set, new ICardChildFactory(set));
         } catch (IntrospectionException ex) {
             Exceptions.printStackTrace(ex);
             return null;
@@ -39,11 +39,18 @@ public class ICardChildFactory extends ChildFactory<ICard> {
     }
 
     @Override
-    protected Node[] createNodesForKey(ICard key) {
+    protected Node[] createNodesForKey(ICardSet key) {
         return new Node[]{createNodeForKey(key)};
     }
 
     public void refresh() {
         refresh(true);
+    }
+
+    /**
+     * @return the game
+     */
+    public IGame getGame() {
+        return game;
     }
 }
