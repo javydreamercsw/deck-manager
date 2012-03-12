@@ -1,13 +1,18 @@
 package dreamer.card.game.core;
 
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import org.joda.time.Interval;
 import org.joda.time.Period;
+import org.openide.modules.InstalledFileLocator;
 
 /**
  * Various commonly used operations.
@@ -148,6 +153,20 @@ public final class Tool {
                 }
             }
             folder.delete();
+        }
+    }
+
+    //Obtain the image URL
+    public static Image createImage(String module_id, String path, String description)
+            throws MalformedURLException, Exception {
+        File icon = InstalledFileLocator.getDefault().locate(path,
+                module_id, false);
+        URL imageURL = icon.toURI().toURL();
+
+        if (imageURL == null) {
+            throw new Exception("Resource not found: " + path);
+        } else {
+            return (new ImageIcon(imageURL, description)).getImage();
         }
     }
 }
