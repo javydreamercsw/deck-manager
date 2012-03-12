@@ -108,33 +108,6 @@ public class ParseGathererNewVisualSpoiler {
     };
     private static String[] updateLatest = {base + "&format=[%22Standard%22]"};
 
-    public static void main(String[] args) throws IOException {
-        String from = args[0];
-        String to = null;
-        if (args.length > 1) {
-            to = args[1];
-        }
-        Properties options = new Properties();
-        if (from.equals("updateAll")) {
-            updateAll(to, updateAll, options);
-        } else {
-            parseFileOrUrl(from, to, options);
-        }
-        Editions.getInstance().save();
-    }
-
-    private static void updateAll(String to, String[] urls, Properties options) throws MalformedURLException, IOException {
-        PrintStream out = System.out;
-        if (to != null) {
-            out = new PrintStream(new File(to));
-        }
-        TextPrinter.printHeader(IMagicCard.DEFAULT, out);
-        for (String string : urls) {
-            loadUrl(new URL(string), createOutputHandler(out, options));
-        }
-        out.close();
-    }
-
     private static OutputHandler createOutputHandler(PrintStream out, Properties options) {
         String land = (String) options.get(UPDATE_BASIC_LAND_PRINTINGS);
         boolean bland = "true".equals(land);
