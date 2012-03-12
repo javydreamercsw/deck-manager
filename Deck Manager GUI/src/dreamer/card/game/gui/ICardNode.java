@@ -1,12 +1,16 @@
 package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.ICardSet;
+import java.awt.Image;
 import java.beans.IntrospectionException;
-import java.beans.PropertyChangeSupport;
+import java.util.Iterator;
 import javax.swing.Action;
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
+import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -16,37 +20,31 @@ import org.openide.util.lookup.Lookups;
  */
 public class ICardNode extends BeanNode {
 
-    private final PropertyChangeSupport supp = new PropertyChangeSupport(this);
     private Action[] actions;
-    private ICard card;
+    private final ICardSet set;
 
-    public ICardNode(ICard card) throws IntrospectionException {
+    public ICardNode(ICard card, ICardSet set) throws IntrospectionException {
         super(card, null, Lookups.singleton(card));
         setDisplayName(card.getName());
-        this.card = card;
+        this.set = set;
     }
 
-    //TODO: Set icons
-//    @Override
-//    public Image getIcon(int type) {
-//        Image icon = getMarauroaApplication().getIcon(type);
-//        if (icon == null) {
-//            try {
-//                icon = Tool.createImage("simple.marauroa.application.gui",
-//                        "resources/images/app.png", "App icon");
-//            } catch (MalformedURLException ex) {
-//                Exceptions.printStackTrace(ex);
-//            } catch (Exception ex) {
-//                Exceptions.printStackTrace(ex);
-//            }
-//        }
-//        return icon;
-//    }
-//
-//    @Override
-//    public Image getOpenedIcon(int i) {
-//        return getIcon(i);
-//    }
+    @Override
+    public Image getIcon(int type) {
+        String gameName = set.getGameName();
+        for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
+            ICardGame game = it.next();
+            if (game.getName().equals(gameName)) {
+                return game.getBackCardIcon();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Image getOpenedIcon(int i) {
+        return getIcon(i);
+    }
 
     @Override
     public boolean canDestroy() {
@@ -66,17 +64,16 @@ public class ICardNode extends BeanNode {
 
     @Override
     public Action[] getActions(boolean popup) {
-        actions = new Action[]{
-//            SystemAction.get(DeleteAction.class),
-//            null,
-//            new MarauroaApplicationNode.ConfigureAction(),
-//            new MarauroaApplicationNode.AddRPZoneAction(),
-//            new MarauroaApplicationNode.StartServerAction(),
-//            new MarauroaApplicationNode.StopServerAction(),
-//            new MarauroaApplicationNode.ConnectAction(),
-//            new MarauroaApplicationNode.DisconnectAction(),
-//            null,
-//            new MarauroaApplicationNode.DeleteServerAction()
+        actions = new Action[]{ //            SystemAction.get(DeleteAction.class),
+        //            null,
+        //            new MarauroaApplicationNode.ConfigureAction(),
+        //            new MarauroaApplicationNode.AddRPZoneAction(),
+        //            new MarauroaApplicationNode.StartServerAction(),
+        //            new MarauroaApplicationNode.StopServerAction(),
+        //            new MarauroaApplicationNode.ConnectAction(),
+        //            new MarauroaApplicationNode.DisconnectAction(),
+        //            null,
+        //            new MarauroaApplicationNode.DeleteServerAction()
         };
         return actions;
     }

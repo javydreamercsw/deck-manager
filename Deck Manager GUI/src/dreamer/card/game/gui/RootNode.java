@@ -9,14 +9,14 @@ import org.openide.nodes.Children;
  */
 public class RootNode extends AbstractNode {
 
-    private final ICardChildFactory childFactory;
+    private final IGameChildFactory childFactory;
 
     /**
      * Creates a new instance of RootNode
      *
      * @param childFactory
      */
-    public RootNode(ICardChildFactory childFactory) {
+    public RootNode(IGameChildFactory childFactory) {
         super(Children.create(childFactory, true));
         this.childFactory = childFactory;
     }

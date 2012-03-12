@@ -39,6 +39,8 @@ public class MTGCardCache extends AbstractCardCache {
 
     public MTGCardCache() {
         super(new MTGRCPGame().getName());
+        setLoadingEnabled(true);
+        setCachingEnabled(true);
     }
 
     @Override
@@ -141,6 +143,7 @@ public class MTGCardCache extends AbstractCardCache {
         public void actionPerformed(ActionEvent e) {
             timer.stop();
             new Thread(new Runnable() {
+
                 @Override
                 public void run() {
                     try {
@@ -165,6 +168,15 @@ public class MTGCardCache extends AbstractCardCache {
                     }
                 }
             }).start();
+        }
+    }
+
+    public static URL createManaImageURL(String symbol) {
+        String manaName = symbol.replaceAll("[{}/]", "");
+        try {
+            return new URL("http://gatherer.wizards.com/Handlers/Image.ashx?size=small&name=" + manaName + "&type=symbol");
+        } catch (MalformedURLException e) {
+            return null;
         }
     }
 }

@@ -91,9 +91,11 @@ public class MTGUpdater extends UpdateRunnable {
             List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll");
             LOG.log(Level.FINE, "{0} sets found in database:", temp.size());
             int i = 0;
-            for (Iterator it = temp.iterator(); it.hasNext();) {
-                CardSet cs = (CardSet) it.next();
-                LOG.log(Level.FINE, (++i + " " + cs.getName()));
+            if (LOG.isLoggable(Level.FINE)) {
+                for (Iterator it = temp.iterator(); it.hasNext();) {
+                    CardSet cs = (CardSet) it.next();
+                    LOG.log(Level.FINE, (++i + " " + cs.getName()));
+                }
             }
             //Chek to see if there's something new to update.
             ArrayList<Editions.Edition> setsToLoad = new ArrayList<Editions.Edition>();
@@ -367,7 +369,7 @@ public class MTGUpdater extends UpdateRunnable {
                         try {
                             c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
                             LOG.log(Level.FINE, "Created card: {0}", c.getName());
-                            if(set == null){
+                            if (set == null) {
                                 parameters.clear();
                                 parameters.put("name", card.getSet());
                                 set = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters).get(0);
