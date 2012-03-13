@@ -96,7 +96,7 @@ public class MTGRCPGameTest {
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardsToSet((List<Card>) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findAll"), cs);
             MTGCardCache.setCachingEnabled(true);
             MTGCardCache.setLoadingEnabled(true);
-            for (Iterator<ICardCache> it = instance.getCardCacheImplementations().iterator(); it.hasNext();) {
+            for (Iterator<? extends ICardCache> it = Lookup.getDefault().lookupAll(ICardCache.class).iterator(); it.hasNext();) {
                 ICardCache cache = it.next();
                 cache.setCacheDir(testDir);
             }

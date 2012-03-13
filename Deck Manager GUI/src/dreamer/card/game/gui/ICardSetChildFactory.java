@@ -1,7 +1,7 @@
 package dreamer.card.game.gui;
 
+import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
-import com.reflexit.magiccards.core.model.IGame;
 import dreamer.card.game.core.ICardDataManager;
 import java.beans.IntrospectionException;
 import java.util.List;
@@ -16,9 +16,9 @@ import org.openide.util.Lookup;
  */
 public class ICardSetChildFactory extends ChildFactory<ICardSet> {
 
-    private final IGame game;
+    private final ICardGame game;
 
-    public ICardSetChildFactory(IGame game) {
+    public ICardSetChildFactory(ICardGame game) {
         this.game = game;
     }
 
@@ -50,7 +50,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> {
     /**
      * @return the game
      */
-    public IGame getGame() {
+    public ICardGame getGame() {
         return game;
     }
 }

@@ -18,7 +18,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     private final RequestProcessor RP;
     private RequestProcessor.Task theTask = null;
     private IProgressAction runnable;
-    private final ProgressHandle ph;
+    private ProgressHandle ph;
     private static final Logger LOG = Logger.getLogger(GameUpdateAction.class.getName());
     private int currentProgress = 0;
     private boolean finished = false;
@@ -26,7 +26,6 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     public GameUpdateAction(IProgressAction runnable) {
         RP = new RequestProcessor("Updater", 1, false);
         this.runnable = runnable;
-        ph = ProgressHandleFactory.createHandle(runnable.getActionName());
     }
 
     @Override
@@ -34,6 +33,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
         if (runnable != null) {
             final long start = System.currentTimeMillis();
             runnable.addListener(this);
+            ph = ProgressHandleFactory.createHandle(runnable.getActionName());
             theTask = RP.create(runnable);
             theTask.addTaskListener(new TaskListener() {
                 @Override

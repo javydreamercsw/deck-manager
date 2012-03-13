@@ -7,6 +7,8 @@ import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
 import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import com.reflexit.magiccards.core.storage.database.Card;
@@ -14,8 +16,10 @@ import com.reflexit.magiccards.core.storage.database.CardSet;
 import com.reflexit.magiccards.core.storage.database.DataBaseCardStorage;
 import com.reflexit.magiccards.core.storage.database.controller.CardJpaController;
 import dreamer.card.game.core.UpdateRunnable;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -23,7 +27,9 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Timer;
+import mtg.card.sync.ParseGathererMTGIcon;
 import mtg.card.sync.ParseGathererNewVisualSpoiler;
+import mtg.card.sync.ParseGathererSetIcons;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
@@ -36,11 +42,10 @@ import org.openide.util.lookup.ServiceProvider;
 public class MTGCardCache extends AbstractCardCache {
 
     private static final Logger LOG = Logger.getLogger(MTGCardCache.class.getName());
+    private CardImageLoader loader = null;
 
     public MTGCardCache() {
         super(new MTGRCPGame().getName());
-        setLoadingEnabled(true);
-        setCachingEnabled(true);
     }
 
     @Override
@@ -53,7 +58,10 @@ public class MTGCardCache extends AbstractCardCache {
 
     @Override
     public Runnable getCacheTask() {
-        return new CardImageLoader();
+        if (loader == null) {
+            loader = new CardImageLoader();
+        }
+        return loader;
     }
 
     @Override
@@ -77,7 +85,7 @@ public class MTGCardCache extends AbstractCardCache {
     private class CardImageLoader extends UpdateRunnable implements ActionListener {
 
         private Timer timer;
-        private final int period = 300000, pause = 60000;
+        private final int period = 10000, pause = 10000;
 
         @Override
         public void run() {
@@ -91,6 +99,7 @@ public class MTGCardCache extends AbstractCardCache {
                     timer.restart();
                     synchronized (this) {
                         reportResumeProgress();
+                        setSize(Lookup.getDefault().lookup(ICacheData.class).toCacheAmount());
                         int progress = 0;
                         setSize(Lookup.getDefault().lookup(ICacheData.class).toCacheAmount());
                         updateProgressMessage("Downloading card images...");
@@ -176,6 +185,40 @@ public class MTGCardCache extends AbstractCardCache {
         try {
             return new URL("http://gatherer.wizards.com/Handlers/Image.ashx?size=small&name=" + manaName + "&type=symbol");
         } catch (MalformedURLException e) {
+            return null;
+        }
+    }
+    
+    @Override
+    public Image getGameIcon(ICardGame game) throws IOException {
+        ParseGathererMTGIcon parser = new ParseGathererMTGIcon();
+        parser.load();
+        try {
+            String path = getGameIconPath();
+            File dest = new File(path);
+            String url = parser.getIconURL();
+            URL setIconURL = new URL(url);
+            return downloadImageFromURL(setIconURL, dest, !dest.exists());
+        } catch (MalformedURLException ex) {
+            LOG.log(Level.SEVERE, "Errors with the icon URL at URL: "
+                    + parser.getIconURL(), ex);
+            return null;
+        }
+    }
+
+    @Override
+    public Image getSetIcon(ICardSet set) throws IOException {
+        ParseGathererSetIcons parser = new ParseGathererSetIcons(set);
+        parser.load();
+        try {
+            String path = getSetIconPath(set);
+            File dest = new File(path);
+            String url = parser.getIconURL();
+            URL setIconURL = new URL(url);
+            return downloadImageFromURL(setIconURL, dest, !dest.exists());
+        } catch (MalformedURLException ex) {
+            LOG.log(Level.SEVERE, "Errors with the icon URL for set: "
+                    + set.getName() + " at URL: " + parser.getIconURL(), ex);
             return null;
         }
     }

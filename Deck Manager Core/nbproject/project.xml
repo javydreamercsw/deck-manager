@@ -150,6 +150,7 @@
             </module-dependencies>
             <public-packages>
                 <package>dreamer.card.game.core</package>
+                <package>dreamer.card.game.core.ui</package>
             </public-packages>
         </data>
     </configuration>

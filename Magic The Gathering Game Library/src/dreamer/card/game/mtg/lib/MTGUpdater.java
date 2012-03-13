@@ -4,6 +4,9 @@ import com.reflexit.magiccards.core.cache.ICacheData;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
+import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import com.reflexit.magiccards.core.storage.database.*;
@@ -33,7 +36,7 @@ import org.openide.util.Lookup;
 public class MTGUpdater extends UpdateRunnable {
 
     private String currentSet = "";
-    private final MTGRCPGame game;
+    private final ICardGame game;
     private static Pattern countPattern = Pattern.compile("Search:<span id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_searchTermDisplay\"><i>.*</i>  \\((\\d+)\\)</span>");
     private static Pattern lastPagePattern = Pattern.compile("\\Q<span style=\"visibility:hidden;\">&nbsp;&gt;</span></div>");
     private static Pattern spanPattern = Pattern.compile("class=[^>]*>(.*)</span>");
@@ -67,7 +70,7 @@ public class MTGUpdater extends UpdateRunnable {
     }
 
     MTGUpdater(final MTGRCPGame game) {
-        this.game = game;
+        this.game = (ICardGame) game;
     }
 
     @Override
@@ -161,7 +164,7 @@ public class MTGUpdater extends UpdateRunnable {
                 if (!cacheDir.exists()) {
                     cacheDir.mkdirs();
                 }
-                for (Iterator<ICardCache> it = game.getCardCacheImplementations().iterator(); it.hasNext();) {
+                for (Iterator<? extends ICardCache> it = Lookup.getDefault().lookupAll(ICardCache.class).iterator(); it.hasNext();) {
                     ICardCache cache = it.next();
                     cache.setCacheDir(cacheDir);
                 }
@@ -190,6 +193,16 @@ public class MTGUpdater extends UpdateRunnable {
                             break;
                         }
                     }
+                }
+                try {
+                    for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll").iterator(); it.hasNext();) {
+                        CardSet cs = (CardSet) it.next();
+                        for (ICardCache cache : game.getCardCacheImplementations()) {
+                            cache.getSetIcon((ICardSet) cs);
+                        }
+                    }
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
                 }
             }
             reportDone();
@@ -401,7 +414,7 @@ public class MTGUpdater extends UpdateRunnable {
                     parameters.put("name", card.getName());
                     c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
                     //Add to caching list
-                    Lookup.getDefault().lookup(ICacheData.class).add(card);
+                    Lookup.getDefault().lookup(ICacheData.class).add((ICard) card);
                 } else {
                     if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition)) {
                         LOG.log(Level.INFO, "Set: {0} exists, maybe we should add it there?", edition);

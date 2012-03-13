@@ -7,7 +7,7 @@ import java.awt.Image;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public class MTGGame extends DefaultCardGame {
+public class MTGGame extends DefaultCardGame{
 
     @Override
     public String getName() {
@@ -16,6 +16,11 @@ public class MTGGame extends DefaultCardGame {
 
     @Override
     public Image getBackCardIcon() {
+        return null;
+    }
+
+    @Override
+    public Image getGameIcon() {
         return null;
     }
 }

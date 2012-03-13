@@ -12,7 +12,7 @@ import org.openide.util.Lookup;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public class IGameChildFactory extends ChildFactory<ICardGame>{
+public class IGameAllChildFactory extends ChildFactory<ICardGame>{
 
     public void refresh() {
         refresh(true);
@@ -27,7 +27,7 @@ public class IGameChildFactory extends ChildFactory<ICardGame>{
     @Override
     protected Node createNodeForKey(ICardGame game) {
         try {
-            return new IGameNode(game, new ICardSetChildFactory(game));
+            return new IGameAllNode(game, new ICardAllChildFactory(game));
         } catch (IntrospectionException ex) {
             Exceptions.printStackTrace(ex);
         return null;
