@@ -11,28 +11,21 @@ import org.openide.util.lookup.Lookups;
 
 /**
  *
- * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
+ * @author Javier A. Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
-public class IGameNode extends BeanNode {
+public class IGameAllNode extends BeanNode {
 
     private final ICardGame game;
 
-    public IGameNode(ICardGame game, ICardSetChildFactory childFactory) throws IntrospectionException {
+    public IGameAllNode(ICardGame game, ICardAllChildFactory childFactory) throws IntrospectionException {
         super(game, Children.create(childFactory, true), Lookups.singleton(game));
         setDisplayName(game.getName());
         this.game = game;
     }
 
-    /**
-     * @return the game
-     */
-    public ICardGame getGame() {
-        return game;
-    }
-
     @Override
     public Image getIcon(int type) {
-        return Tool.loadImage(new JFrame(),getGame().getGameIcon()).getImage();
+        return Tool.loadImage(new JFrame(), game.getGameIcon()).getImage();
     }
 
     @Override

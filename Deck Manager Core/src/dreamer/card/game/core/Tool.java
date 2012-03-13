@@ -1,13 +1,13 @@
 package dreamer.card.game.core;
 
-import java.awt.Dimension;
-import java.awt.Image;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import org.joda.time.Interval;
@@ -168,5 +168,23 @@ public final class Tool {
         } else {
             return (new ImageIcon(imageURL, description)).getImage();
         }
+    }
+    
+    /**
+     * Load image
+     * @param comp Component
+     * @param image Image to load
+     * @return ImageIcon
+     */
+    public static ImageIcon loadImage(Component comp, Image image) {
+        MediaTracker tracker = new MediaTracker(comp);
+        tracker.addImage(image, 0);
+        try {
+            tracker.waitForAll();
+        } catch (InterruptedException e) {
+            Logger.getLogger(Tool.class.getSimpleName()).log(Level.FINE, 
+                    "Interrupted while loading Image", false);
+        }
+        return new ImageIcon(image);
     }
 }

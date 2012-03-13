@@ -11,6 +11,7 @@ import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.OutlineView;
+import org.openide.nodes.AbstractNode;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 
@@ -30,15 +31,15 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @TopComponent.OpenActionRegistration(displayName = "#CTL_TableViewAction",
 preferredID = "TableViewTopComponent")
 @Messages({
-    "CTL_TableViewAction=TableView",
-    "CTL_TableViewTopComponent=TableView Window",
+    "CTL_TableViewAction=Table View",
+    "CTL_TableViewTopComponent=Table View Window",
     "HINT_TableViewTopComponent=This is a TableView window"
 })
 public final class TableViewTopComponent extends TopComponent
         implements ExplorerManager.Provider, EventBusListener<ICard> {
 
     private final ExplorerManager mgr = new ExplorerManager();
-    private RootNode root;
+    private AbstractNode root;
     private OutlineView ov;
 
     public TableViewTopComponent() {
@@ -63,7 +64,7 @@ public final class TableViewTopComponent extends TopComponent
         add(ov, BorderLayout.CENTER);
 
         //Set the root of the ExplorerManager:
-        root = new RootNode(new IGameChildFactory());
+        root = new RootNode(new IGameAllChildFactory());
         getExplorerManager().setRootContext(root);
 
         //Put the Nodes into the Lookup of the TopComponent,
@@ -105,7 +106,7 @@ public final class TableViewTopComponent extends TopComponent
         //followed by the text to be displayed in the column header:
         ov.setPropertyColumns(
                 "name", "Name",
-                "cardId", "Card ID");
+                "set", "Set");
     }
 
     @Override

@@ -2,11 +2,12 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.ICardSet;
+import dreamer.card.game.core.Tool;
 import java.awt.Image;
 import java.beans.IntrospectionException;
 import java.util.Iterator;
 import javax.swing.Action;
+import javax.swing.JFrame;
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -21,21 +22,20 @@ import org.openide.util.lookup.Lookups;
 public class ICardNode extends BeanNode {
 
     private Action[] actions;
-    private final ICardSet set;
+    private final String gameName;
 
-    public ICardNode(ICard card, ICardSet set) throws IntrospectionException {
+    public ICardNode(ICard card, String gameName) throws IntrospectionException {
         super(card, null, Lookups.singleton(card));
         setDisplayName(card.getName());
-        this.set = set;
+        this.gameName = gameName;
     }
 
     @Override
     public Image getIcon(int type) {
-        String gameName = set.getGameName();
         for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
             ICardGame game = it.next();
             if (game.getName().equals(gameName)) {
-                return game.getBackCardIcon();
+                return Tool.loadImage(new JFrame(), game.getBackCardIcon()).getImage();
             }
         }
         return null;
