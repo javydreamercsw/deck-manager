@@ -2,9 +2,9 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
-import dreamer.card.game.core.ICardDataManager;
-import dreamer.card.game.core.ui.ICardUI;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.beans.IntrospectionException;
+import java.util.Iterator;
 import java.util.List;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -15,7 +15,7 @@ import org.openide.util.Lookup;
  *
  * @author Javier A. Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
-public class ICardAllChildFactory extends ChildFactory<ICardUI> {
+public class ICardAllChildFactory extends ChildFactory<ICard> {
 
     private final ICardGame game;
 
@@ -24,15 +24,16 @@ public class ICardAllChildFactory extends ChildFactory<ICardUI> {
     }
 
     @Override
-    protected boolean createKeys(List<ICardUI> toPopulate) {
-        for(ICard card:Lookup.getDefault().lookup(ICardDataManager.class).getCardsForGame(game)){
-            toPopulate.add((ICardUI)card);
+    protected boolean createKeys(List<ICard> toPopulate) {
+        for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForGame(game).iterator(); it.hasNext();) {
+            ICard card = (ICard) it.next();
+            toPopulate.add((ICard) card);
         }
         return true;
     }
 
     @Override
-    protected Node createNodeForKey(ICardUI card) {
+    protected Node createNodeForKey(ICard card) {
         try {
             return new ICardNode(card, game.getName());
         } catch (IntrospectionException ex) {
@@ -42,7 +43,7 @@ public class ICardAllChildFactory extends ChildFactory<ICardUI> {
     }
 
     @Override
-    protected Node[] createNodesForKey(ICardUI key) {
+    protected Node[] createNodesForKey(ICard key) {
         return new Node[]{createNodeForKey(key)};
     }
 

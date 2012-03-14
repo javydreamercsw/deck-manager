@@ -129,7 +129,7 @@ public class Installer extends ModuleInstall {
                     if (task != null) {
                         if (task instanceof IProgressAction) {
                             //Properly created to display progress in the IDE
-                            new GameUpdateAction((IProgressAction) task).actionPerformed(null);
+                            new CacheUpdateAction((IProgressAction) task).actionPerformed(null);
                         } else {
                             //No progress information available
                             new Thread(task).start();

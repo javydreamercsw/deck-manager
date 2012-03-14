@@ -1,5 +1,6 @@
 package mtg.card;
 
+import com.reflexit.magiccards.core.model.CardImpl;
 import com.reflexit.magiccards.core.model.ICardField;
 import com.reflexit.magiccards.core.model.ICardModifiable;
 import java.util.*;
@@ -9,7 +10,7 @@ import java.util.regex.Pattern;
 import javax.swing.ImageIcon;
 import mtg.card.MagicCardFilter.TextValue;
 
-public class MagicCard implements IMagicCard, ICardModifiable {
+public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     private int id;
     private String name;
@@ -117,12 +118,12 @@ public class MagicCard implements IMagicCard, ICardModifiable {
      * @see com.reflexit.magiccards.core.model.IMagicCard#getEdition()
      */
     @Override
-    public String getSet() {
+    public String getSetName() {
         return this.edition;
     }
 
     @Override
-    public void setSet(String setName) {
+    public void setSetName(String setName) {
         this.edition = setName.intern();
     }
 
@@ -461,7 +462,7 @@ public class MagicCard implements IMagicCard, ICardModifiable {
                 setOracleText(value);
                 break;
             case SET:
-                setSet(value);
+                setSetName(value);
                 break;
             case RARITY:
                 setRarity(value);

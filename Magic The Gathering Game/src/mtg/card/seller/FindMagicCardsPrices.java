@@ -58,7 +58,6 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
     @Override
     public void updateStore(ICardStore<ISellableCard> store, Iterable<ISellableCard> iterable, int size)
             throws IOException {
-//	TODO: use NetBeans RCP to show progress.
         if (iterable == null) {
             iterable = store;
             size = store.size();
@@ -66,7 +65,7 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
         HashSet<String> sets = new HashSet();
         for (Iterator<ISellableCard> it = iterable.iterator(); it.hasNext();) {
             ISellableCard card = it.next();
-            String set = card.getSet();
+            String set = card.getSetName();
             sets.add(set);
         }
 
@@ -84,7 +83,7 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
                         //
                     }
                     for (ISellableCard card : iterable) {
-                        String set2 = card.getSet();
+                        String set2 = card.getSetName();
                         if (set2.equals(set)) {
                             float price = -1;
                             if (prices != null && prices.containsKey(card.getName())) {

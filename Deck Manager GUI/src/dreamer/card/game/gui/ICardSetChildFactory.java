@@ -2,7 +2,7 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
-import dreamer.card.game.core.ICardDataManager;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.beans.IntrospectionException;
 import java.util.List;
 import org.openide.nodes.ChildFactory;
@@ -24,7 +24,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> {
 
     @Override
     protected boolean createKeys(List<ICardSet> list) {
-        list.addAll(Lookup.getDefault().lookup(ICardDataManager.class).getSetsForGame(getGame()));
+        list.addAll(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(getGame()));
         return true;
     }
 

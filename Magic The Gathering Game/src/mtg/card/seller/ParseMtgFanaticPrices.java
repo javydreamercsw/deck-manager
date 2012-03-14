@@ -45,7 +45,7 @@ public class ParseMtgFanaticPrices implements IStoreUpdater, IPriceProvider {
         HashSet<String> sets = new HashSet();
         for (Iterator<ISellableCard> it = iterable.iterator(); it.hasNext();) {
             ISellableCard magicCard = it.next();
-            String set = magicCard.getSet();
+            String set = magicCard.getSetName();
             sets.add(set);
         }
         HashMap<String, String> parseSets = parseSets();
@@ -59,7 +59,7 @@ public class ParseMtgFanaticPrices implements IStoreUpdater, IPriceProvider {
                     try {
                         for (Iterator<ISellableCard> it = iterable.iterator(); it.hasNext();) {
                             ISellableCard magicCard = it.next();
-                            String set2 = magicCard.getSet();
+                            String set2 = magicCard.getSetName();
                             if (set2.equals(set)) {
                                 if (prices.containsKey(magicCard.getName())) {
                                     Float price = prices.get(magicCard.getName());

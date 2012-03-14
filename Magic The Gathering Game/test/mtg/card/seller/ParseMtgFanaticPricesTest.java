@@ -61,7 +61,7 @@ public class ParseMtgFanaticPricesTest {
                 }
             };
             MagicCard card = new MagicCard();
-            card.setSet("Time Spiral");
+            card.setSetName("Time Spiral");
             card.setName("Amrou Scout");
             fstore.getCardStore().add(card);
             fstore.update(new MagicCardFilter());

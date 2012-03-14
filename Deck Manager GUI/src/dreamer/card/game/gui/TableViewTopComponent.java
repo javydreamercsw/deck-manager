@@ -1,17 +1,16 @@
 package dreamer.card.game.gui;
 
+import dreamer.card.game.gui.glazedlist.GameDataManager;
 import com.reflexit.magiccards.core.model.ICard;
-import java.awt.BorderLayout;
-import javax.swing.ActionMap;
-import javax.swing.text.DefaultEditorKit;
+import com.reflexit.magiccards.core.model.ICardGame;
+import java.util.HashMap;
+import java.util.Iterator;
 import org.dreamer.event.bus.EventBusListener;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
-import org.openide.explorer.ExplorerUtils;
-import org.openide.explorer.view.OutlineView;
-import org.openide.nodes.AbstractNode;
+import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 
@@ -32,45 +31,28 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 preferredID = "TableViewTopComponent")
 @Messages({
     "CTL_TableViewAction=Table View",
-    "CTL_TableViewTopComponent=Table View Window",
+    "CTL_TableViewTopComponent=Card Collections",
     "HINT_TableViewTopComponent=This is a TableView window"
 })
 public final class TableViewTopComponent extends TopComponent
         implements ExplorerManager.Provider, EventBusListener<ICard> {
 
     private final ExplorerManager mgr = new ExplorerManager();
-    private AbstractNode root;
-    private OutlineView ov;
+    private HashMap<ICardGame, GameDataManager> games = new HashMap<ICardGame, GameDataManager>();
 
     public TableViewTopComponent() {
         initComponents();
         setName(Bundle.CTL_TableViewTopComponent());
         setToolTipText(Bundle.HINT_TableViewTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
-        ActionMap map = getActionMap();
-        map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(getExplorerManager()));
-        map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(getExplorerManager()));
-        map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(getExplorerManager()));
-        map.put("delete", ExplorerUtils.actionDelete(getExplorerManager(), true));
-        this.setLayout(new BorderLayout());
-        //Create the OutlineView:
-        ov = new OutlineView();
-        ov.setEnabled(false);
 
-        //Set the columns to show
-        updateColumns();
-
-        //Add the OutlineView to the TopComponent:
-        add(ov, BorderLayout.CENTER);
-
-        //Set the root of the ExplorerManager:
-        root = new RootNode(new IGameAllChildFactory());
-        getExplorerManager().setRootContext(root);
-
-        //Put the Nodes into the Lookup of the TopComponent,
-        //so that the Properties window will be synchronized:
-        associateLookup(ExplorerUtils.createLookup(getExplorerManager(), getActionMap()));
-        getExplorerManager().getRootContext().setDisplayName("Available Games");
+        for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
+            ICardGame game = it.next();
+            //Create a game data manager
+            games.put(game, new GameDataManager(game));
+            //Add a table to contain the cards
+            gameTabbedPane.add(games.get(game).getComponent());
+        }
     }
 
     /**
@@ -81,32 +63,32 @@ public final class TableViewTopComponent extends TopComponent
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        gameTabbedPane = new javax.swing.JTabbedPane();
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(gameTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(gameTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 278, Short.MAX_VALUE)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTabbedPane gameTabbedPane;
     // End of variables declaration//GEN-END:variables
+
     @Override
     public void componentOpened() {
         // TODO add custom code on component opening
-    }
-
-    private void updateColumns() {
-        //Set the columns of the outline view,
-        //using the name of the property
-        //followed by the text to be displayed in the column header:
-        ov.setPropertyColumns(
-                "name", "Name",
-                "set", "Set");
     }
 
     @Override

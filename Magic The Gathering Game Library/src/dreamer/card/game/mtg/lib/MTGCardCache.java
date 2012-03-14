@@ -94,51 +94,55 @@ public class MTGCardCache extends AbstractCardCache {
             timer.setInitialDelay(pause);
             timer.start();
             while (true) {
-                Card card = (Card) Lookup.getDefault().lookup(ICacheData.class).next();
-                if (card != null) {
-                    timer.restart();
-                    synchronized (this) {
-                        reportResumeProgress();
-                        setSize(Lookup.getDefault().lookup(ICacheData.class).toCacheAmount());
-                        int progress = 0;
-                        setSize(Lookup.getDefault().lookup(ICacheData.class).toCacheAmount());
-                        updateProgressMessage("Downloading card images...");
-                        card = new CardJpaController(((DataBaseCardStorage) Lookup.getDefault().lookup(IDataBaseCardStorage.class)).getEntityManagerFactory()).findCard(card.getCardPK());
-                        LOG.log(Level.FINE, "Processing card: {0}", card.getName());
-                        if (card.getCardSetList().isEmpty()) {
-                            LOG.log(Level.SEVERE, "No card sets defined for card: {0}", card.getName());
-                        } else {
-                            for (Iterator<CardSet> it2 = card.getCardSetList().iterator(); it2.hasNext();) {
-                                CardSet cs = it2.next();
-                                String message = "Processing set: " + cs.getName() + " for card: " + card.getName() + "";
-                                LOG.log(Level.FINE, message);
-                                updateProgressMessage(message);
-                                try {
-                                    URL url = createRemoteImageURL((ICard) card, Editions.getInstance().getEditionByName(cs.getName()));
-                                    downloadAndSaveImage(card, cs, url, isLoadingEnabled(), true);
-                                } catch (CannotDetermineSetAbbriviation e) {
-                                    LOG.log(Level.SEVERE, "Looks like the set: "
-                                            + cs.getName() + " is not properly created. "
-                                            + "It is missing the abbreviation", e);
-                                    return;
-                                } catch (Exception e) {
-                                    LOG.log(Level.SEVERE, null, e);
-                                    return;
-                                } finally {
-                                    notifyAll();
+                try {
+                    Card card = (Card) Lookup.getDefault().lookup(ICacheData.class).next();
+                    if (card != null) {
+                        timer.restart();
+                        synchronized (this) {
+                            reportResumeProgress();
+                            setSize(Lookup.getDefault().lookup(ICacheData.class).toCacheAmount());
+                            int progress = 0;
+                            setSize(Lookup.getDefault().lookup(ICacheData.class).toCacheAmount());
+                            updateProgressMessage("Downloading card images...");
+                            card = new CardJpaController(((DataBaseCardStorage) Lookup.getDefault().lookup(IDataBaseCardStorage.class)).getEntityManagerFactory()).findCard(card.getCardPK());
+                            LOG.log(Level.FINE, "Processing card: {0}", card.getName());
+                            if (card.getCardSetList().isEmpty()) {
+                                LOG.log(Level.SEVERE, "No card sets defined for card: {0}", card.getName());
+                            } else {
+                                for (Iterator<CardSet> it2 = card.getCardSetList().iterator(); it2.hasNext();) {
+                                    CardSet cs = it2.next();
+                                    String message = "Processing set: " + cs.getName() + " for card: " + card.getName() + "";
+                                    LOG.log(Level.FINE, message);
+                                    updateProgressMessage(message);
+                                    try {
+                                        URL url = createRemoteImageURL((ICard) card, Editions.getInstance().getEditionByName(cs.getName()));
+                                        downloadAndSaveImage(card, cs, url, isLoadingEnabled(), true);
+                                    } catch (CannotDetermineSetAbbriviation e) {
+                                        LOG.log(Level.SEVERE, "Looks like the set: "
+                                                + cs.getName() + " is not properly created. "
+                                                + "It is missing the abbreviation", e);
+                                        return;
+                                    } catch (Exception e) {
+                                        LOG.log(Level.SEVERE, null, e);
+                                        return;
+                                    } finally {
+                                        notifyAll();
+                                    }
                                 }
+                                progress++;
+                                reportProgress(progress);
                             }
-                            progress++;
-                            reportProgress(progress);
+                        }
+                    } else {
+                        try {
+                            reportDone();
+                            Thread.currentThread().sleep(100);
+                        } catch (InterruptedException ex) {
+                            LOG.log(Level.SEVERE, null, ex);
                         }
                     }
-                } else {
-                    try {
-                        reportSuspendProgress();
-                        Thread.currentThread().sleep(100);
-                    } catch (InterruptedException ex) {
-                        LOG.log(Level.SEVERE, null, ex);
-                    }
+                } catch (Exception ex) {
+                    LOG.log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -188,7 +192,7 @@ public class MTGCardCache extends AbstractCardCache {
             return null;
         }
     }
-    
+
     @Override
     public Image getGameIcon(ICardGame game) throws IOException {
         ParseGathererMTGIcon parser = new ParseGathererMTGIcon();
