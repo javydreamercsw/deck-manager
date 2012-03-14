@@ -1,9 +1,6 @@
 package mtg.card;
 
-import com.reflexit.magiccards.core.model.ICard;
-import com.reflexit.magiccards.core.model.ICardCountable;
-import com.reflexit.magiccards.core.model.ICardField;
-import com.reflexit.magiccards.core.model.ICardModifiable;
+import com.reflexit.magiccards.core.model.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -11,7 +8,7 @@ import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import mtg.card.MagicCardFilter.TextValue;
 
-public class MagicCardPhisical implements IMagicCard, ICardCountable, ICardModifiable {
+public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCountable, ICardModifiable {
 
     private MagicCard card;
     private int count;
@@ -155,13 +152,13 @@ public class MagicCardPhisical implements IMagicCard, ICardCountable, ICardModif
     }
 
     @Override
-    public String getSet() {
-        return this.card.getSet();
+    public String getSetName() {
+        return this.card.getSetName();
     }
     
     @Override
-    public void setSet(String set) {
-        this.card.setSet(set);
+    public void setSetName(String set) {
+        this.card.setSetName(set);
     }
 
     @Override

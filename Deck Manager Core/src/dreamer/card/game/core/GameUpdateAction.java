@@ -13,15 +13,15 @@ import org.openide.util.TaskListener;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public final class GameUpdateAction implements UpdateProgressListener, ActionListener {
+public class GameUpdateAction implements UpdateProgressListener, ActionListener {
 
-    private final RequestProcessor RP;
-    private RequestProcessor.Task theTask = null;
-    private IProgressAction runnable;
-    private ProgressHandle ph;
+    protected final RequestProcessor RP;
+    protected RequestProcessor.Task theTask = null;
+    protected IProgressAction runnable;
+    protected ProgressHandle ph;
     private static final Logger LOG = Logger.getLogger(GameUpdateAction.class.getName());
-    private int currentProgress = 0;
-    private boolean finished = false;
+    protected int currentProgress = 0;
+    protected boolean finished = false;
 
     public GameUpdateAction(IProgressAction runnable) {
         RP = new RequestProcessor("Updater", 1, false);
@@ -36,6 +36,7 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
             ph = ProgressHandleFactory.createHandle(runnable.getActionName());
             theTask = RP.create(runnable);
             theTask.addTaskListener(new TaskListener() {
+
                 @Override
                 public void taskFinished(org.openide.util.Task task) {
                     //Make sure that we get rid of the ProgressHandle
@@ -56,32 +57,44 @@ public final class GameUpdateAction implements UpdateProgressListener, ActionLis
     @Override
     public void reportProgress(int amount) {
         currentProgress = amount;
-        ph.progress(currentProgress);
+        if (ph != null) {
+            ph.progress(currentProgress);
+        }
     }
 
     @Override
     public void reportDone() {
-        ph.finish();
+        if (ph != null) {
+            ph.finish();
+        }
         finished = true;
     }
 
     @Override
     public void reportSize(int size) {
-        ph.switchToDeterminate(size);
+        if (ph != null) {
+            ph.switchToDeterminate(size);
+        }
     }
 
     @Override
     public void changeMessage(String message) {
-        ph.progress(message);
+        if (ph != null) {
+            ph.progress(message);
+        }
     }
 
     @Override
     public void resume() {
-        ph.progress(currentProgress);
+        if (ph != null) {
+            ph.progress(currentProgress);
+        }
     }
 
     @Override
     public void suspend() {
-        ph.suspend(null);
+        if (ph != null) {
+            ph.suspend(null);
+        }
     }
 }

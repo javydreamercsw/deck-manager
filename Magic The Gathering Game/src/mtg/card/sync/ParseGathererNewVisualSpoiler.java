@@ -93,7 +93,7 @@ public class ParseGathererNewVisualSpoiler {
 
         @Override
         public void handleSecondary(MagicCard primary, MagicCard secondary) {
-            if (loadLandPrintings && primary.getSet() != null && primary.getSet().equals(secondary.getSet())) {
+            if (loadLandPrintings && primary.getSetName() != null && primary.getSetName().equals(secondary.getSetName())) {
                 handle(secondary);
             } else if (loadOtherPrintings) {
                 handle(secondary);
@@ -233,7 +233,7 @@ public class ParseGathererNewVisualSpoiler {
             edition = edition.trim();
             Edition ed = new Editions.Edition(edition, abbr);
             if (id.equals(setId)) {
-                card.setSet(edition);
+                card.setSetName(edition);
                 card.setRarity(rarity.trim());
                 handler.edition(ed);
             } else {
@@ -241,7 +241,7 @@ public class ParseGathererNewVisualSpoiler {
                 MagicCard card2 = (MagicCard) card.clone();
                 if (card2 != null) {
                     card2.setId(setId);
-                    card2.setSet(edition);
+                    card2.setSetName(edition);
                     card2.setRarity(rarity.trim());
                     handler.edition(ed);
                     handler.handleSecondary(card, card2);

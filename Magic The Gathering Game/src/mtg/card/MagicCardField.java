@@ -82,6 +82,7 @@ public enum MagicCardField implements ICardField {
         return res.toArray(new ICardField[res.size()]);
     }
 
+    @Override
     public Field getJavaField() {
         return field;
     }

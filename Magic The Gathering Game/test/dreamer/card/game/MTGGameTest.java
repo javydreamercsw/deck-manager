@@ -43,9 +43,9 @@ public class MTGGameTest {
     public void testUpdateDatabase() {
         try {
             final MTGGame instance = new MTGGame();
-            synchronized (instance) {
-                instance.init();
-                Runnable updateRunnable = instance.getUpdateRunnable();
+            instance.init();
+            Runnable updateRunnable = instance.getUpdateRunnable();
+            synchronized (updateRunnable) {
                 updateRunnable.run();
                 updateRunnable.wait();
                 assertFalse(Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll").isEmpty());

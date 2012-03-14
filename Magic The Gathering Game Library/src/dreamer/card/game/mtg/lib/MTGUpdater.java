@@ -358,7 +358,7 @@ public class MTGUpdater extends UpdateRunnable {
                 }
                 edition = edition.trim();
                 if (id.equals(setId)) {
-                    card.setSet(edition);
+                    card.setSetName(edition);
                     card.setRarity(rarity.trim());
                     //Handle card type, it might be new
                     parameters.put("name", type);
@@ -384,7 +384,7 @@ public class MTGUpdater extends UpdateRunnable {
                             LOG.log(Level.FINE, "Created card: {0}", c.getName());
                             if (set == null) {
                                 parameters.clear();
-                                parameters.put("name", card.getSet());
+                                parameters.put("name", card.getSetName());
                                 set = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters).get(0);
                             }
                             Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
