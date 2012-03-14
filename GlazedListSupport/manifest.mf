@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+AutoUpdate-Show-In-Client: true
+OpenIDE-Module: ca.odell.glazedlists/1
+OpenIDE-Module-Implementation-Version: 3
+OpenIDE-Module-Localizing-Bundle: ca/odell/glazedlists/Bundle.properties
+
