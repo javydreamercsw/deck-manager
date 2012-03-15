@@ -1,8 +1,8 @@
 package dreamer.card.game.gui;
 
-import dreamer.card.game.gui.glazedlist.GameDataManager;
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.IGameDataManager;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.dreamer.event.bus.EventBusListener;
@@ -38,7 +38,7 @@ public final class TableViewTopComponent extends TopComponent
         implements ExplorerManager.Provider, EventBusListener<ICard> {
 
     private final ExplorerManager mgr = new ExplorerManager();
-    private HashMap<ICardGame, GameDataManager> games = new HashMap<ICardGame, GameDataManager>();
+    private HashMap<ICardGame, IGameDataManager> games = new HashMap<ICardGame, IGameDataManager>();
 
     public TableViewTopComponent() {
         initComponents();
@@ -49,7 +49,7 @@ public final class TableViewTopComponent extends TopComponent
         for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
             ICardGame game = it.next();
             //Create a game data manager
-            games.put(game, new GameDataManager(game));
+            games.put(game, game.getGameDataManagerImplementations().get(0));
             //Add a table to contain the cards
             gameTabbedPane.add(games.get(game).getComponent());
         }
