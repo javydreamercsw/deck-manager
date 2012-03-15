@@ -77,6 +77,13 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.netbeans.core.output2</code-name-base>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>1.24.2</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.netbeans.modules.autoupdate.ui</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
