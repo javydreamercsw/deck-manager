@@ -7,6 +7,7 @@ import ca.odell.glazedlists.swing.TableComparatorChooser;
 import ca.odell.glazedlists.swing.TextComponentMatcherEditor;
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.IGameDataManager;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -14,20 +15,24 @@ import java.awt.Panel;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import javax.swing.*;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import org.jdesktop.swingx.JXTable;
 import org.openide.util.Lookup;
 import org.openide.util.Lookup.Result;
 import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
+import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
  * @author Javier A. Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
-public class GameDataManager implements LookupListener, Lookup.Provider {
+@ServiceProvider(service = IGameDataManager.class)
+public class GameDataManager implements IGameDataManager {
 
     private ICardGame game;
     private EventList<ICard> eventList = new BasicEventList<ICard>();
@@ -42,7 +47,11 @@ public class GameDataManager implements LookupListener, Lookup.Provider {
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
 
-    public GameDataManager(ICardGame game) {
+    public GameDataManager() {
+    }
+
+    @Override
+    public void setGame(ICardGame game) {
         this.game = game;
         SetSelect setSelect = new SetSelect(eventList);
         FilterList<ICard> setsFilteredIssues = new FilterList<ICard>(sortedCards, setSelect);
@@ -118,10 +127,12 @@ public class GameDataManager implements LookupListener, Lookup.Provider {
     /**
      * @return the sortedCards
      */
+    @Override
     public SortedList<ICard> getSortedCards() {
         return sortedCards;
     }
 
+    @Override
     public Component getComponent() {
         return panel;
     }
@@ -129,6 +140,11 @@ public class GameDataManager implements LookupListener, Lookup.Provider {
     @Override
     public Lookup getLookup() {
         return dynamicLookup;
+    }
+
+    @Override
+    public ICardGame getGame() {
+        return game;
     }
 
     private class DataLoader implements Runnable {
