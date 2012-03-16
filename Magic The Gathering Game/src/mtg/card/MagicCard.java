@@ -4,6 +4,7 @@ import com.reflexit.magiccards.core.model.CardImpl;
 import com.reflexit.magiccards.core.model.ICardField;
 import com.reflexit.magiccards.core.model.ICardModifiable;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -290,6 +291,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
                 setProperty(MagicCardField.OTHER_PART, other);
             }
         } catch (Exception e) {
+            Logger.getLogger(MagicCard.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 

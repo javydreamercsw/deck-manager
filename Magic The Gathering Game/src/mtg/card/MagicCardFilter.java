@@ -538,7 +538,6 @@ public class MagicCardFilter implements ICardFilter {
             if (requestedId.contains("_exclude_")) {
                 res = new BinaryExpr(res, Operation.NOT, null);
             }
-            // TODO: Other
         } else {
             res = bin;
         }
@@ -704,6 +703,7 @@ public class MagicCardFilter implements ICardFilter {
      * sort field
      *
      * @param sortField
+     * @param accending  
      */
     @Override
     public void setSortField(ICardField sortField, boolean accending) {

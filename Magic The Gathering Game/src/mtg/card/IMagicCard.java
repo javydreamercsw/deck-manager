@@ -44,7 +44,6 @@ public interface IMagicCard extends ISellableCard {
     public abstract int getEnglishCardId();
 
     public abstract int getFlipId();
-
-    //TODO: maybe move to ICard
+    
     public abstract boolean matches(ICardField left, TextValue right);
 }
