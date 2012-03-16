@@ -73,7 +73,6 @@ public class FilterHelper {
         ids.add(FilterHelper.getPrefConstant(MagicCardFieldPhysical.FORTRADECOUNT.name(), FilterHelper.NUMERIC_POSTFIX));
         ids.add(FilterHelper.getPrefConstant(MagicCardFieldPhysical.SPECIAL.name(), FilterHelper.TEXT_POSTFIX));
         ids.add(FilterHelper.getPrefConstant(FilterHelper.LANG, FilterHelper.TEXT_POSTFIX));
-        // TODO add the rest
         return ids;
     }
 

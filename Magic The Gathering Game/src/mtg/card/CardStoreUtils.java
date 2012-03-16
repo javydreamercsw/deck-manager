@@ -59,8 +59,7 @@ public final class CardStoreUtils {
                 bars[cost] += count;
             } else if (cost >= 7) {
                 bars[7] += count;
-            } else {
-            }
+            } 
         }
         return bars;
     }
@@ -93,7 +92,7 @@ public final class CardStoreUtils {
         ArrayList<IMagicCard> filteredList = new ArrayList<IMagicCard>();
         for (Iterator<IMagicCard> iterator = store.iterator(); iterator.hasNext();) {
             IMagicCard elem = iterator.next();
-            int count = 1;
+            int count;
             if (elem instanceof ICardCountable) {
                 ICardCountable card = (ICardCountable) elem;
                 count = card.getCount();
