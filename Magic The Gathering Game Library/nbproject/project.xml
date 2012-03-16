@@ -7,6 +7,15 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
+                    <code-name-base>ca.odell.glazedlists</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>1.8</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>dreamer.card.game.core</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -17,6 +26,15 @@
                 </dependency>
                 <dependency>
                     <code-name-base>dreamer.card.game.database</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>0-1</release-version>
+                        <specification-version>0</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>dreamer.card.game.gui</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
@@ -40,6 +58,24 @@
                     <run-dependency>
                         <release-version>2</release-version>
                         <specification-version>3</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.dreamer.event.bus</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>0-1</release-version>
+                        <specification-version>0</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.jdesktop.swingx</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>1.6</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>

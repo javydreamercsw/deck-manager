@@ -1,12 +1,13 @@
 package dreamer.card.game.gui;
 
-import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.IGameDataManager;
 import java.util.HashMap;
 import java.util.Iterator;
-import org.dreamer.event.bus.EventBusListener;
+import java.util.List;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
@@ -34,11 +35,11 @@ preferredID = "TableViewTopComponent")
     "CTL_TableViewTopComponent=Card Collections",
     "HINT_TableViewTopComponent=This is a TableView window"
 })
-public final class TableViewTopComponent extends TopComponent
-        implements ExplorerManager.Provider, EventBusListener<ICard> {
+public final class TableViewTopComponent extends TopComponent 
+implements ExplorerManager.Provider{
 
     private final ExplorerManager mgr = new ExplorerManager();
-    private HashMap<ICardGame, IGameDataManager> games = new HashMap<ICardGame, IGameDataManager>();
+    private HashMap<ICardGame, IGameDataManager> gameManagers = new HashMap<ICardGame, IGameDataManager>();
 
     public TableViewTopComponent() {
         initComponents();
@@ -48,10 +49,18 @@ public final class TableViewTopComponent extends TopComponent
 
         for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
             ICardGame game = it.next();
-            //Create a game data manager
-            games.put(game, game.getGameDataManagerImplementations().get(0));
-            //Add a table to contain the cards
-            gameTabbedPane.add(games.get(game).getComponent());
+            List<IGameDataManager> dmImplementations = game.getGameDataManagerImplementations();
+            if (!dmImplementations.isEmpty()) {
+                //Create a game data manager
+                gameManagers.put(game, game.getGameDataManagerImplementations().get(0));
+                //Add a table to contain the cards
+                gameTabbedPane.add(gameManagers.get(game).getComponent());
+            }else{
+                DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(game.getName()+
+                        " doesn't have a Data Manager implementation. "
+                        + "Some functionality won't work or will be limited.", 
+                        NotifyDescriptor.ERROR_MESSAGE));
+            }
         }
     }
 
@@ -86,16 +95,6 @@ public final class TableViewTopComponent extends TopComponent
     private javax.swing.JTabbedPane gameTabbedPane;
     // End of variables declaration//GEN-END:variables
 
-    @Override
-    public void componentOpened() {
-        // TODO add custom code on component opening
-    }
-
-    @Override
-    public void componentClosed() {
-        // TODO add custom code on component closing
-    }
-
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
@@ -111,10 +110,5 @@ public final class TableViewTopComponent extends TopComponent
     @Override
     public ExplorerManager getExplorerManager() {
         return mgr;
-    }
-
-    @Override
-    public void notify(ICard card) {
-        System.out.println("Added card: " + card.getName());
     }
 }

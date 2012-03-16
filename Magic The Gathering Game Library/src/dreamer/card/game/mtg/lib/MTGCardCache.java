@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -86,6 +87,20 @@ public class MTGCardCache extends AbstractCardCache {
 
         private Timer timer;
         private final int period = 10000, pause = 10000;
+        private ArrayList<String> mana = new ArrayList<String>();
+
+        public CardImageLoader() {
+            mana.add("{B}");
+            mana.add("{U}");
+            mana.add("{W}");
+            mana.add("{R}");
+            mana.add("{G}");
+            mana.add("{P}");
+            mana.add("{X}");
+            for (int i = 1; i <= 12; i++) {
+                mana.add("{" + i + "}");
+            }
+        }
 
         @Override
         public void run() {
@@ -136,13 +151,14 @@ public class MTGCardCache extends AbstractCardCache {
                     } else {
                         try {
                             reportDone();
-                            Thread.currentThread().sleep(100);
+                            Thread.sleep(100);
                         } catch (InterruptedException ex) {
                             LOG.log(Level.SEVERE, null, ex);
                         }
                     }
                 } catch (Exception ex) {
                     LOG.log(Level.SEVERE, null, ex);
+                    return;
                 }
             }
         }
@@ -156,10 +172,18 @@ public class MTGCardCache extends AbstractCardCache {
         public void actionPerformed(ActionEvent e) {
             timer.stop();
             new Thread(new Runnable() {
-
                 @Override
                 public void run() {
                     try {
+                        //Get mana icons
+                        for (String m : mana) {
+                            LOG.log(Level.FINE, "Getting mana icon for: {0}", m);
+                            try {
+                                getManaIcon(m);
+                            } catch (IOException ex) {
+                                Exceptions.printStackTrace(ex);
+                            }
+                        }
                         //Get all cards
                         LOG.log(Level.FINE, "Adding cards to the download queue");
                         for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findAll").iterator(); it.hasNext();) {
@@ -193,6 +217,13 @@ public class MTGCardCache extends AbstractCardCache {
         }
     }
 
+    public String getManaIconPath(String mana) {
+        File loc = getCacheLocationFile();
+        String part = new MTGRCPGame().getName() + System.getProperty("file.separator")
+                + "Mana" + System.getProperty("file.separator") + mana.replaceAll("[{}/]", "") + ".jpg";
+        return new File(loc, part).getPath();
+    }
+
     @Override
     public Image getGameIcon(ICardGame game) throws IOException {
         ParseGathererMTGIcon parser = new ParseGathererMTGIcon();
@@ -223,6 +254,20 @@ public class MTGCardCache extends AbstractCardCache {
         } catch (MalformedURLException ex) {
             LOG.log(Level.SEVERE, "Errors with the icon URL for set: "
                     + set.getName() + " at URL: " + parser.getIconURL(), ex);
+            return null;
+        }
+    }
+
+    public Image getManaIcon(String mana) throws IOException {
+        URL manaIconURL = null;
+        try {
+            String path = getManaIconPath(mana);
+            File dest = new File(path);
+            manaIconURL = createManaImageURL(mana);
+            return downloadImageFromURL(manaIconURL, dest, !dest.exists());
+        } catch (MalformedURLException ex) {
+            LOG.log(Level.SEVERE, "Errors with the icon URL for mana: "
+                    + mana + " at URL: " + manaIconURL, ex);
             return null;
         }
     }
