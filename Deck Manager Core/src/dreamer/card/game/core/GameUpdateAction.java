@@ -36,7 +36,6 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
             ph = ProgressHandleFactory.createHandle(runnable.getActionName());
             theTask = RP.create(runnable);
             theTask.addTaskListener(new TaskListener() {
-
                 @Override
                 public void taskFinished(org.openide.util.Task task) {
                     //Make sure that we get rid of the ProgressHandle
@@ -95,6 +94,13 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
     public void suspend() {
         if (ph != null) {
             ph.suspend(null);
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        if (theTask != null) {
+            theTask.cancel();
         }
     }
 }

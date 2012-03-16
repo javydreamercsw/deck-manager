@@ -1,4 +1,4 @@
-package dreamer.card.game.gui.glazedlist;
+package dreamer.card.game.mtg.lib.gui;
 
 import ca.odell.glazedlists.EventList;
 import ca.odell.glazedlists.UniqueList;
@@ -7,6 +7,8 @@ import ca.odell.glazedlists.matchers.Matcher;
 import ca.odell.glazedlists.swing.DefaultEventListModel;
 import ca.odell.glazedlists.swing.DefaultEventSelectionModel;
 import com.reflexit.magiccards.core.model.ICard;
+import dreamer.card.game.gui.glazedlist.CardToSetList;
+import dreamer.card.game.gui.glazedlist.CardsForSetsMatcher;
 import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;

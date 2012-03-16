@@ -38,4 +38,9 @@ public interface UpdateProgressListener {
      * Resume progress for this task
      */
     public void resume();
+    
+    /**
+     * Finish the task
+     */
+    public void shutdown();
 }

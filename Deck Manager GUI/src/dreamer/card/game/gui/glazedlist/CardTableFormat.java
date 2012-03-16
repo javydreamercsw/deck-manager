@@ -2,12 +2,15 @@ package dreamer.card.game.gui.glazedlist;
 
 import ca.odell.glazedlists.gui.TableFormat;
 import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openide.util.Lookup;
 
 /**
@@ -18,6 +21,7 @@ public class CardTableFormat implements TableFormat<ICard> {
 
     private final ICardGame game;
     private final ArrayList<String> columns = new ArrayList<String>();
+    private static final Logger LOG = Logger.getLogger(CardTableFormat.class.getName());
 
     public CardTableFormat(ICardGame game) {
         this.game = game;
@@ -49,14 +53,24 @@ public class CardTableFormat implements TableFormat<ICard> {
     @Override
     public Object getColumnValue(ICard card, int column) {
         String columnName = getColumnName(column).toLowerCase().replaceAll("_", "");
+        Object result;
         if (columnName.equals("name")) {
-            return card.getName();
+            result = card.getName();
         } else if (columnName.equals("cardid")) {
-            return card.getCardId();
+            result = card.getCardId();
         } else if (columnName.equals("set")) {
-            return card.getSetName();
+            result = card.getSetName();
         } else {
-            return Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(card, columnName);
+            result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(card, getColumnName(column));
         }
+        for (ICardAttributeFormatter formatter : game.getGameCardAttributeFormatterImplementations()) {
+            if (result instanceof String) {
+                String string = (String) result;
+                LOG.log(Level.FINER, "Formatting string: {0}", result);
+                result = formatter.format(string);
+                LOG.log(Level.FINER, "Done!");
+            }
+        }
+        return result;
     }
 }
