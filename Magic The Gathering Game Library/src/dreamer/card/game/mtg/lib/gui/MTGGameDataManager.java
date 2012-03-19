@@ -6,25 +6,29 @@ import ca.odell.glazedlists.swing.DefaultEventSelectionModel;
 import ca.odell.glazedlists.swing.DefaultEventTableModel;
 import ca.odell.glazedlists.swing.TableComparatorChooser;
 import ca.odell.glazedlists.swing.TextComponentMatcherEditor;
+import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.IGameDataManager;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
+import dreamer.card.game.core.Tool;
 import dreamer.card.game.gui.glazedlist.CardTableFormat;
+import dreamer.card.game.mtg.lib.MTGCardCache;
 import dreamer.card.game.mtg.lib.MTGRCPGame;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Panel;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableCellRenderer;
 import org.dreamer.event.bus.EventBus;
 import org.jdesktop.swingx.JXTable;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -38,7 +42,7 @@ import org.openide.util.lookup.ServiceProvider;
  */
 @ServiceProvider(service = IGameDataManager.class)
 public final class MTGGameDataManager implements IGameDataManager, LookupListener {
-    
+
     private ICardGame game;
     private EventList<ICard> eventList = new BasicEventList<ICard>();
     private DefaultEventTableModel<ICard> tableModel;
@@ -52,18 +56,42 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
     private FilterList<ICard> textFilteredIssues;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
-    
+
     public MTGGameDataManager() {
         setGame(new MTGRCPGame());
     }
-    
+
     private TableCellRenderer getRendererForAttribute(String name) {
         if (name.toLowerCase().equals("cost")) {
             return new TableCellRenderer() {
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                     if (value != null) {
-                        return (JLabel) value;
+                        List<ICardCache> impls = getGame().getCardCacheImplementations();
+                        if (impls.size() > 0 && ((String) value).contains("{") && ((String) value).contains("}")) {
+                            JLabel container = new JLabel();
+                            container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
+                            ArrayList<String> values = new ArrayList<String>();
+                            StringTokenizer st = new StringTokenizer((String) value, "}");
+                            while (st.hasMoreTokens()) {
+                                String token = st.nextToken();
+                                values.add(token.substring(1));
+                            }
+                            for (Iterator<String> it = values.iterator(); it.hasNext();) {
+                                String v = it.next();
+                                try {
+                                    JLabel iconLabel = new JLabel(new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(v)))));
+                                    container.add(iconLabel);
+                                    if (it.hasNext()) {
+                                        container.add(Box.createRigidArea(new Dimension(5, 0)));
+                                    }
+                                } catch (IOException ex) {
+                                    Exceptions.printStackTrace(ex);
+                                }
+                            }
+                            return container;
+                        }
+                        return new JLabel(((String) value));
                     } else {
                         return new JLabel();
                     }
@@ -72,13 +100,13 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
                 // The following methods override the defaults for performance reasons
                 public void validate() {
                 }
-                
+
                 public void revalidate() {
                 }
-                
+
                 protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
                 }
-                
+
                 public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
                 }
             };
@@ -86,7 +114,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
             return null;
         }
     }
-    
+
     @Override
     public void setGame(ICardGame game) {
         this.game = game;
@@ -149,7 +177,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
         panel.add(westPane, BorderLayout.WEST);
         panel.add(sp, BorderLayout.CENTER);
     }
-    
+
     @Override
     public void load() {
         if (!loaded) {
@@ -167,7 +195,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
         }
         return tableModel;
     }
-    
+
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
         if (loaded) {
@@ -186,24 +214,24 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
             }
         }
     }
-    
+
     @Override
     public Component getComponent() {
         return panel;
     }
-    
+
     @Override
     public Lookup getLookup() {
         return dynamicLookup;
     }
-    
+
     @Override
     public ICardGame getGame() {
         return game;
     }
-    
+
     private class DataLoader implements Runnable {
-        
+
         @Override
         public void run() {
             eventList.getReadWriteLock().readLock().lock();
@@ -217,7 +245,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
             }
         }
     }
-    
+
     private void addCard(ICard card) {
         content.add(card);
         eventList.add(card);
