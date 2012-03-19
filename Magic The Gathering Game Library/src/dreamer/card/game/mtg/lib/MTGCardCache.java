@@ -131,7 +131,7 @@ public class MTGCardCache extends AbstractCardCache {
                                     updateProgressMessage(message);
                                     try {
                                         URL url = createRemoteImageURL((ICard) card, Editions.getInstance().getEditionByName(cs.getName()));
-                                        downloadAndSaveImage(card, cs, url, isLoadingEnabled(), true);
+                                        getCardImage(card, cs, url, isLoadingEnabled(), true);
                                     } catch (CannotDetermineSetAbbriviation e) {
                                         LOG.log(Level.SEVERE, "Looks like the set: "
                                                 + cs.getName() + " is not properly created. "
@@ -157,7 +157,8 @@ public class MTGCardCache extends AbstractCardCache {
                         }
                     }
                 } catch (Exception ex) {
-                    LOG.log(Level.SEVERE, null, ex);
+                    //THis is expected if the task is interrupted
+                    LOG.log(Level.FINEST, null, ex);
                     return;
                 }
             }
