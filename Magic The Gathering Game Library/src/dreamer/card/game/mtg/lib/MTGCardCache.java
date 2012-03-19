@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Timer;
@@ -80,7 +82,20 @@ public class MTGCardCache extends AbstractCardCache {
 
     @Override
     public boolean loadCardImageOffline(ICard icard, Edition edtn, boolean bln) throws IOException, CannotDetermineSetAbbriviation {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try {
+            HashMap parameters = new HashMap();
+            parameters.put("name", edtn.getName());
+            List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
+            if (result.isEmpty()) {
+                return false;
+            } else {
+                CardSet cs = (CardSet) result.get(0);
+                return loadCardImageOffline(icard, cs, bln);
+            }
+        } catch (DBException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            return false;
+        }
     }
 
     private class CardImageLoader extends UpdateRunnable implements ActionListener {
