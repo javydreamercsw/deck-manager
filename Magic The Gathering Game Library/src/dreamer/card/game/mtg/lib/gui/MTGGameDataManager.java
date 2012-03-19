@@ -2,6 +2,7 @@ package dreamer.card.game.mtg.lib.gui;
 
 import ca.odell.glazedlists.*;
 import ca.odell.glazedlists.matchers.MatcherEditor;
+import ca.odell.glazedlists.swing.DefaultEventSelectionModel;
 import ca.odell.glazedlists.swing.DefaultEventTableModel;
 import ca.odell.glazedlists.swing.TableComparatorChooser;
 import ca.odell.glazedlists.swing.TextComponentMatcherEditor;
@@ -19,6 +20,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableCellRenderer;
 import org.dreamer.event.bus.EventBus;
 import org.jdesktop.swingx.JXTable;
@@ -35,7 +38,7 @@ import org.openide.util.lookup.ServiceProvider;
  */
 @ServiceProvider(service = IGameDataManager.class)
 public final class MTGGameDataManager implements IGameDataManager, LookupListener {
-
+    
     private ICardGame game;
     private EventList<ICard> eventList = new BasicEventList<ICard>();
     private DefaultEventTableModel<ICard> tableModel;
@@ -49,15 +52,14 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
     private FilterList<ICard> textFilteredIssues;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
-
+    
     public MTGGameDataManager() {
         setGame(new MTGRCPGame());
     }
-
+    
     private TableCellRenderer getRendererForAttribute(String name) {
         if (name.toLowerCase().equals("cost")) {
             return new TableCellRenderer() {
-
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                     if (value != null) {
@@ -70,13 +72,13 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
                 // The following methods override the defaults for performance reasons
                 public void validate() {
                 }
-
+                
                 public void revalidate() {
                 }
-
+                
                 protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
                 }
-
+                
                 public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
                 }
             };
@@ -84,7 +86,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
             return null;
         }
     }
-
+    
     @Override
     public void setGame(ICardGame game) {
         this.game = game;
@@ -93,7 +95,6 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
         MatcherEditor<ICard> textMatcherEditor =
                 new TextComponentMatcherEditor<ICard>(filterEdit,
                 new TextFilterator<ICard>() {
-
                     @Override
                     public void getFilterStrings(List<String> list, ICard e) {
                         for (int i = 0; i < getTableModel().getTableFormat().getColumnCount(); i++) {
@@ -108,7 +109,15 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
         //Create the card list
         tableModel = new DefaultEventTableModel<ICard>(textFilteredIssues,
                 new CardTableFormat(game));
+        DefaultEventSelectionModel selectionModel = new DefaultEventSelectionModel(eventList);
         cards = new JXTable(getTableModel());
+        cards.setSelectionModel(selectionModel);
+        cards.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                EventBus.getDefault().add(getTableModel().getElementAt(cards.getSelectedRow()));
+            }
+        });
         //Add custom renderers
         for (int i = 0; i < getTableModel().getColumnCount(); i++) {
             TableCellRenderer renderer = getRendererForAttribute(getTableModel().getColumnName(i));
@@ -140,7 +149,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
         panel.add(westPane, BorderLayout.WEST);
         panel.add(sp, BorderLayout.CENTER);
     }
-
+    
     @Override
     public void load() {
         if (!loaded) {
@@ -158,7 +167,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
         }
         return tableModel;
     }
-
+    
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
         if (loaded) {
@@ -168,35 +177,33 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
                 Object next = c.iterator().next();
                 if (next instanceof ICard) {
                     ICard card = (ICard) next;
-                    System.err.println("Saw card: " + card.getName());
                     if (!eventList.contains(card)) {
                         addCard(card);
                     }
                 } else if (next instanceof ICardSet) {
                     ICardSet set = (ICardSet) next;
-                    System.err.println("Saw set: " + set.getName());
                 }
             }
         }
     }
-
+    
     @Override
     public Component getComponent() {
         return panel;
     }
-
+    
     @Override
     public Lookup getLookup() {
         return dynamicLookup;
     }
-
+    
     @Override
     public ICardGame getGame() {
         return game;
     }
-
+    
     private class DataLoader implements Runnable {
-
+        
         @Override
         public void run() {
             eventList.getReadWriteLock().readLock().lock();
@@ -210,7 +217,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
             }
         }
     }
-
+    
     private void addCard(ICard card) {
         content.add(card);
         eventList.add(card);
