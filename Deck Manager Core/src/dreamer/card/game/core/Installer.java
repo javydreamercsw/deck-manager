@@ -8,8 +8,6 @@ import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.IGameDataManager;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +15,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.Timer;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.netbeans.api.db.explorer.*;
 import org.openide.modules.InstalledFileLocator;
@@ -27,13 +24,11 @@ import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.windows.WindowManager;
 
-public class Installer extends ModuleInstall implements ActionListener {
+public class Installer extends ModuleInstall {
 
     private static final Logger LOG = Logger.getLogger(Installer.class.getName());
     private final ArrayList<GameUpdateAction> updaters = new ArrayList<GameUpdateAction>();
     final ArrayList<Thread> runnables = new ArrayList<Thread>();
-    private Timer timer;
-    private final int period = 10000, pause = 10000;
 
     @Override
     public void restored() {
@@ -165,9 +160,10 @@ public class Installer extends ModuleInstall implements ActionListener {
                 }
                 OutputHandler.output("Output", "Done!");
                 //Timer for inactivity background work
-                timer = new Timer(period, Installer.this);
-                timer.setInitialDelay(pause);
-                timer.start();
+                for (Iterator<? extends IGameDataManager> it = Lookup.getDefault().lookupAll(IGameDataManager.class).iterator(); it.hasNext();) {
+                    IGameDataManager gdm = it.next();
+                    gdm.load();
+                }
             }
         });
     }
@@ -204,14 +200,5 @@ public class Installer extends ModuleInstall implements ActionListener {
             }
         }
         return sqlSrvDrv;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        timer.stop();
-        for (Iterator<? extends IGameDataManager> it = Lookup.getDefault().lookupAll(IGameDataManager.class).iterator(); it.hasNext();) {
-            IGameDataManager gdm = it.next();
-            gdm.load();
-        }
     }
 }
