@@ -1,6 +1,7 @@
 package dreamer.card.game.core;
 
 import com.dreamer.outputhandler.OutputHandler;
+import com.reflexit.magiccards.core.cache.AbstractCardCache;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.CardFileUtils;
 import com.reflexit.magiccards.core.model.ICardGame;
@@ -101,13 +102,22 @@ public class Installer extends ModuleInstall implements ActionListener {
         try {
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
         } catch (DBException ex) {
-            Exceptions.printStackTrace(ex);
+            LOG.log(Level.SEVERE, null, ex);
+            OutputHandler.output("Output", ex.getLocalizedMessage());
         }
         LOG.log(Level.FINE, "Database initialized");
         OutputHandler.output("Output", "Database initialized");
         LOG.log(Level.FINE, "Initializing database took: {0}", Tool.elapsedTime(start));
+        File cardCacheDir = new File(Places.getCacheSubdirectory(".Deck Manager").getAbsolutePath()
+                + System.getProperty("file.separator") + "cache");
+        //Create game cache dir
+        if (!cardCacheDir.exists()) {
+            cardCacheDir.mkdirs();
+        }
+        AbstractCardCache.setCachingEnabled(true);
+        AbstractCardCache.setLoadingEnabled(true);
+        AbstractCardCache.setCacheDir(cardCacheDir);
         WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
-
             @Override
             public void run() {
                 LOG.log(Level.FINE, "Initializing games...");
@@ -199,11 +209,9 @@ public class Installer extends ModuleInstall implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         timer.stop();
-        OutputHandler.output("Output", "Loading data into GUI...");
         for (Iterator<? extends IGameDataManager> it = Lookup.getDefault().lookupAll(IGameDataManager.class).iterator(); it.hasNext();) {
             IGameDataManager gdm = it.next();
             gdm.load();
         }
-        OutputHandler.output("Output", "Done!");
     }
 }
