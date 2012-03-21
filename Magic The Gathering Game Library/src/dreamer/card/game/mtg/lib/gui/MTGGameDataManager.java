@@ -2,10 +2,9 @@ package dreamer.card.game.mtg.lib.gui;
 
 import ca.odell.glazedlists.*;
 import ca.odell.glazedlists.matchers.MatcherEditor;
-import ca.odell.glazedlists.swing.DefaultEventSelectionModel;
-import ca.odell.glazedlists.swing.DefaultEventTableModel;
-import ca.odell.glazedlists.swing.TableComparatorChooser;
-import ca.odell.glazedlists.swing.TextComponentMatcherEditor;
+import ca.odell.glazedlists.matchers.TextMatcherEditor;
+import ca.odell.glazedlists.swing.*;
+import com.dreamer.outputhandler.OutputHandler;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
@@ -22,6 +21,8 @@ import java.awt.Dimension;
 import java.awt.Panel;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -44,7 +45,7 @@ import org.openide.util.lookup.ServiceProvider;
 public final class MTGGameDataManager implements IGameDataManager, LookupListener {
 
     private ICardGame game;
-    private EventList<ICard> eventList = new BasicEventList<ICard>();
+    private EventList<ICard> eventList = GlazedListsSwing.swingThreadProxyList(GlazedLists.threadSafeList(new BasicEventList<ICard>()));
     private DefaultEventTableModel<ICard> tableModel;
     private SortedList<ICard> sortedCards = new SortedList<ICard>(eventList);
     private Lookup.Result<ICard> cardResult;
@@ -56,6 +57,7 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
     private FilterList<ICard> textFilteredIssues;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
+    private static final Logger LOG = Logger.getLogger(MTGGameDataManager.class.getName());
 
     public MTGGameDataManager() {
         setGame(new MTGRCPGame());
@@ -134,9 +136,25 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
                     }
                 });
         textFilteredIssues = new FilterList<ICard>(setsFilteredIssues, textMatcherEditor);
+        TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new TextFilterator<ICard>() {
+            @Override
+            public void getFilterStrings(List<String> list, ICard e) {
+                for (int i = 0; i < getTableModel().getTableFormat().getColumnCount(); i++) {
+                    if (getTableModel().getTableFormat().getColumnName(i).equals("Cost")) {
+                        String columnValue = (String) getTableModel().getTableFormat().getColumnValue(e, i);
+                        if (columnValue != null) {
+                            StringTokenizer st = new StringTokenizer((String) columnValue, "}");
+                            while (st.hasMoreTokens()) {
+                                String token = st.nextToken();
+                                list.add(token.substring(1));
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        final ArrayList<String> manaFilters = new ArrayList<String>();
         //Create the card list
-        tableModel = new DefaultEventTableModel<ICard>(textFilteredIssues,
-                new CardTableFormat(game));
         DefaultEventSelectionModel selectionModel = new DefaultEventSelectionModel(eventList);
         cards = new JXTable(getTableModel());
         cards.setSelectionModel(selectionModel);
@@ -165,6 +183,25 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
         cardSetResult.allInstances();
         cardSetResult.addLookupListener(MTGGameDataManager.this);
         //Create Panel for the game
+        ArrayList<String> manaTypes = new ArrayList<String>();
+        manaTypes.add("W");
+        manaTypes.add("U");
+        manaTypes.add("B");
+        manaTypes.add("R");
+        manaTypes.add("G");
+        Panel manaFilterPanel = new Panel();
+        List<ICardCache> impls = getGame().getCardCacheImplementations();
+        if (impls.size() > 0) {
+            for (String mana : manaTypes) {
+                try {
+                    manaFilterPanel.add(new ManaFilterButton(mana, manaFilters,
+                            manaMatcherEditor,
+                            new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(mana))))));
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        }
         panel = new Panel();
         panel.setName(game.getName());
         panel.setLayout(new BorderLayout());
@@ -172,16 +209,15 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
         Panel filterPane = new Panel();
         filterPane.add(new JLabel("Filter: "), BorderLayout.WEST);
         filterPane.add(filterEdit, BorderLayout.CENTER);
-        Panel westPane = new Panel();
-        westPane.add(filterPane, BorderLayout.NORTH);
-        panel.add(westPane, BorderLayout.WEST);
+        filterPane.add(manaFilterPanel, BorderLayout.EAST);
+        panel.add(filterPane, BorderLayout.NORTH);
         panel.add(sp, BorderLayout.CENTER);
     }
 
     @Override
     public void load() {
         if (!loaded) {
-            SwingUtilities.invokeLater(new DataLoader());
+            new Thread(new DataLoader()).start();
         }
     }
 
@@ -234,14 +270,18 @@ public final class MTGGameDataManager implements IGameDataManager, LookupListene
 
         @Override
         public void run() {
-            eventList.getReadWriteLock().readLock().lock();
-            try {
-                for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForGame(game).iterator(); it.hasNext();) {
+            if (!loaded) {
+                OutputHandler.output("Output", "Loading data into Table...");
+                List cardsForGame = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForGame(game);
+                LOG.log(Level.FINE, "Cards to load: {0}", cardsForGame.size());
+                int count=0;
+                for (Iterator it = cardsForGame.iterator(); it.hasNext();) {
                     addCard((ICard) it.next());
+                    count++;
+                    LOG.log(Level.FINEST, "Cards to loaded: {0}", count);
                 }
                 loaded = true;
-            } finally {
-                eventList.getReadWriteLock().readLock().unlock();
+                OutputHandler.output("Output", "Done!");
             }
         }
     }

@@ -98,6 +98,11 @@ public class MTGCardCache extends AbstractCardCache {
         }
     }
 
+    @Override
+    public String getGamePath() {
+        return getCacheLocationFile().getAbsolutePath() + System.getProperty("file.separator") + getGameName();
+    }
+
     private class CardImageLoader extends UpdateRunnable implements ActionListener {
 
         private Timer timer;
@@ -130,9 +135,10 @@ public class MTGCardCache extends AbstractCardCache {
                         timer.restart();
                         synchronized (this) {
                             reportResumeProgress();
-                            setSize(Lookup.getDefault().lookup(ICacheData.class).toCacheAmount());
+                            int size = Lookup.getDefault().lookup(ICacheData.class).toCacheAmount();
+                            LOG.log(Level.INFO, "Setting size to: {0}", size);
+                            setSize(size);
                             int progress = 0;
-                            setSize(Lookup.getDefault().lookup(ICacheData.class).toCacheAmount());
                             updateProgressMessage("Downloading card images...");
                             card = new CardJpaController(((DataBaseCardStorage) Lookup.getDefault().lookup(IDataBaseCardStorage.class)).getEntityManagerFactory()).findCard(card.getCardPK());
                             LOG.log(Level.FINE, "Processing card: {0}", card.getName());
@@ -234,10 +240,8 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     public String getManaIconPath(String mana) {
-        File loc = getCacheLocationFile();
-        String part = new MTGRCPGame().getName() + System.getProperty("file.separator")
+        return getGamePath() + System.getProperty("file.separator")
                 + "Mana" + System.getProperty("file.separator") + mana.replaceAll("[{}/]", "") + ".jpg";
-        return new File(loc, part).getPath();
     }
 
     @Override

@@ -4,4 +4,5 @@ OpenIDE-Module-Implementation-Version: 1
 OpenIDE-Module-Install: dreamer/card/game/core/Installer.class
 OpenIDE-Module-Layer: dreamer/card/game/core/layer.xml
 OpenIDE-Module-Localizing-Bundle: dreamer/card/game/core/Bundle.properties
+OpenIDE-Module-Requires: org.openide.windows.IOProvider
 

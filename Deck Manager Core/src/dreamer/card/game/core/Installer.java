@@ -124,7 +124,6 @@ public class Installer extends ModuleInstall {
                     new GameInitializationAction(game).actionPerformed(null);
                     task = game.getUpdateRunnable();
                     if (task != null) {
-                        OutputHandler.output("Output", "Updating: " + game.getName());
                         if (task instanceof IProgressAction) {
                             //Properly created to display progress in the IDE
                             updaters.add(new GameUpdateAction((IProgressAction) task));
@@ -172,6 +171,7 @@ public class Installer extends ModuleInstall {
     public boolean closing() {
         super.closing();
         try {
+            OutputHandler.output("Output", "Shutting down updaters...");
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).close();
             for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
                 GameUpdateAction updater = it.next();
@@ -182,6 +182,7 @@ public class Installer extends ModuleInstall {
                 Thread runnable = it.next();
                 runnable.interrupt();
             }
+            OutputHandler.output("Output", "Done!");
             return true;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Error closing database!", e);

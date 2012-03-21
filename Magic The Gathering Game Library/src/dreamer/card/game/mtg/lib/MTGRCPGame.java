@@ -21,6 +21,12 @@ public class MTGRCPGame extends MTGGame implements ICardGame {
 
     private static final Logger LOG = Logger.getLogger(MTGRCPGame.class.getName());
 
+    public MTGRCPGame() {
+        collectionTypes.add("Deck");
+        collectionTypes.add("Collection");
+        collections.put("Collection", "My Collection");
+    }
+
     @Override
     public Runnable getUpdateRunnable() {
         return new MTGUpdater(this);
@@ -48,6 +54,4 @@ public class MTGRCPGame extends MTGGame implements ICardGame {
             return null;
         }
     }
-
-    
 }

@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import mtg.card.MagicCard;
 import mtg.card.sync.ParseGathererSets;
-import org.openide.modules.Places;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
@@ -156,18 +155,6 @@ public class MTGUpdater extends UpdateRunnable {
                     setSize(totalPages);
                 }
                 //Update card cache
-                MTGCardCache.setCachingEnabled(true);
-                MTGCardCache.setLoadingEnabled(true);
-                File cacheDir = new File(Places.getCacheSubdirectory(".Deck Manager").getAbsolutePath()
-                        + System.getProperty("file.separator") + "cache");
-                //Create game cache dir
-                if (!cacheDir.exists()) {
-                    cacheDir.mkdirs();
-                }
-                for (Iterator<? extends ICardCache> it = Lookup.getDefault().lookupAll(ICardCache.class).iterator(); it.hasNext();) {
-                    ICardCache cache = it.next();
-                    cache.setCacheDir(cacheDir);
-                }
                 if (totalPages > 0) {
                     for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
                         if (!dbError) {
@@ -302,7 +289,7 @@ public class MTGUpdater extends UpdateRunnable {
             }
             state = 0;
         }
-        if (cards == false) {
+        if (!cards) {
             try {
                 LOG.log(Level.SEVERE, "Unable to retrieve pages from set: {0}", getCurrentSet());
                 //Delete it from database
