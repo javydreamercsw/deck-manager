@@ -33,7 +33,6 @@ import javax.swing.Timer;
 import mtg.card.sync.ParseGathererMTGIcon;
 import mtg.card.sync.ParseGathererNewVisualSpoiler;
 import mtg.card.sync.ParseGathererSetIcons;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -136,7 +135,6 @@ public class MTGCardCache extends AbstractCardCache {
                         synchronized (this) {
                             reportResumeProgress();
                             int size = Lookup.getDefault().lookup(ICacheData.class).toCacheAmount();
-                            LOG.log(Level.INFO, "Setting size to: {0}", size);
                             setSize(size);
                             int progress = 0;
                             updateProgressMessage("Downloading card images...");
@@ -192,7 +190,6 @@ public class MTGCardCache extends AbstractCardCache {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            timer.stop();
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -203,7 +200,7 @@ public class MTGCardCache extends AbstractCardCache {
                             try {
                                 getManaIcon(m);
                             } catch (IOException ex) {
-                                Exceptions.printStackTrace(ex);
+                                LOG.log(Level.SEVERE, null, ex);
                             }
                         }
                         //Get all cards
@@ -223,10 +220,11 @@ public class MTGCardCache extends AbstractCardCache {
                         LOG.log(Level.FINE, "Done adding cards to the download queue");
                         timer.restart();
                     } catch (DBException ex) {
-                        Exceptions.printStackTrace(ex);
+                        LOG.log(Level.SEVERE, null, ex);
                     }
                 }
             }).start();
+            timer.restart();
         }
     }
 
