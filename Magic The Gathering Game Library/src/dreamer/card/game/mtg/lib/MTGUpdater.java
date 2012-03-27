@@ -247,7 +247,6 @@ public class MTGUpdater extends UpdateRunnable {
     }
 
     private int getAmountOfPagesForSet(BufferedReader st) throws IOException {
-        //TODO: Fix calculation
         String line;
         int amount = 0;
         while ((line = st.readLine()) != null) {
