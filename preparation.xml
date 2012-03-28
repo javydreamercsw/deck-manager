@@ -6,7 +6,7 @@
     <property file="nbproject/project.properties"/>
     <property file="nbproject/platform.properties"/>
     <property name="platform.dir" value="../netbeans/"/>
-    <property name="lib.dir" value="${suite.dir}/../Simple Libs/tools"/>
+    <property name="lib.dir" value="${suite.dir}/tools"/>
     <!--Check to see if Simple Libs is present to update my libraries-->
     <condition property="simple.libs.exists">
         <available file="${lib.dir}/.." type="dir"/>
