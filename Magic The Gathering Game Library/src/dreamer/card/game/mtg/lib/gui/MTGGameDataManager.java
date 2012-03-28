@@ -264,11 +264,6 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
                     addCard((ICard) it.next());
                     count++;
                     LOG.log(Level.FINEST, "Cards to load: {0}", count);
-                    try {
-                        Thread.currentThread().sleep(100);
-                    } catch (InterruptedException ex) {
-                        LOG.log(Level.SEVERE, null, ex);
-                    }
                 }
                 loaded = true;
                 loading = false;
