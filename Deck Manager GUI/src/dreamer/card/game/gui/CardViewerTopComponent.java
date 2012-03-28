@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.CannotDetermineSetAbbriviation;
@@ -142,6 +138,7 @@ public final class CardViewerTopComponent extends TopComponent implements EventB
                     ImageIcon icon = Tool.loadImage(this, ImageIO.read(cache.getCardImage(card, cs, cache.createRemoteImageURL(card, Editions.getInstance().getEditionByName(cs.getName())), true, false)));
                     icon.getImage().flush();
                     cardLabel.setIcon(icon);
+                    cardLabel.setText("");
                 }
             } catch (MalformedURLException ex) {
                 Exceptions.printStackTrace(ex);

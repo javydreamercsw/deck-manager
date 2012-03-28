@@ -26,17 +26,7 @@ public class CardTableFormat implements TableFormat<ICard> {
     public CardTableFormat(ICardGame game) {
         this.game = game;
         columns.add("Name");
-        for (Iterator<ICard> it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForGame(game).iterator(); it.hasNext();) {
-            ICard card = it.next();
-            Map<java.lang.String, java.lang.String> attrs =
-                    Lookup.getDefault().lookup(IDataBaseCardStorage.class).getAttributesForCard(card);
-            for (Iterator<Entry<String, String>> it2 = attrs.entrySet().iterator(); it2.hasNext();) {
-                Entry<String, String> attr = it2.next();
-                if (!columns.contains(attr.getKey())) {
-                    columns.add(attr.getKey());
-                }
-            }
-        }
+        refresh();
     }
 
     @Override
@@ -72,5 +62,19 @@ public class CardTableFormat implements TableFormat<ICard> {
             }
         }
         return result;
+    }
+
+    public void refresh() {
+        for (Iterator<ICard> it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForGame(game).iterator(); it.hasNext();) {
+            ICard card = it.next();
+            Map<java.lang.String, java.lang.String> attrs =
+                    Lookup.getDefault().lookup(IDataBaseCardStorage.class).getAttributesForCard(card);
+            for (Iterator<Entry<String, String>> it2 = attrs.entrySet().iterator(); it2.hasNext();) {
+                Entry<String, String> attr = it2.next();
+                if (!columns.contains(attr.getKey())) {
+                    columns.add(attr.getKey());
+                }
+            }
+        }
     }
 }
