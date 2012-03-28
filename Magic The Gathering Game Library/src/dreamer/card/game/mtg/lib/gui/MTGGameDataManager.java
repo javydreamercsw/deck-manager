@@ -29,10 +29,10 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableCellRenderer;
+import mtg.card.MagicCardField;
 import org.dreamer.event.bus.EventBus;
 import org.dreamer.event.bus.EventBusListener;
 import org.jdesktop.swingx.JXTable;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
@@ -49,14 +49,16 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     private EventList<ICard> eventList = GlazedListsSwing.swingThreadProxyList(GlazedLists.threadSafeList(new BasicEventList<ICard>()));
     private DefaultEventTableModel<ICard> tableModel;
     private SortedList<ICard> sortedCards = new SortedList<ICard>(eventList);
-    private boolean loaded = false;
+    private boolean loaded = false, loading = false;
     private JXTable cards;
     private JTextField filterEdit = new JTextField(10);
     private Panel panel;
-    private FilterList<ICard> textFilteredIssues;
+    private FilterList<ICard> textFilteredList;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
     private static final Logger LOG = Logger.getLogger(MTGGameDataManager.class.getName());
+    private FilterList<ICard> manaFilteredList;
+    private CardTableFormat tableFormat;
 
     public MTGGameDataManager() {
         setGame(new MTGRCPGame());
@@ -65,7 +67,6 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     private TableCellRenderer getRendererForAttribute(String name) {
         if (name.toLowerCase().equals("cost")) {
             return new TableCellRenderer() {
-
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                     if (value != null) {
@@ -88,7 +89,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
                                         container.add(Box.createRigidArea(new Dimension(5, 0)));
                                     }
                                 } catch (IOException ex) {
-                                    Exceptions.printStackTrace(ex);
+                                    LOG.log(Level.SEVERE, null, ex);
                                 }
                             }
                             return container;
@@ -121,52 +122,49 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     public void setGame(ICardGame game) {
         this.game = game;
         SetSelect setSelect = new SetSelect(eventList);
-        FilterList<ICard> setsFilteredIssues = new FilterList<ICard>(sortedCards, setSelect);
+        FilterList<ICard> setsFilteredList = new FilterList<ICard>(sortedCards, setSelect);
         MatcherEditor<ICard> textMatcherEditor =
                 new TextComponentMatcherEditor<ICard>(filterEdit,
                 new TextFilterator<ICard>() {
-
                     @Override
                     public void getFilterStrings(List<String> list, ICard e) {
-                        for (int i = 0; i < getTableModel().getTableFormat().getColumnCount(); i++) {
-                            Object columnValue = getTableModel().getTableFormat().getColumnValue(e, i);
-                            if (columnValue != null) {
-                                list.add(columnValue.toString());
-                            }
+                        list.add(e.getObjectByField(MagicCardField.NAME).toString());
+                        list.add(e.getObjectByField(MagicCardField.TEXT).toString());
+                        Object value = e.getObjectByField(MagicCardField.NAME);
+                        if (value != null) {
+                            list.add(value.toString());
+                        }
+                        value = e.getObjectByField(MagicCardField.TEXT);
+                        if (value != null) {
+                            list.add(value.toString());
                         }
                     }
                 });
-        textFilteredIssues = new FilterList<ICard>(setsFilteredIssues, textMatcherEditor);
+        textFilteredList = new FilterList<ICard>(setsFilteredList, textMatcherEditor);
+        final ArrayList<String> manaFilters = new ArrayList<String>();
         TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new TextFilterator<ICard>() {
-
             @Override
             public void getFilterStrings(List<String> list, ICard e) {
-                for (int i = 0; i < getTableModel().getTableFormat().getColumnCount(); i++) {
-                    if (getTableModel().getTableFormat().getColumnName(i).equals("Cost")) {
-                        String columnValue = (String) getTableModel().getTableFormat().getColumnValue(e, i);
-                        if (columnValue != null) {
-                            StringTokenizer st = new StringTokenizer((String) columnValue, "}");
-                            while (st.hasMoreTokens()) {
-                                String token = st.nextToken();
-                                list.add(token.substring(1));
-                            }
-                        }
-                    }
+                Object value = e.getObjectByField(MagicCardField.COST);
+                if (value != null) {
+                    list.add(value.toString());
                 }
             }
         });
-        final ArrayList<String> manaFilters = new ArrayList<String>();
+        manaMatcherEditor.setMode(TextMatcherEditor.CONTAINS);
+        manaFilteredList = new FilterList<ICard>(textFilteredList, textMatcherEditor);
         //Create the card list
         DefaultEventSelectionModel selectionModel = new DefaultEventSelectionModel(eventList);
         cards = new JXTable(getTableModel());
         cards.setSelectionModel(selectionModel);
         cards.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 EventBus.getDefault().add(getTableModel().getElementAt(cards.getSelectedRow()));
             }
         });
+        TableComparatorChooser.install(
+                cards, sortedCards, TableComparatorChooser.MULTIPLE_COLUMN_MOUSE);
         //Add custom renderers
         for (int i = 0; i < getTableModel().getColumnCount(); i++) {
             TableCellRenderer renderer = getRendererForAttribute(getTableModel().getColumnName(i));
@@ -176,8 +174,6 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
         }
         //Enable the controls for the table
         cards.setColumnControlVisible(true);
-        TableComparatorChooser.install(
-                cards, sortedCards, TableComparatorChooser.MULTIPLE_COLUMN_MOUSE);
         //Set up the Lookp listener stuff
         EventBus.getDefault().subscribe(ICard.class, this);
         //Create Panel for the game
@@ -196,7 +192,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
                             manaMatcherEditor,
                             new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(mana))))));
                 } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
+                    LOG.log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -223,8 +219,9 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
      */
     public DefaultEventTableModel<ICard> getTableModel() {
         if (tableModel == null) {
-            tableModel = new DefaultEventTableModel<ICard>(textFilteredIssues,
-                    new CardTableFormat(game));
+            tableFormat = new CardTableFormat(game);
+            tableModel = new DefaultEventTableModel<ICard>(manaFilteredList,
+                    tableFormat);
         }
         return tableModel;
     }
@@ -256,23 +253,35 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
 
         @Override
         public void run() {
-            if (!loaded) {
+            if (!loaded && !loading) {
+                loading = true;
                 OutputHandler.output("Output", "Loading data into Table...");
+                cards.setEnabled(loaded);
                 List cardsForGame = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForGame(game);
                 LOG.log(Level.FINE, "Cards to load: {0}", cardsForGame.size());
                 int count = 0;
                 for (Iterator it = cardsForGame.iterator(); it.hasNext();) {
                     addCard((ICard) it.next());
                     count++;
-                    LOG.log(Level.FINEST, "Cards to loaded: {0}", count);
+                    LOG.log(Level.FINEST, "Cards to load: {0}", count);
+                    try {
+                        Thread.currentThread().sleep(100);
+                    } catch (InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
                 }
                 loaded = true;
+                loading = false;
+                cards.setEnabled(loaded);
                 OutputHandler.output("Output", "Done!");
             }
         }
     }
 
     private void addCard(ICard card) {
+        if (eventList.isEmpty()) {
+            tableFormat.refresh();
+        }
         content.add(card);
         eventList.add(card);
     }
