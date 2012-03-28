@@ -4,6 +4,7 @@ import com.reflexit.magiccards.core.cache.ICacheData;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
+import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
@@ -24,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import mtg.card.MagicCard;
 import mtg.card.sync.ParseGathererSets;
+import org.dreamer.event.bus.EventBus;
 import org.openide.util.Lookup;
 
 /**
@@ -148,12 +150,10 @@ public class MTGUpdater extends UpdateRunnable {
                     SetUpdateData setData = it.next();
                     totalPages += setData.getPagesInSet();
                 }
-                LOG.log(Level.INFO, "Pages to update: {0}", totalPages);
-                if (totalPages > 0) {
-                    setSize(totalPages);
-                }
+                LOG.log(Level.FINE, "Pages to update: {0}", totalPages);
                 //Update card cache
                 if (totalPages > 0) {
+                    setSize(totalPages);
                     //Create all sets first
                     for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
                         if (!dbError) {
@@ -389,8 +389,6 @@ public class MTGUpdater extends UpdateRunnable {
                 LOG.log(Level.SEVERE, null, ex);
             }
         }
-        //Add the card to the set
-        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
         //Add the card attributes
         try {
             HashMap<String, String> attributes = new HashMap<String, String>();
@@ -405,8 +403,10 @@ public class MTGUpdater extends UpdateRunnable {
             attributes.put("Type", card.getType());
             attributes.put("CardId", "" + card.getCardId());
             //This only adds it if it doesn't exist
-            //TODO: Method should check value as well and update if needed
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributesToCard(c, attributes);
+            //Add the card to the set
+            Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
+            EventBus.getDefault().publish((ICard) c);
         } catch (DBException ex) {
             LOG.log(Level.SEVERE, null, ex);
             return null;

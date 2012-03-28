@@ -22,9 +22,13 @@ public class MTGRCPGame extends MTGGame implements ICardGame {
     private static final Logger LOG = Logger.getLogger(MTGRCPGame.class.getName());
 
     public MTGRCPGame() {
-        collectionTypes.add("Deck");
-        collectionTypes.add("Collection");
-        collections.put("Collection", "My Collection");
+        synchronized (collectionTypes) {
+            collectionTypes.add("Deck");
+            collectionTypes.add("Collection");
+        }
+        synchronized (collections) {
+            collections.put("Collection", "My Collection");
+        }
     }
 
     @Override
