@@ -6,7 +6,6 @@ import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.CardFileUtils;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.IGameDataManager;
-import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,10 +19,11 @@ import java.util.logging.Logger;
 import javax.swing.Timer;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.netbeans.api.db.explorer.*;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.ModuleInstall;
 import org.openide.modules.Places;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.windows.WindowManager;
 
@@ -33,13 +33,13 @@ public class Installer extends ModuleInstall implements ActionListener {
     private final ArrayList<GameUpdateAction> updaters = new ArrayList<GameUpdateAction>();
     final ArrayList<Thread> runnables = new ArrayList<Thread>();
     private Timer timer;
-    private final int period = 10000, pause = 10000;
+    private final int period = 30000, pause = 10000;
 
     @Override
     public void restored() {
         //Create game cache dir
         File cacheDir = Places.getCacheSubdirectory(".Deck Manager");
-        //Check if database is present, if not copy the default database (to avoid long initial update)
+        //Check if database is present, if not copy the default database (to avoid long initial update that was 45 minutes long on my test)
         File dbDir = new File(cacheDir.getAbsolutePath()
                 + System.getProperty("file.separator") + "data");
         dbDir.mkdirs();
@@ -53,12 +53,12 @@ public class Installer extends ModuleInstall implements ActionListener {
                             + System.getProperty("file.separator")
                             + "deck_manager.h2.db"));
                 } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
+                    LOG.log(Level.SEVERE, null, ex);
                 }
             }
             LOG.log(Level.FINE, "Done!");
         }
-        HashMap<String, String> dbProperties = new HashMap<String, String>();
+        final HashMap<String, String> dbProperties = new HashMap<String, String>();
         dbProperties.put(PersistenceUnitProperties.JDBC_URL, "jdbc:h2:file:"
                 + cacheDir.getAbsolutePath()
                 + "/data/deck_manager;AUTO_SERVER=TRUE");
@@ -76,12 +76,12 @@ public class Installer extends ModuleInstall implements ActionListener {
                         "card_manager",
                         dbProperties.get(PersistenceUnitProperties.JDBC_PASSWORD),
                         true,
-                        "Deck manager Database");
+                        "Deck Manager Database");
                 //Create the default connection to embedded database
                 ConnectionManager.getDefault().addConnection(conn);
                 LOG.log(Level.FINE, "Created default connection!");
             } catch (DatabaseException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
         } else {
             //Copy the settings from the defined database
@@ -94,20 +94,6 @@ public class Installer extends ModuleInstall implements ActionListener {
             dbProperties.put(PersistenceUnitProperties.JDBC_USER, conn.getUser());
             LOG.log(Level.FINE, "Updating from found connection!");
         }
-        long start = System.currentTimeMillis();
-        OutputHandler.output("Output", "Initializing database...");
-        Lookup.getDefault().lookup(IDataBaseCardStorage.class).setDataBaseProperties(dbProperties);
-        //Start the database activities
-        LOG.log(Level.FINE, "Initializing database...");
-        try {
-            Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
-        } catch (DBException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            OutputHandler.output("Output", ex.getLocalizedMessage());
-        }
-        LOG.log(Level.FINE, "Database initialized");
-        OutputHandler.output("Output", "Database initialized");
-        LOG.log(Level.FINE, "Initializing database took: {0}", Tool.elapsedTime(start));
         File cardCacheDir = new File(Places.getCacheSubdirectory(".Deck Manager").getAbsolutePath()
                 + System.getProperty("file.separator") + "cache");
         //Create game cache dir
@@ -120,53 +106,79 @@ public class Installer extends ModuleInstall implements ActionListener {
         WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
             @Override
             public void run() {
-                LOG.log(Level.FINE, "Initializing games...");
-                Runnable task;
-                OutputHandler.output("Output", "Starting game updaters...");
-                for (Iterator<? extends ICardGame> it =
-                        Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
-                    ICardGame game = it.next();
-                    new GameInitializationAction(game).actionPerformed(null);
-                    task = game.getUpdateRunnable();
-                    if (task != null) {
-                        if (task instanceof IProgressAction) {
-                            //Properly created to display progress in the IDE
-                            updaters.add(new GameUpdateAction((IProgressAction) task));
-                        } else {
-                            //No progress information available
-                            runnables.add(new Thread(task));
+                try {
+                    long start = System.currentTimeMillis();
+                    OutputHandler.output("Output", "Initializing database...");
+                    Lookup.getDefault().lookup(IDataBaseCardStorage.class).setDataBaseProperties(dbProperties);
+                    //Start the database activities
+                    LOG.log(Level.FINE, "Initializing database...");
+                    try {
+                        //Make sure to load the driver
+                        Lookup.getDefault().lookup(ClassLoader.class).loadClass(dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
+                        Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
+                    } catch (Exception ex) {
+                        DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
+                                "Unable to load database driver!",
+                                NotifyDescriptor.ERROR_MESSAGE));
+                        LOG.log(Level.SEVERE, null, ex);
+                        OutputHandler.output("Output", ex.getLocalizedMessage());
+                        return;
+                    }
+                    LOG.log(Level.FINE, "Database initialized");
+                    OutputHandler.output("Output", "Database initialized");
+                    LOG.log(Level.FINE, "Initializing database took: {0}", Tool.elapsedTime(start));
+                    LOG.log(Level.FINE, "Initializing games...");
+                    Runnable task;
+                    OutputHandler.output("Output", "Starting game updaters...");
+                    for (Iterator<? extends ICardGame> it =
+                            Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
+                        ICardGame game = it.next();
+                        new GameInitializationAction(game).actionPerformed(null);
+                        task = game.getUpdateRunnable();
+                        if (task != null) {
+                            if (task instanceof IProgressAction) {
+                                //Properly created to display progress in the IDE
+                                updaters.add(new GameUpdateAction((IProgressAction) task));
+                            } else {
+                                //No progress information available
+                                runnables.add(new Thread(task));
+                            }
                         }
                     }
-                }
-                OutputHandler.output("Output", "Done!");
-                OutputHandler.output("Output", "Starting cache updaters...");
-                for (Iterator<? extends ICardCache> it =
-                        Lookup.getDefault().lookupAll(ICardCache.class).iterator(); it.hasNext();) {
-                    ICardCache cache = it.next();
-                    task = cache.getCacheTask();
-                    if (task != null) {
-                        if (task instanceof IProgressAction) {
-                            //Properly created to display progress in the IDE
-                            updaters.add(new CacheUpdateAction((IProgressAction) task));
-                        } else {
-                            //No progress information available
-                            runnables.add(new Thread(task));
+                    OutputHandler.output("Output", "Done!");
+                    OutputHandler.output("Output", "Starting cache updaters...");
+                    for (Iterator<? extends ICardCache> it =
+                            Lookup.getDefault().lookupAll(ICardCache.class).iterator(); it.hasNext();) {
+                        ICardCache cache = it.next();
+                        task = cache.getCacheTask();
+                        if (task != null) {
+                            if (task instanceof IProgressAction) {
+                                //Properly created to display progress in the IDE
+                                updaters.add(new CacheUpdateAction((IProgressAction) task));
+                            } else {
+                                //No progress information available
+                                runnables.add(new Thread(task));
+                            }
                         }
                     }
+                    for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
+                        GameUpdateAction updater = it.next();
+                        updater.actionPerformed(null);
+                    }
+                    for (Iterator<Thread> it = runnables.iterator(); it.hasNext();) {
+                        Thread runnable = it.next();
+                        runnable.start();
+                    }
+                    OutputHandler.output("Output", "Done!");
+                    //Timer for inactivity background work
+                    timer = new Timer(period, Installer.this);
+                    timer.setInitialDelay(pause);
+                    timer.start();
+                } catch (IllegalArgumentException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                } catch (SecurityException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
                 }
-                for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
-                    GameUpdateAction updater = it.next();
-                    updater.actionPerformed(null);
-                }
-                for (Iterator<Thread> it = runnables.iterator(); it.hasNext();) {
-                    Thread runnable = it.next();
-                    runnable.start();
-                }
-                OutputHandler.output("Output", "Done!");
-                //Timer for inactivity background work
-                timer = new Timer(period, Installer.this);
-                timer.setInitialDelay(pause);
-                timer.start();
             }
         });
     }
@@ -176,7 +188,6 @@ public class Installer extends ModuleInstall implements ActionListener {
         super.closing();
         try {
             OutputHandler.output("Output", "Shutting down updaters...");
-            Lookup.getDefault().lookup(IDataBaseCardStorage.class).close();
             for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
                 GameUpdateAction updater = it.next();
                 updater.shutdown();
@@ -187,9 +198,10 @@ public class Installer extends ModuleInstall implements ActionListener {
                 runnable.interrupt();
             }
             OutputHandler.output("Output", "Done!");
+            Lookup.getDefault().lookup(IDataBaseCardStorage.class).close();
             return true;
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error closing database!", e);
+            LOG.log(Level.SEVERE, "Error shuting down!", e);
             return false;
         }
     }
@@ -197,7 +209,7 @@ public class Installer extends ModuleInstall implements ActionListener {
     private JDBCDriver findSqlServerDriver(String driverClass, String driverName) {
         JDBCDriver sqlSrvDrv = null;
         JDBCDriver[] drivers = JDBCDriverManager.getDefault().getDrivers(driverClass);
-        // we know that there should be at least one as this module registers it  
+        // We know that there should be at least one as this module registers it  
         for (JDBCDriver drv : drivers) {
             if (driverName == null || (driverName != null && driverName.equals(drv.getName()))) {
                 sqlSrvDrv = drv;
@@ -209,9 +221,28 @@ public class Installer extends ModuleInstall implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        for (Iterator<? extends IGameDataManager> it = Lookup.getDefault().lookupAll(IGameDataManager.class).iterator(); it.hasNext();) {
-            IGameDataManager gdm = it.next();
-            gdm.load();
+        boolean ready = true;
+        for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
+            GameUpdateAction gua = it.next();
+            if (!gua.finished) {
+                ready = false;
+                break;
+            }
+        }
+        if (ready) {
+            for (Iterator<Thread> it = runnables.iterator(); it.hasNext();) {
+                Thread t = it.next();
+                if (!t.isAlive()) {
+                    ready = false;
+                    break;
+                }
+            }
+        }
+        if (ready) {
+            for (Iterator<? extends IGameDataManager> it = Lookup.getDefault().lookupAll(IGameDataManager.class).iterator(); it.hasNext();) {
+                IGameDataManager gdm = it.next();
+                gdm.load();
+            }
         }
         //Make sure to retry in case we got an update.
         timer.restart();
