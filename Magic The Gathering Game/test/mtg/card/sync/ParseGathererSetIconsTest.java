@@ -8,11 +8,13 @@ import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICardSet;
 import dreamer.card.game.MTGGame;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.*;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -60,6 +62,11 @@ public class ParseGathererSetIconsTest {
 
                 @Override
                 public Iterator iterator() {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                @Override
+                public Collection getCards() {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
             };
