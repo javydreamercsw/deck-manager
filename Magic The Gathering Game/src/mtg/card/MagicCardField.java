@@ -31,8 +31,7 @@ public enum MagicCardField implements ICardField {
     FLIPID(null),
     PART(null),
     OTHER_PART(null),
-    DUAL_ID(null), // end
-    ;
+    DUAL_ID(null);
     private final Field field;
 
     MagicCardField(String javaField) {
