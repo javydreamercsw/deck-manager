@@ -109,6 +109,7 @@ public class MTGCardCache extends AbstractCardCache {
         private ArrayList<String> mana = new ArrayList<String>();
 
         public CardImageLoader() {
+            super(new MTGRCPGame());
             mana.add("{B}");
             mana.add("{U}");
             mana.add("{W}");
@@ -193,38 +194,46 @@ public class MTGCardCache extends AbstractCardCache {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    //Get mana icons
+                    for (String m : mana) {
+                        LOG.log(Level.FINE, "Getting mana icon for: {0}", m);
+                        try {
+                            getManaIcon(m);
+                        } catch (IOException ex) {
+                            LOG.log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    //Get all cards
+                    LOG.log(Level.FINE, "Adding cards to the download queue");
+                    List result;
                     try {
-                        //Get mana icons
-                        for (String m : mana) {
-                            LOG.log(Level.FINE, "Getting mana icon for: {0}", m);
-                            try {
-                                getManaIcon(m);
-                            } catch (IOException ex) {
-                                LOG.log(Level.SEVERE, null, ex);
-                            }
-                        }
-                        //Get all cards
-                        LOG.log(Level.FINE, "Adding cards to the download queue");
-                        for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findAll").iterator(); it.hasNext();) {
-                            Card card = (Card) it.next();
-                            //Check if card's image has been downloaded or not
-                            for (CardSet set : card.getCardSetList()) {
-                                if (!cardImageExists(card, set)) {
-                                    //Add it to the queue
-                                    LOG.log(Level.FINER, "Added card: {0} to the image queue.", card.getName());
-                                    Lookup.getDefault().lookup(ICacheData.class).add(card);
-                                    break;
-                                }
-                            }
-                        }
-                        LOG.log(Level.FINE, "Done adding cards to the download queue");
-                        timer.restart();
+                        result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findAll");
                     } catch (DBException ex) {
                         LOG.log(Level.SEVERE, null, ex);
+                        return;
                     }
+                    for (Iterator it = result.iterator(); it.hasNext();) {
+                        Card card = (Card) it.next();
+                        //Check if card's image has been downloaded or not
+                        for (CardSet set : card.getCardSetList()) {
+                            if (!cardImageExists(card, set)) {
+                                //Add it to the queue
+                                LOG.log(Level.FINER, "Added card: {0} to the image queue.", card.getName());
+                                Lookup.getDefault().lookup(ICacheData.class).add(card);
+                                break;
+                            }
+                        }
+                    }
+                    LOG.log(Level.FINE, "Done adding cards to the download queue");
+                    timer.restart();
                 }
             }).start();
             timer.restart();
+        }
+
+        @Override
+        public void initialized() {
+            //Nothing to do
         }
     }
 

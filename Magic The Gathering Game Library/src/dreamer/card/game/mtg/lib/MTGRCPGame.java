@@ -33,7 +33,7 @@ public class MTGRCPGame extends MTGGame implements ICardGame {
 
     @Override
     public Runnable getUpdateRunnable() {
-        return new MTGUpdater(this);
+        return new MTGUpdater();
     }
 
     @Override

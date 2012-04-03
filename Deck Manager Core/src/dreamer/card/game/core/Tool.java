@@ -260,10 +260,11 @@ public final class Tool {
         try {
             pg.grabPixels();
         } catch (InterruptedException e) {
+            return false;
         }
 
         // Get the image's color model
         ColorModel cm = pg.getColorModel();
-        return cm.hasAlpha();
+        return cm == null ? false : cm.hasAlpha();
     }
 }

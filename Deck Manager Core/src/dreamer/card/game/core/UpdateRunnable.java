@@ -1,21 +1,32 @@
 package dreamer.card.game.core;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.storage.db.DBException;
+import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Query;
+import org.openide.util.Lookup;
 
 /**
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public abstract class UpdateRunnable implements IProgressAction {
+public abstract class UpdateRunnable implements IProgressAction, DataBaseStateListener {
 
     private int size, progress = 0;
     private ArrayList<UpdateProgressListener> listeners = new ArrayList<UpdateProgressListener>();
+    private final ICardGame game;
     private static final Logger LOG = Logger.getLogger(UpdateRunnable.class.getName());
 
-    public UpdateRunnable() {
+    public UpdateRunnable(ICardGame game) {
+        this.game = game;
+        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addDataBaseStateListener(this);
     }
 
     @Override
@@ -59,7 +70,7 @@ public abstract class UpdateRunnable implements IProgressAction {
             listener.reportProgress(amount);
         }
     }
-    
+
     @Override
     public void reportDone() {
         for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
@@ -91,7 +102,7 @@ public abstract class UpdateRunnable implements IProgressAction {
             listener.changeMessage(message);
         }
     }
-    
+
     @Override
     public void reportSuspendProgress() {
         for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
@@ -99,12 +110,52 @@ public abstract class UpdateRunnable implements IProgressAction {
             listener.suspend();
         }
     }
-    
+
     @Override
-    public void reportResumeProgress(){
+    public void reportResumeProgress() {
         for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
             UpdateProgressListener listener = it.next();
             listener.resume();
+        }
+    }
+
+    /**
+     * @return the game
+     */
+    public ICardGame getGame() {
+        return game;
+    }
+
+    public List<Object> namedQuery(String query,
+            HashMap<String, Object> parameters, EntityManagerFactory emf) throws DBException {
+        Query q;
+        EntityManager localEM = emf.createEntityManager();
+        EntityTransaction transaction = localEM.getTransaction();
+        transaction.begin();
+        q = localEM.createNamedQuery(query);
+        if (parameters != null) {
+            Iterator<Map.Entry<String, Object>> entries = parameters.entrySet().iterator();
+            while (entries.hasNext()) {
+                Map.Entry<String, Object> e = entries.next();
+                q.setParameter(e.getKey().toString(), e.getValue());
+            }
+        }
+        List result = q.getResultList();
+        transaction.commit();
+        localEM.close();
+        return result;
+    }
+
+    @Override
+    public void initialized() {
+        HashMap parameters = new HashMap();
+        try {
+            parameters.put("name", game.getName());
+            if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).isEmpty()) {
+                Lookup.getDefault().lookup(IDataBaseCardStorage.class).createGame(game.getName());
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
 }
