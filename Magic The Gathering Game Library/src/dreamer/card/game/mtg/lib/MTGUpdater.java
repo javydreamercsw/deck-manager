@@ -143,13 +143,13 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                                 List<CardHasCardAttribute> attributes = ((Card) card).getCardHasCardAttributeList();
                                 card = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(cardType,
                                         card.getName(), ((Card) card).getText());
-                                LOG.log(Level.INFO, "Added card: {0}", card.getName());
+                                LOG.log(Level.FINE, "Added card: {0}", card.getName());
                                 for (Iterator<CardHasCardAttribute> it3 = attributes.iterator(); it3.hasNext();) {
                                     CardHasCardAttribute attr = it3.next();
-                                    if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(attr.getCardAttribute().getName()) == null) {
+                                    if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(card, attr.getCardAttribute().getName()) == null) {
                                         Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributeToCard(card,
                                                 attr.getCardAttribute().getName(), attr.getValue());
-                                        LOG.log(Level.INFO, "Added attribute: {0} with value: {1}!",
+                                        LOG.log(Level.FINE, "Added attribute: {0} with value: {1}!",
                                                 new Object[]{attr.getCardAttribute().getName(), attr.getValue()});
                                     }
                                 }
@@ -247,7 +247,7 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                                                 ? "it was not in the database" : "is missing pages in the database"});
                                     data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
                                 } else {
-                                    LOG.log(Level.INFO, "Skipping processing of set: {0}", edition.getName());
+                                    LOG.log(Level.FINE, "Skipping processing of set: {0}", edition.getName());
                                 }
                             } else {
                                 break;
