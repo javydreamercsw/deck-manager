@@ -4,6 +4,7 @@ import ca.odell.glazedlists.gui.TableFormat;
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,7 +18,7 @@ import org.openide.util.Lookup;
  *
  * @author Javier A. Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
-public class CardTableFormat implements TableFormat<ICard> {
+public class CardTableFormat implements TableFormat<ICard>, DataBaseStateListener {
 
     private final ICardGame game;
     private final ArrayList<String> columns = new ArrayList<String>();
@@ -26,7 +27,7 @@ public class CardTableFormat implements TableFormat<ICard> {
     public CardTableFormat(ICardGame game) {
         this.game = game;
         columns.add("Name");
-        refresh();
+        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addDataBaseStateListener(CardTableFormat.this);
     }
 
     @Override
@@ -76,5 +77,10 @@ public class CardTableFormat implements TableFormat<ICard> {
                 }
             }
         }
+    }
+
+    @Override
+    public void initialized() {
+        refresh();
     }
 }

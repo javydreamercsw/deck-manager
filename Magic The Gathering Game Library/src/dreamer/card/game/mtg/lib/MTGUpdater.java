@@ -5,9 +5,10 @@ import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
 import com.reflexit.magiccards.core.model.ICard;
-import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
+import com.reflexit.magiccards.core.model.ICardType;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
+import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import com.reflexit.magiccards.core.storage.database.*;
 import com.reflexit.magiccards.core.storage.database.controller.CardSetJpaController;
@@ -23,19 +24,26 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import mtg.card.MagicCard;
 import mtg.card.sync.ParseGathererSets;
 import org.dreamer.event.bus.EventBus;
+import org.eclipse.persistence.config.PersistenceUnitProperties;
+import org.openide.modules.InstalledFileLocator;
+import org.openide.modules.Places;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public class MTGUpdater extends UpdateRunnable {
+@ServiceProvider(service = DataBaseStateListener.class)
+public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener {
 
     private String currentSet = "";
-    private final ICardGame game;
     private static Pattern countPattern = Pattern.compile("Search:<span id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_searchTermDisplay\".*><i>.*</i>  \\((\\d+)\\)</span>");
     private static Pattern lastPagePattern = Pattern.compile("\\Q<span style=\"visibility:hidden;\">&nbsp;&gt;</span></div>");
     private static Pattern spanPattern = Pattern.compile("class=[^>]*>(.*)</span>");
@@ -67,141 +75,248 @@ public class MTGUpdater extends UpdateRunnable {
         }
     }
 
-    MTGUpdater(final MTGRCPGame game) {
-        this.game = (ICardGame) game;
+    public MTGUpdater() {
+        super(new MTGRCPGame());
     }
 
     @Override
     public void run() {
+        //This section updates from the deployed database
+        //Create game cache dir
+        File cacheDir = Places.getCacheSubdirectory(".Deck Manager");
+        //Check if database is present, if not copy the default database (to avoid long initial update that was 45 minutes long on my test)
+        File dbDir = new File(cacheDir.getAbsolutePath()
+                + System.getProperty("file.separator") + "data");
+        dbDir.mkdirs();
+        File db = InstalledFileLocator.getDefault().locate("card_manager.h2.db",
+                "dreamer.card.game.mtg.lib", false);
+        LOG.info("Updating database...");
+        EntityManagerFactory emf = null;
         try {
-            //Get the sets
-            updateProgressMessage("Gathering stats before start processing...");
-            ParseGathererSets parser = new ParseGathererSets();
-            parser.load();
-            Collection<Editions.Edition> editions = Editions.getInstance().getEditions();
-            HashMap parameters = new HashMap();
-            parameters.put("name", game.getName());
-            Game mtg = null;
-            try {
-                mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).get(0);
-            } catch (DBException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-                dbError = true;
-            }
-            ArrayList<SetUpdateData> data = new ArrayList<SetUpdateData>();
-            List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll");
-            LOG.log(Level.FINE, "{0} sets found in database:", temp.size());
-            int i = 0;
-            if (LOG.isLoggable(Level.FINE)) {
-                for (Iterator it = temp.iterator(); it.hasNext();) {
-                    CardSet cs = (CardSet) it.next();
-                    LOG.log(Level.FINE, (++i + " " + cs.getName()));
+            if (db != null && db.exists()) {
+                //Connect to the module's DB
+                String dbName = db.getName();
+                if (dbName.indexOf(".") > 0) {
+                    dbName = dbName.substring(0, dbName.indexOf("."));
                 }
-            }
-            //Chek to see if there's something new to update.
-            ArrayList<Editions.Edition> setsToLoad = new ArrayList<Editions.Edition>();
-            for (Iterator iterator = editions.iterator(); iterator.hasNext();) {
-                Editions.Edition edition = (Editions.Edition) iterator.next();
-                parameters.clear();
-                parameters.put("name", edition.getName());
-                temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
-                if (temp.isEmpty()) {
-                    LOG.log(Level.WARNING, "Unable to find set: {0}", edition.getName());
-                    setsToLoad.add(edition);
-                }
-            }
-            if (!setsToLoad.isEmpty()) {
-                updateProgressMessage("Calculating amount of pages to process...");
+                final Map<String, String> dbProperties = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getConnectionSettings();
+                dbProperties.put(PersistenceUnitProperties.JDBC_URL, "jdbc:h2:file:"
+                        + db.getParentFile().getAbsolutePath()
+                        + System.getProperty("file.separator") + dbName + ";AUTO_SERVER=TRUE");
+                dbProperties.put(PersistenceUnitProperties.TARGET_DATABASE, "org.eclipse.persistence.platform.database.H2Platform");
+                dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD, "test");
+                dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, "org.h2.Driver");
+                dbProperties.put(PersistenceUnitProperties.JDBC_USER, "deck_manager");
+                emf = Persistence.createEntityManagerFactory("Card_Game_InterfacePU",
+                        dbProperties);
+                HashMap parameters = new HashMap();
+                parameters.put("name", getGame().getName());
+                Game game = (Game) namedQuery("Game.findByName", parameters, emf).get(0);
+                ParseGathererSets parser = new ParseGathererSets();
                 try {
-                    for (Iterator iterator = setsToLoad.iterator(); iterator.hasNext();) {
-                        if (!dbError) {
-                            Editions.Edition edition = (Editions.Edition) iterator.next();
-                            String from = source + edition.getName().replaceAll(" ", "+") + "%22%5d";
-                            int urlAmount = checkAmountOfPagesForSet(from);
-                            parameters.clear();
-                            parameters.put("name", edition.getName());
-                            List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
-                            long amount = 0;
-                            CardSet set;
-                            if (!result.isEmpty()) {
-                                set = (CardSet) result.get(0);
-                                parameters.clear();
-                                parameters.put("gameId", set.getCardSetPK().getGameId());
-                                amount = (Long) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery("SELECT count(c) FROM CardSet c WHERE c.cardSetPK.gameId = :gameId", parameters).get(0);
-                            }
-                            if (result.isEmpty() || amount < urlAmount) {
-                                LOG.log(Level.FINE, "Adding set: {0} to processing list because {1}.",
-                                        new Object[]{edition.getName(), result.isEmpty()
-                                            ? "it was not in the database" : "is missing pages in the database"});
-                                data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
-                            } else {
-                                LOG.log(Level.INFO, "Skipping processing of set: {0}", edition.getName());
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                } catch (DBException e) {
-                    LOG.log(Level.SEVERE, null, e);
-                    dbError = true;
-                }
-                int totalPages = 0;
-                for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
-                    SetUpdateData setData = it.next();
-                    totalPages += setData.getPagesInSet();
-                }
-                LOG.log(Level.FINE, "Pages to update: {0}", totalPages);
-                //Update card cache
-                if (totalPages > 0) {
-                    setSize(totalPages);
-                    //Create all sets first
-                    for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
-                        if (!dbError) {
-                            SetUpdateData setData = it.next();
-                            Edition edition = setData.getEdition();
-                            if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName())) {
-                                Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(mtg,
-                                        edition.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
-                                LOG.log(Level.FINE, "Created set: {0}", edition.getName());
-                            }
-                        }
-                    }
-                    for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
-                        if (!dbError) {
-                            SetUpdateData setData = it.next();
-                            String mess = "Updating set: " + setData.getName();
-                            LOG.log(Level.FINE, mess);
-                            updateProgressMessage(mess);
-                            setCurrentSet(setData.getName());
-                            createCardsForSet(setData.getUrl());
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                try {
-                    for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll").iterator(); it.hasNext();) {
-                        CardSet cs = (CardSet) it.next();
-                        for (ICardCache cache : game.getCardCacheImplementations()) {
-                            cache.getSetIcon((ICardSet) cs);
-                        }
-                    }
+                    parser.load();
                 } catch (IOException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
+                    Exceptions.printStackTrace(ex);
+                }
+                for (Iterator<CardSet> it = game.getCardSetList().iterator(); it.hasNext();) {
+                    if (!dbError) {
+                        ICardSet set = it.next();
+                        LOG.log(Level.FINE, "Checkig set: {0}", set.getName());
+                        if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(set.getName())) {
+                            Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(game, set.getName(),
+                                    Editions.getInstance().getEditionByName(set.getName()).getMainAbbreviation(), new Date());
+                        }
+                        LOG.log(Level.FINE, "{0} cards to check!", set.getCards().size());
+                        for (Iterator it2 = set.getCards().iterator(); it2.hasNext();) {
+                            ICard card = (ICard) it2.next();
+                            ICardType cardType = ((Card) card).getCardType();
+                            if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardTypeExists(cardType.getName())) {
+                                cardType = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardType(cardType.getName());
+                                LOG.log(Level.FINE, "Added card type: {0}", cardType.getName());
+                            } else {
+                                LOG.log(Level.FINE, "Card type: {0} already exists!", cardType.getName());
+                                parameters.clear();
+                                parameters.put("name", cardType.getName());
+                                cardType = (ICardType) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardType.findByName", parameters).get(0);
+                            }
+                            if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardExists(card.getName())) {
+                                List<CardHasCardAttribute> attributes = ((Card) card).getCardHasCardAttributeList();
+                                card = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(cardType,
+                                        card.getName(), ((Card) card).getText());
+                                LOG.log(Level.INFO, "Added card: {0}", card.getName());
+                                for (Iterator<CardHasCardAttribute> it3 = attributes.iterator(); it3.hasNext();) {
+                                    CardHasCardAttribute attr = it3.next();
+                                    if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(attr.getCardAttribute().getName()) == null) {
+                                        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributeToCard(card,
+                                                attr.getCardAttribute().getName(), attr.getValue());
+                                        LOG.log(Level.INFO, "Added attribute: {0} with value: {1}!",
+                                                new Object[]{attr.getCardAttribute().getName(), attr.getValue()});
+                                    }
+                                }
+                            } else {
+                                parameters.clear();
+                                parameters.put("name", card.getName());
+                                card = (ICard) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
+                                LOG.log(Level.FINE, "Card: {0} already exists!", card.getName());
+                            }
+                            if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).setHasCard(set, card)) {
+                                parameters.clear();
+                                parameters.put("name", set.getName());
+                                CardSet temp = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters).get(0);
+                                Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(card, temp);
+                                LOG.log(Level.FINE, "Added card: {0} to set {1}", new Object[]{card.getName(), temp.getName()});
+                            } else {
+                                LOG.log(Level.FINE, "Card set: {0} already has card {1}",
+                                        new Object[]{set.getName(), card.getName()});
+                            }
+                        }
+                    }
                 }
             }
-            reportDone();
         } catch (DBException ex) {
             LOG.log(Level.SEVERE, null, ex);
             dbError = true;
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+        } finally {
+            //Close connections
+            if (emf != null) {
+                emf.close();
+            }
+        }
+        if (!dbError) {
+            //Now update from the internet
+            try {
+                ParseGathererSets parser = new ParseGathererSets();
+                parser.load();
+                Collection<Editions.Edition> editions = Editions.getInstance().getEditions();
+                ArrayList<SetUpdateData> data = new ArrayList<SetUpdateData>();
+                //This section updates from the internet
+                //Get the sets
+                updateProgressMessage("Gathering stats before start processing...");
+                HashMap parameters = new HashMap();
+                parameters.put("name", getGame().getName());
+                Game mtg = null;
+                try {
+                    mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).get(0);
+                } catch (DBException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                    dbError = true;
+                }
+                List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll");
+                LOG.log(Level.FINE, "{0} sets found in database:", temp.size());
+                int i = 0;
+                if (LOG.isLoggable(Level.FINE)) {
+                    for (Iterator it = temp.iterator(); it.hasNext();) {
+                        CardSet cs = (CardSet) it.next();
+                        LOG.log(Level.FINE, (++i + " " + cs.getName()));
+                    }
+                }
+                //Chek to see if there's something new to update.
+                ArrayList<Editions.Edition> setsToLoad = new ArrayList<Editions.Edition>();
+                for (Iterator iterator = editions.iterator(); iterator.hasNext();) {
+                    Editions.Edition edition = (Editions.Edition) iterator.next();
+                    parameters.clear();
+                    parameters.put("name", edition.getName());
+                    temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
+                    if (temp.isEmpty()) {
+                        LOG.log(Level.WARNING, "Unable to find set: {0}", edition.getName());
+                        setsToLoad.add(edition);
+                    }
+                }
+                if (!setsToLoad.isEmpty()) {
+                    updateProgressMessage("Calculating amount of pages to process...");
+                    try {
+                        for (Iterator iterator = setsToLoad.iterator(); iterator.hasNext();) {
+                            if (!dbError) {
+                                Editions.Edition edition = (Editions.Edition) iterator.next();
+                                String from = source + edition.getName().replaceAll(" ", "+") + "%22%5d";
+                                int urlAmount = checkAmountOfPagesForSet(from);
+                                parameters.clear();
+                                parameters.put("name", edition.getName());
+                                List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
+                                long amount = 0;
+                                CardSet set;
+                                if (!result.isEmpty()) {
+                                    set = (CardSet) result.get(0);
+                                    parameters.clear();
+                                    parameters.put("gameId", set.getCardSetPK().getGameId());
+                                    amount = (Long) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery("SELECT count(c) FROM CardSet c WHERE c.cardSetPK.gameId = :gameId", parameters).get(0);
+                                }
+                                if (result.isEmpty() || amount < urlAmount) {
+                                    LOG.log(Level.FINE, "Adding set: {0} to processing list because {1}.",
+                                            new Object[]{edition.getName(), result.isEmpty()
+                                                ? "it was not in the database" : "is missing pages in the database"});
+                                    data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
+                                } else {
+                                    LOG.log(Level.INFO, "Skipping processing of set: {0}", edition.getName());
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                    } catch (DBException e) {
+                        LOG.log(Level.SEVERE, null, e);
+                        dbError = true;
+                    }
+                    int totalPages = 0;
+                    for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
+                        SetUpdateData setData = it.next();
+                        totalPages += setData.getPagesInSet();
+                    }
+                    LOG.log(Level.FINE, "Pages to update: {0}", totalPages);
+                    //Update card cache
+                    if (totalPages > 0) {
+                        setSize(totalPages);
+                        //Create all sets first
+                        for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
+                            if (!dbError) {
+                                SetUpdateData setData = it.next();
+                                Edition edition = setData.getEdition();
+                                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName())) {
+                                    Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(mtg,
+                                            edition.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
+                                    LOG.log(Level.FINE, "Created set: {0}", edition.getName());
+                                }
+                            }
+                        }
+                        for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
+                            if (!dbError) {
+                                SetUpdateData setData = it.next();
+                                String mess = "Updating set: " + setData.getName();
+                                LOG.log(Level.FINE, mess);
+                                updateProgressMessage(mess);
+                                setCurrentSet(setData.getName());
+                                createCardsForSet(setData.getUrl());
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    try {
+                        if (!dbError) {
+                            for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll").iterator(); it.hasNext();) {
+                                CardSet cs = (CardSet) it.next();
+                                for (ICardCache cache : getGame().getCardCacheImplementations()) {
+                                    cache.getSetIcon((ICardSet) cs);
+                                }
+                            }
+                        }
+                    } catch (IOException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                }
+                reportDone();
+            } catch (DBException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                dbError = true;
+            } catch (IOException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
         }
     }
 
     @Override
     public String getActionName() {
-        return "Updating " + game.getName() + " game...";
+        return "Updating " + getGame().getName() + " game...";
     }
 
     /**
@@ -264,7 +379,7 @@ public class MTGUpdater extends UpdateRunnable {
         int state = 0;
         boolean lastPage = false;
         boolean cards = false;
-        while ((state == 0 && (line = st.readLine()) != null) || (state == 1)) {
+        while ((state == 0 && (line = st.readLine()) != null) || (state == 1) && !dbError) {
             if (lastPagePattern.matcher(line).find()) {
                 lastPage = true;
             }
@@ -303,6 +418,7 @@ public class MTGUpdater extends UpdateRunnable {
                 return true;
             } catch (DBException ex) {
                 LOG.log(Level.SEVERE, null, ex);
+                dbError = true;
                 return true;
             }
         }
@@ -310,114 +426,113 @@ public class MTGUpdater extends UpdateRunnable {
     }
 
     private void parseRecord(String line) throws DBException {
-        try {
-            MagicCard card = new MagicCard();
-            // split by td
-            String[] rows = line.split("<td");
-            String[] fields = rows[2].split("<span|<div");
-            String id = getMatch(idPattern, fields[3]);
-            card.setId(id);
-            card.setName(getMatch(namePattern, fields[3]));
-            String cost = getMatch(spanPattern, fields[4]);
-            card.setCost(cost);
-            String type = getMatch(spanPattern, fields[6]);
-            String powerCombo = type;
-            String pow = getMatch(powPattern, powerCombo, 1).replaceFirst("/", "");
-            String tou = getMatch(powPattern, powerCombo, 2);
-            type = type.replaceAll("\\(.*", "").trim();
-            card.setType(type);
-            String text = fixText(getMatch(divPattern, fields[7]));
-            card.setOracleText(text);
-            card.setPower(pow);
-            card.setToughness(tou);
-            String[] sets = rows[3].split("<a onclick");
-            for (String temp : sets) {
-                String edition = getMatch(setPattern, temp, 1);
-                String rarity = getMatch(setPattern, temp, 2);
-                String setId = getMatch(idPattern, temp, 1);
-                if (edition.length() <= 1) {
-                    continue;
-                }
-                edition = edition.trim();
-                if (id.equals(setId)) {
-                    addCardToSet(card, edition, rarity, type);
-                } else {
-                    if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition)) {
-                        LOG.log(Level.WARNING, "Is this a printing for card: {0} ID: {1} Set: {2}?",
-                                new Object[]{card.getName(), id, edition});
-                    }
+        MagicCard card = new MagicCard();
+        // split by td
+        String[] rows = line.split("<td");
+        String[] fields = rows[2].split("<span|<div");
+        String id = getMatch(idPattern, fields[3]);
+        card.setId(id);
+        card.setName(getMatch(namePattern, fields[3]));
+        String cost = getMatch(spanPattern, fields[4]);
+        card.setCost(cost);
+        String type = getMatch(spanPattern, fields[6]);
+        String powerCombo = type;
+        String pow = getMatch(powPattern, powerCombo, 1).replaceFirst("/", "");
+        String tou = getMatch(powPattern, powerCombo, 2);
+        type = type.replaceAll("\\(.*", "").trim();
+        card.setType(type);
+        String text = fixText(getMatch(divPattern, fields[7]));
+        card.setOracleText(text);
+        card.setPower(pow);
+        card.setToughness(tou);
+        String[] sets = rows[3].split("<a onclick");
+        for (String temp : sets) {
+            String edition = getMatch(setPattern, temp, 1);
+            String rarity = getMatch(setPattern, temp, 2);
+            String setId = getMatch(idPattern, temp, 1);
+            if (edition.length() <= 1) {
+                continue;
+            }
+            edition = edition.trim();
+            if (id.equals(setId)) {
+                addCardToSet(card, edition, rarity, type);
+            } else {
+                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition)) {
+                    LOG.log(Level.WARNING, "Is this a printing for card: {0} ID: {1} Set: {2}?",
+                            new Object[]{card.getName(), id, edition});
                 }
             }
-        } catch (IllegalStateException e) {
-            LOG.log(Level.WARNING, null, e);
         }
     }
 
     private Card addCardToSet(MagicCard card, String edition, String rarity, String type) throws DBException {
-        HashMap parameters = new HashMap();
-        List result;
-        CardType ct;
         Card c = null;
-        card.setSetName(edition);
-        card.setRarity(rarity.trim());
-        parameters.clear();
-        parameters.put("name", card.getSetName());
-        CardSet set = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters).get(0);
-        //Handle card type, it might be new
-        parameters.put("name", type);
-        try {
-            result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardType.findByName", parameters);
-            if (result.isEmpty()) {
-                ct = (CardType) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardType(type);
-            } else {
-                ct = (CardType) result.get(0);
+        if (!dbError) {
+            HashMap parameters = new HashMap();
+            List result;
+            CardType ct;
+            card.setSetName(edition);
+            card.setRarity(rarity.trim());
+            parameters.clear();
+            parameters.put("name", card.getSetName());
+            CardSet set = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters).get(0);
+            //Handle card type, it might be new
+            parameters.put("name", type);
+            try {
+                result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardType.findByName", parameters);
+                if (result.isEmpty()) {
+                    ct = (CardType) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardType(type);
+                } else {
+                    ct = (CardType) result.get(0);
+                }
+            } catch (DBException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                return null;
             }
-        } catch (DBException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            return null;
-        }
-        //Create the card
-        if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardExists(card.getName())) {
+            //Create the card
+            if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardExists(card.getName())) {
+                parameters.clear();
+                parameters.put("name", card.getName());
+                c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
+            } else {
+                try {
+                    c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
+                    LOG.log(Level.FINE, "Created card: {0}", c.getName());
+                } catch (DBException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                }
+            }
+            //Add the card attributes
+            try {
+                HashMap<String, String> attributes = new HashMap<String, String>();
+                attributes.put("Rarity", card.getRarity());
+                attributes.put("Cost", card.getCost());
+                attributes.put("Color Type", card.getColorType());
+                attributes.put("Language", card.getLanguage());
+                attributes.put("Part", card.getPart());
+                attributes.put("Power", card.getPower());
+                attributes.put("Rulings", card.getRulings());
+                attributes.put("Toughness", card.getToughness());
+                attributes.put("Type", card.getType());
+                attributes.put("CardId", "" + card.getCardId());
+                //This only adds it if it doesn't exist
+                Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributesToCard(c, attributes);
+                //Add the card to the set
+                Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
+                EventBus.getDefault().publish((ICard) c);
+            } catch (DBException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                dbError = true;
+                return null;
+            }
             parameters.clear();
             parameters.put("name", card.getName());
             c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
-        } else {
-            try {
-                c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
-                LOG.log(Level.FINE, "Created card: {0}", c.getName());
-            } catch (DBException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            }
+            //Add to caching list
+            c.setSetName(edition);
+            Lookup.getDefault().lookup(ICacheData.class).add(c);
+            increaseProgress();
         }
-        //Add the card attributes
-        try {
-            HashMap<String, String> attributes = new HashMap<String, String>();
-            attributes.put("Rarity", card.getRarity());
-            attributes.put("Cost", card.getCost());
-            attributes.put("Color Type", card.getColorType());
-            attributes.put("Language", card.getLanguage());
-            attributes.put("Part", card.getPart());
-            attributes.put("Power", card.getPower());
-            attributes.put("Rulings", card.getRulings());
-            attributes.put("Toughness", card.getToughness());
-            attributes.put("Type", card.getType());
-            attributes.put("CardId", "" + card.getCardId());
-            //This only adds it if it doesn't exist
-            Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributesToCard(c, attributes);
-            //Add the card to the set
-            Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
-            EventBus.getDefault().publish((ICard) c);
-        } catch (DBException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            return null;
-        }
-        parameters.clear();
-        parameters.put("name", card.getName());
-        c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
-        //Add to caching list
-        c.setSetName(edition);
-        Lookup.getDefault().lookup(ICacheData.class).add(c);
-        increaseProgress();
         return c;
     }
 

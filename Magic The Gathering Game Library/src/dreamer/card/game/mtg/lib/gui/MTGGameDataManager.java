@@ -8,6 +8,7 @@ import com.dreamer.outputhandler.OutputHandler;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.IGameDataManager;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import dreamer.card.game.core.Tool;
@@ -257,14 +258,17 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
                 loading = true;
                 OutputHandler.output("Output", "Loading data into Table...");
                 cards.setEnabled(loaded);
-                List cardsForGame = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForGame(game);
-                LOG.log(Level.FINE, "Cards to load: {0}", cardsForGame.size());
+                List setsForGame = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(game);
+                LOG.log(Level.FINE, "Cards to load: {0}", setsForGame.size());
                 int count = 0;
-                for (Iterator it = cardsForGame.iterator(); it.hasNext();) {
-                    addCard((ICard) it.next());
-                    count++;
-                    LOG.log(Level.FINEST, "Cards to load: {0}", count);
+                for (Iterator it = setsForGame.iterator(); it.hasNext();) {
+                    ICardSet set = (ICardSet) it.next();
+                    for (Iterator it2 = set.getCards().iterator(); it2.hasNext();) {
+                        addCard((ICard) it2.next());
+                        count++;
+                    }
                 }
+                LOG.log(Level.FINEST, "Cards to load: {0}", count);
                 loaded = true;
                 loading = false;
                 cards.setEnabled(loaded);
