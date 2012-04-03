@@ -232,6 +232,7 @@ public class Installer extends ModuleInstall implements ActionListener, DataBase
                     }
                 }
             }
+            OutputHandler.output("Output", "Done!");
             for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
                 GameUpdateAction updater = it.next();
                 updater.actionPerformed(null);
