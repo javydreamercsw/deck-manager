@@ -6,9 +6,10 @@ import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.beans.IntrospectionException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 /**
@@ -18,6 +19,7 @@ import org.openide.util.Lookup;
 public class ICardAllChildFactory extends ChildFactory<ICard> {
 
     private final ICardGame game;
+    private static final Logger LOG = Logger.getLogger(ICardAllChildFactory.class.getName());
 
     public ICardAllChildFactory(ICardGame game) {
         this.game = game;
@@ -37,7 +39,7 @@ public class ICardAllChildFactory extends ChildFactory<ICard> {
         try {
             return new ICardNode(card, game.getName());
         } catch (IntrospectionException ex) {
-            Exceptions.printStackTrace(ex);
+            LOG.log(Level.SEVERE, null, ex);
             return null;
         }
     }

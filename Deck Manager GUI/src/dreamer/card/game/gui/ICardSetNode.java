@@ -6,10 +6,11 @@ import dreamer.card.game.core.Tool;
 import java.awt.Image;
 import java.beans.IntrospectionException;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFrame;
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
 
@@ -20,6 +21,7 @@ import org.openide.util.lookup.Lookups;
 public class ICardSetNode extends BeanNode {
 
     private final ICardSet set;
+    private static final Logger LOG = Logger.getLogger(ICardSetNode.class.getName());
 
     public ICardSetNode(ICardSet set, ICardChildFactory childFactory) throws IntrospectionException {
         super(set, Children.create(childFactory, true), Lookups.singleton(set));
@@ -39,7 +41,7 @@ public class ICardSetNode extends BeanNode {
         try {
             return Tool.loadImage(new JFrame(), Lookup.getDefault().lookup(ICardCache.class).getSetIcon(set)).getImage();
         } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
+            LOG.log(Level.SEVERE, null, ex);
             return null;
         }
     }

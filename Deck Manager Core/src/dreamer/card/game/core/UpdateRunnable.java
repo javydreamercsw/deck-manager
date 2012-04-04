@@ -26,7 +26,7 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
 
     public UpdateRunnable(ICardGame game) {
         this.game = game;
-        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addDataBaseStateListener(this);
+        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addDataBaseStateListener(UpdateRunnable.this);
     }
 
     @Override

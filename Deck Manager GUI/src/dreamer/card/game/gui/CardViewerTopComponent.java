@@ -14,6 +14,8 @@ import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import org.dreamer.event.bus.EventBus;
@@ -45,6 +47,8 @@ preferredID = "CardViewerTopComponent")
     "HINT_CardViewerTopComponent=Card Viewer window"
 })
 public final class CardViewerTopComponent extends TopComponent implements EventBusListener<ICard> {
+
+    private static final Logger LOG = Logger.getLogger(CardViewerTopComponent.class.getName());
 
     public CardViewerTopComponent() {
         initComponents();
@@ -141,13 +145,13 @@ public final class CardViewerTopComponent extends TopComponent implements EventB
                     cardLabel.setText("");
                 }
             } catch (MalformedURLException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.log(Level.SEVERE, null, ex);
             } catch (CannotDetermineSetAbbriviation ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.log(Level.SEVERE, null, ex);
             } catch (DBException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
         }
     }
