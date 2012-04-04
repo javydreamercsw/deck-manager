@@ -10,13 +10,13 @@
                 <attr name="instanceOf" stringvalue="org.netbeans.spi.autoupdate.UpdateProvider"/>
                 <attr name="url" stringvalue="http://xinco.org:8080/hudson/job/Card%20Game%20Interface%20Module/lastSuccessfulBuild/artifact/Card%20Game%20Interface/build/updates/updates.xml"/>
             </file>
-            <!--TODO <file name="Card_Game_Interface_.instance">
+            <file name="Card_Game_Interface.instance">
                 <attr name="displayName" stringvalue="Card Game Interface Update Center"/>
                 <attr name="enabled" boolvalue="true"/>
                 <attr name="instanceCreate" methodvalue="org.netbeans.modules.autoupdate.updateprovider.AutoupdateCatalogFactory.createUpdateProvider"/>
                 <attr name="instanceOf" stringvalue="org.netbeans.spi.autoupdate.UpdateProvider"/>
                 <attr name="url" stringvalue="updates.xml"/>
-            </file>-->
+            </file>
         </folder>
     </folder>
     <folder name="Menu">
@@ -96,9 +96,9 @@
             <file name="QuickSearch_hidden"/>
             <file name="UndoRedo_hidden"/>
         </folder>
-        <folder name="Databases">
+        <!--<folder name="Databases">
             <folder name="JDBCDrivers">
                 <file name="H2Driver.xml" url="H2Driver.xml"/>
             </folder>
-            </folder>
+            </folder>-->
 </filesystem>

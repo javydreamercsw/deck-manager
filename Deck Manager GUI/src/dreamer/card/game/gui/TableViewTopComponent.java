@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import org.dreamer.event.bus.EventBus;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -22,7 +24,6 @@ import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.ServiceProvider;
@@ -54,6 +55,7 @@ public final class TableViewTopComponent extends TopComponent
 
     private final ExplorerManager mgr = new ExplorerManager();
     private HashMap<ICardGame, IGameDataManager> gameManagers = new HashMap<ICardGame, IGameDataManager>();
+    private static final Logger LOG = Logger.getLogger(TableViewTopComponent.class.getName());
 
     public TableViewTopComponent() {
         initComponents();
@@ -186,7 +188,7 @@ public final class TableViewTopComponent extends TopComponent
                 System.out.println(cc.getName());
             }
         } catch (DBException ex) {
-            Exceptions.printStackTrace(ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         //TODO: Enable on platform 7.2
         //makeBusy(false);
