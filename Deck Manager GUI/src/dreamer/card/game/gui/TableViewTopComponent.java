@@ -8,16 +8,11 @@ import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.awt.Component;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import org.dreamer.event.bus.EventBus;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
@@ -49,57 +44,6 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @ServiceProvider(service = DataBaseStateListener.class)
 public final class TableViewTopComponent extends GameCardComponent {
 
-    @Override
-    public void notify(ICardGame game) {
-        //TODO: Enable on platform 7.2
-        //makeBusy(true);
-        try {
-            IGameDataManager implementation = game.getGameDataManagerImplementation();
-            if (implementation != null && !gameManagers.containsKey(game)) {
-                //Create a game data manager
-                gameManagers.put(game, implementation);
-                //Add a table to contain the cards
-                Component component = gameManagers.get(game).getComponent();
-                component.addMouseListener(new MouseListener() {
-
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        notifySelection(e.getComponent());
-                    }
-
-                    @Override
-                    public void mousePressed(MouseEvent e) {
-                        notifyDeselection(e.getComponent());
-                    }
-
-                    @Override
-                    public void mouseReleased(MouseEvent e) {
-                        notifyDeselection(e.getComponent());
-                    }
-
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-                        notifySelection(e.getComponent());
-                    }
-
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-                        notifyDeselection(e.getComponent());
-                    }
-                });
-                gameTabbedPane.addTab(game.getName(), new ImageIcon(game.getGameIcon()), component);
-            } else {
-                DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(game.getName()
-                        + " doesn't have a Data Manager implementation. "
-                        + "Some functionality won't work or will be limited.",
-                        NotifyDescriptor.ERROR_MESSAGE));
-            }
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        //TODO: Enable on platform 7.2
-        //makeBusy(false);
-    }
     private final ExplorerManager mgr = new ExplorerManager();
     private HashMap<ICardGame, IGameDataManager> gameManagers = new HashMap<ICardGame, IGameDataManager>();
     private static final Logger LOG = Logger.getLogger(TableViewTopComponent.class.getName());
@@ -112,22 +56,29 @@ public final class TableViewTopComponent extends GameCardComponent {
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
     }
 
-    private void notifySelection(Component source) {
-        for (Iterator<Entry<ICardGame, IGameDataManager>> it = gameManagers.entrySet().iterator(); it.hasNext();) {
-            Entry<ICardGame, IGameDataManager> entry = it.next();
-            if (entry.getValue().getComponent().equals(source)) {
-                EventBus.getDefault().publish(entry.getKey());
+    @Override
+    public void notify(ICardGame game) {
+        //TODO: Enable on platform 7.2
+        //makeBusy(true);
+        try {
+            IGameDataManager implementation = game.getGameDataManagerImplementation();
+            if (implementation != null && !gameManagers.containsKey(game)) {
+                //Create a game data manager
+                gameManagers.put(game, implementation);
+                //Add a table to contain the cards
+                Component component = gameManagers.get(game).getComponent();
+                gameTabbedPane.addTab(game.getName(), new ImageIcon(game.getGameIcon()), component);
+            } else {
+                DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(game.getName()
+                        + " doesn't have a Data Manager implementation. "
+                        + "Some functionality won't work or will be limited.",
+                        NotifyDescriptor.ERROR_MESSAGE));
             }
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
-    }
-
-    private void notifyDeselection(Component source) {
-        for (Iterator<Entry<ICardGame, IGameDataManager>> it = gameManagers.entrySet().iterator(); it.hasNext();) {
-            Entry<ICardGame, IGameDataManager> entry = it.next();
-            if (entry.getValue().getComponent().equals(source)) {
-                EventBus.getDefault().remove(entry.getKey());
-            }
-        }
+        //TODO: Enable on platform 7.2
+        //makeBusy(false);
     }
 
     /**
@@ -194,7 +145,5 @@ public final class TableViewTopComponent extends GameCardComponent {
         } catch (DBException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        //TODO: Enable on platform 7.2
-        //makeBusy(false);
     }
 }
