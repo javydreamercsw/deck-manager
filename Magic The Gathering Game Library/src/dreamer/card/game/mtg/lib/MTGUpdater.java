@@ -32,7 +32,6 @@ import org.dreamer.event.bus.EventBus;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.Places;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -94,6 +93,7 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
         EntityManagerFactory emf = null;
         try {
             if (db != null && db.exists()) {
+                //TODO Instead of checking card by card make an amount check to decide faster.
                 //Connect to the module's DB
                 String dbName = db.getName();
                 if (dbName.indexOf(".") > 0) {
@@ -116,7 +116,7 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                 try {
                     parser.load();
                 } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
+                    LOG.log(Level.SEVERE, null, ex);
                 }
                 for (Iterator<CardSet> it = game.getCardSetList().iterator(); it.hasNext();) {
                     if (!dbError) {
@@ -182,6 +182,7 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                 emf.close();
             }
         }
+        //TODO: Move to the interface to be more generic (updateRemote)V
         if (!dbError) {
             //Now update from the internet
             try {
@@ -304,7 +305,6 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                         LOG.log(Level.SEVERE, null, ex);
                     }
                 }
-                reportDone();
             } catch (DBException ex) {
                 LOG.log(Level.SEVERE, null, ex);
                 dbError = true;
@@ -312,6 +312,7 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                 LOG.log(Level.SEVERE, null, ex);
             }
         }
+        reportDone();
     }
 
     @Override
