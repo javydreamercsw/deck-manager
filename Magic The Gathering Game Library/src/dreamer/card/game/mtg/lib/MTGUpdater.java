@@ -183,6 +183,8 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
             }
         }
         EventBus.getDefault().publish(getGame());
+        //TODO Load faster
+        getGame().getGameDataManagerImplementation().load();
         //TODO: Move to the interface to be more generic (updateRemote)V
         if (!dbError) {
             //Now update from the internet

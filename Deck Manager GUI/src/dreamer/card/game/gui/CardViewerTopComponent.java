@@ -23,7 +23,6 @@ import org.dreamer.event.bus.EventBusListener;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
@@ -38,9 +37,9 @@ autostore = false)
 persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @TopComponent.Registration(mode = "explorer", openAtStartup = true)
 @ActionID(category = "Window", id = "dreamer.card.game.gui.CardViewerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
-@TopComponent.OpenActionRegistration(displayName = "#CTL_CardViewerAction",
-preferredID = "CardViewerTopComponent")
+@ActionReference(path = "Menu/Window" /*
+ * , position = 333
+ */)
 @Messages({
     "CTL_CardViewerAction=Card Viewer",
     "CTL_CardViewerTopComponent=Card Viewer Window",
@@ -57,7 +56,7 @@ public final class CardViewerTopComponent extends TopComponent implements EventB
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
-        //Set up the Lookp listener stuff
+        //Set up the listener stuff
         EventBus.getDefault().subscribe(ICard.class, CardViewerTopComponent.this);
     }
 

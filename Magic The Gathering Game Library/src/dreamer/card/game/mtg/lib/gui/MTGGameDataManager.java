@@ -54,11 +54,10 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     private JXTable cards;
     private JTextField filterEdit = new JTextField(10);
     private Panel panel;
-    private FilterList<ICard> textFilteredList;
+    private FilterList<ICard> textFilteredList, manaFilteredList;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
     private static final Logger LOG = Logger.getLogger(MTGGameDataManager.class.getName());
-    private FilterList<ICard> manaFilteredList;
     private CardTableFormat tableFormat;
     private boolean stop;
 
@@ -190,7 +189,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
 
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
-                    EventBus.getDefault().add(getTableModel().getElementAt(cards.getSelectedRow()));
+                    EventBus.getDefault().publish(getTableModel().getElementAt(cards.getSelectedRow()));
                 }
             });
             TableComparatorChooser.install(
@@ -274,11 +273,13 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
                     }
                     ICardSet set = (ICardSet) it.next();
                     for (Iterator it2 = set.getCards().iterator(); it2.hasNext();) {
-                        addCard((ICard) it2.next());
+                        ICard card=(ICard) it2.next();
+                        card.setSetName(set.getName());
+                        addCard(card);
                         count++;
                     }
                 }
-                LOG.log(Level.FINEST, "Cards to load: {0}", count);
+                LOG.log(Level.FINEST, "Cards loaded: {0}", count);
                 loaded = true;
                 loading = false;
                 cards.setEnabled(loaded);
