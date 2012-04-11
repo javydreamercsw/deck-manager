@@ -60,6 +60,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     private static final Logger LOG = Logger.getLogger(MTGGameDataManager.class.getName());
     private FilterList<ICard> manaFilteredList;
     private CardTableFormat tableFormat;
+    private boolean stop;
 
     public MTGGameDataManager() {
         setGame(new MTGRCPGame());
@@ -262,6 +263,9 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
                 LOG.log(Level.FINE, "Cards to load: {0}", setsForGame.size());
                 int count = 0;
                 for (Iterator it = setsForGame.iterator(); it.hasNext();) {
+                    if (stop) {
+                        break;
+                    }
                     ICardSet set = (ICardSet) it.next();
                     for (Iterator it2 = set.getCards().iterator(); it2.hasNext();) {
                         addCard((ICard) it2.next());
@@ -278,10 +282,11 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     }
 
     private void addCard(ICard card) {
-        if (eventList.isEmpty()) {
-            tableFormat.refresh();
-        }
         content.add(card);
         eventList.add(card);
+    }
+    @Override
+    public void stop() {
+        stop = true;
     }
 }
