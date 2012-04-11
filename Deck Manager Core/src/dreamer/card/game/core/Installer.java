@@ -186,11 +186,8 @@ public class Installer extends ModuleInstall implements ActionListener, DataBase
             }
         }
         if (ready) {
-            //Code to be executed after all updates are complete
-            for (Iterator<? extends IGameDataManager> it = Lookup.getDefault().lookupAll(IGameDataManager.class).iterator(); it.hasNext();) {
-                IGameDataManager gdm = it.next();
-                gdm.load();
-            }
+            OutputHandler.output("Output", "Executing after update code...");
+            //TODO: Code to be executed after all updates are complete
             OutputHandler.output("Output", "Done!");
         }
         return ready;
