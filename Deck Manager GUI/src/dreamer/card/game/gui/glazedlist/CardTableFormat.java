@@ -2,12 +2,14 @@ package dreamer.card.game.gui.glazedlist;
 
 import ca.odell.glazedlists.gui.TableFormat;
 import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardAttribute;
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openide.util.Exceptions;
@@ -29,11 +31,17 @@ public class CardTableFormat implements TableFormat<ICard> {
             columns.add("Name");
             HashMap parameters = new HashMap();
             parameters.put("game", game.getName());
-            Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery(
+            List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery(
                     "select distinct chca.cardAttribute from "
                     + "CardHasCardAttribute chca, Card c, CardSet cs, Game g"
                     + " where cs.game =g and g.name =:game and cs member of c.cardSetList"
                     + " and chca.card =c order by chca.cardAttribute.name", parameters);
+            for(Object obj:result){
+                ICardAttribute attr=(ICardAttribute) obj;
+                if(!columns.contains(attr.getName())){
+                    columns.add(attr.getName());
+                }
+            }
         } catch (DBException ex) {
             Exceptions.printStackTrace(ex);
         }
