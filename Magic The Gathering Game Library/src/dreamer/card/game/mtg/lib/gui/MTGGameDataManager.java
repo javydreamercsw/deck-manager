@@ -69,6 +69,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     private TableCellRenderer getRendererForAttribute(String name) {
         if (name.toLowerCase().equals("cost")) {
             return new TableCellRenderer() {
+
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                     if (value != null) {
@@ -128,6 +129,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
         MatcherEditor<ICard> textMatcherEditor =
                 new TextComponentMatcherEditor<ICard>(filterEdit,
                 new TextFilterator<ICard>() {
+
                     @Override
                     public void getFilterStrings(List<String> list, ICard e) {
                         list.add(e.getObjectByField(MagicCardField.NAME).toString());
@@ -145,6 +147,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
         textFilteredList = new FilterList<ICard>(setsFilteredList, textMatcherEditor);
         final ArrayList<String> manaFilters = new ArrayList<String>();
         TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new TextFilterator<ICard>() {
+
             @Override
             public void getFilterStrings(List<String> list, ICard e) {
                 Object value = e.getObjectByField(MagicCardField.COST);
@@ -160,6 +163,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
         cards = new JXTable(getTableModel());
         cards.setSelectionModel(selectionModel);
         cards.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 EventBus.getDefault().add(getTableModel().getElementAt(cards.getSelectedRow()));
@@ -212,7 +216,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     @Override
     public void load() {
         if (!loaded) {
-            new Thread(new DataLoader()).start();
+            new Thread(new DataLoader(), game.getName() + " loader").start();
         }
     }
 
@@ -285,6 +289,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
         content.add(card);
         eventList.add(card);
     }
+
     @Override
     public void stop() {
         stop = true;
