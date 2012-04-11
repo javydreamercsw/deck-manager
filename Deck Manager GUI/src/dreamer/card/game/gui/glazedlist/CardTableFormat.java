@@ -4,21 +4,20 @@ import ca.odell.glazedlists.gui.TableFormat;
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
+import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 /**
  *
  * @author Javier A. Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
-public class CardTableFormat implements TableFormat<ICard>, DataBaseStateListener {
+public class CardTableFormat implements TableFormat<ICard> {
 
     private final ICardGame game;
     private final ArrayList<String> columns = new ArrayList<String>();
@@ -26,8 +25,18 @@ public class CardTableFormat implements TableFormat<ICard>, DataBaseStateListene
 
     public CardTableFormat(ICardGame game) {
         this.game = game;
-        columns.add("Name");
-        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addDataBaseStateListener(CardTableFormat.this);
+        try {
+            columns.add("Name");
+            HashMap parameters = new HashMap();
+            parameters.put("game", game.getName());
+            Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery(
+                    "select distinct chca.cardAttribute from "
+                    + "CardHasCardAttribute chca, Card c, CardSet cs, Game g"
+                    + " where cs.game =g and g.name =:game and cs member of c.cardSetList"
+                    + " and chca.card =c order by chca.cardAttribute.name", parameters);
+        } catch (DBException ex) {
+            Exceptions.printStackTrace(ex);
+        }
     }
 
     @Override
@@ -63,24 +72,5 @@ public class CardTableFormat implements TableFormat<ICard>, DataBaseStateListene
             }
         }
         return result;
-    }
-
-    public void refresh() {
-        for (Iterator<ICard> it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForGame(game).iterator(); it.hasNext();) {
-            ICard card = it.next();
-            Map<java.lang.String, java.lang.String> attrs =
-                    Lookup.getDefault().lookup(IDataBaseCardStorage.class).getAttributesForCard(card);
-            for (Iterator<Entry<String, String>> it2 = attrs.entrySet().iterator(); it2.hasNext();) {
-                Entry<String, String> attr = it2.next();
-                if (!columns.contains(attr.getKey())) {
-                    columns.add(attr.getKey());
-                }
-            }
-        }
-    }
-
-    @Override
-    public void initialized() {
-        refresh();
     }
 }
