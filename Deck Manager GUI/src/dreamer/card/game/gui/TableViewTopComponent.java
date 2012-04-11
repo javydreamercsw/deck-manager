@@ -12,11 +12,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import org.dreamer.event.bus.EventBus;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.DialogDisplayer;
@@ -42,22 +42,70 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @ActionReference(path = "Menu/Window" /*
  * , position = 333
  */)
-@TopComponent.OpenActionRegistration(displayName = "#CTL_TableViewAction",
-preferredID = "TableViewTopComponent")
 @Messages({
-    "CTL_TableViewAction=Table View",
-    "CTL_TableViewTopComponent=Cards",
-    "HINT_TableViewTopComponent=This is a TableView window"
+    "CTL_TableViewTopComponent=Game Card List",
+    "HINT_TableViewTopComponent=This is a Game Card List window"
 })
 @ServiceProvider(service = DataBaseStateListener.class)
-public final class TableViewTopComponent extends TopComponent
-        implements ExplorerManager.Provider, DataBaseStateListener {
+public final class TableViewTopComponent extends GameCardComponent {
 
+    @Override
+    public void notify(ICardGame game) {
+        //TODO: Enable on platform 7.2
+        //makeBusy(true);
+        try {
+            IGameDataManager implementation = game.getGameDataManagerImplementation();
+            if (implementation != null && !gameManagers.containsKey(game)) {
+                //Create a game data manager
+                gameManagers.put(game, implementation);
+                //Add a table to contain the cards
+                Component component = gameManagers.get(game).getComponent();
+                component.addMouseListener(new MouseListener() {
+
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        notifySelection(e.getComponent());
+                    }
+
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        notifyDeselection(e.getComponent());
+                    }
+
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                        notifyDeselection(e.getComponent());
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        notifySelection(e.getComponent());
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        notifyDeselection(e.getComponent());
+                    }
+                });
+                gameTabbedPane.addTab(game.getName(), new ImageIcon(game.getGameIcon()), component);
+            } else {
+                DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(game.getName()
+                        + " doesn't have a Data Manager implementation. "
+                        + "Some functionality won't work or will be limited.",
+                        NotifyDescriptor.ERROR_MESSAGE));
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+        //TODO: Enable on platform 7.2
+        //makeBusy(false);
+    }
     private final ExplorerManager mgr = new ExplorerManager();
     private HashMap<ICardGame, IGameDataManager> gameManagers = new HashMap<ICardGame, IGameDataManager>();
     private static final Logger LOG = Logger.getLogger(TableViewTopComponent.class.getName());
 
     public TableViewTopComponent() {
+        super();
         initComponents();
         setName(Bundle.CTL_TableViewTopComponent());
         setToolTipText(Bundle.HINT_TableViewTopComponent());
@@ -132,50 +180,6 @@ public final class TableViewTopComponent extends TopComponent
 
     @Override
     public void initialized() {
-        //TODO: Enable on platform 7.2
-        //makeBusy(true);
-        for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
-            ICardGame game = it.next();
-            List<IGameDataManager> dmImplementations = game.getGameDataManagerImplementations();
-            if (!dmImplementations.isEmpty()) {
-                //Create a game data manager
-                gameManagers.put(game, game.getGameDataManagerImplementations().get(0));
-                //Add a table to contain the cards
-                Component component = gameManagers.get(game).getComponent();
-                gameTabbedPane.addTab(game.getName(), new ImageIcon(game.getGameIcon()), component);
-                component.addMouseListener(new MouseListener() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        notifySelection(e.getComponent());
-                    }
-
-                    @Override
-                    public void mousePressed(MouseEvent e) {
-                        notifyDeselection(e.getComponent());
-                    }
-
-                    @Override
-                    public void mouseReleased(MouseEvent e) {
-                        notifyDeselection(e.getComponent());
-                    }
-
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-                        notifySelection(e.getComponent());
-                    }
-
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-                        notifyDeselection(e.getComponent());
-                    }
-                });
-            } else {
-                DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(game.getName()
-                        + " doesn't have a Data Manager implementation. "
-                        + "Some functionality won't work or will be limited.",
-                        NotifyDescriptor.ERROR_MESSAGE));
-            }
-        }
         try {
             System.out.println("Collections:");
             for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardCollection.findAll").iterator(); it.hasNext();) {
