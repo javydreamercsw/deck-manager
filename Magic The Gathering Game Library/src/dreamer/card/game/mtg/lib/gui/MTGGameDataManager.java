@@ -189,7 +189,9 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
 
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
-                    EventBus.getDefault().publish(getTableModel().getElementAt(cards.getSelectedRow()));
+                    if (cards.getSelectedRow() >= 0) {
+                        EventBus.getDefault().publish(getTableModel().getElementAt(cards.getSelectedRow()));
+                    }
                 }
             });
             TableComparatorChooser.install(
@@ -273,7 +275,7 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
                     }
                     ICardSet set = (ICardSet) it.next();
                     for (Iterator it2 = set.getCards().iterator(); it2.hasNext();) {
-                        ICard card=(ICard) it2.next();
+                        ICard card = (ICard) it2.next();
                         card.setSetName(set.getName());
                         addCard(card);
                         count++;
