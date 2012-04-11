@@ -124,93 +124,6 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     @Override
     public void setGame(ICardGame game) {
         this.game = game;
-        SetSelect setSelect = new SetSelect(eventList);
-        FilterList<ICard> setsFilteredList = new FilterList<ICard>(sortedCards, setSelect);
-        MatcherEditor<ICard> textMatcherEditor =
-                new TextComponentMatcherEditor<ICard>(filterEdit,
-                new TextFilterator<ICard>() {
-
-                    @Override
-                    public void getFilterStrings(List<String> list, ICard e) {
-                        list.add(e.getObjectByField(MagicCardField.NAME).toString());
-                        list.add(e.getObjectByField(MagicCardField.TEXT).toString());
-                        Object value = e.getObjectByField(MagicCardField.NAME);
-                        if (value != null) {
-                            list.add(value.toString());
-                        }
-                        value = e.getObjectByField(MagicCardField.TEXT);
-                        if (value != null) {
-                            list.add(value.toString());
-                        }
-                    }
-                });
-        textFilteredList = new FilterList<ICard>(setsFilteredList, textMatcherEditor);
-        final ArrayList<String> manaFilters = new ArrayList<String>();
-        TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new TextFilterator<ICard>() {
-
-            @Override
-            public void getFilterStrings(List<String> list, ICard e) {
-                Object value = e.getObjectByField(MagicCardField.COST);
-                if (value != null) {
-                    list.add(value.toString());
-                }
-            }
-        });
-        manaMatcherEditor.setMode(TextMatcherEditor.CONTAINS);
-        manaFilteredList = new FilterList<ICard>(textFilteredList, textMatcherEditor);
-        //Create the card list
-        DefaultEventSelectionModel selectionModel = new DefaultEventSelectionModel(eventList);
-        cards = new JXTable(getTableModel());
-        cards.setSelectionModel(selectionModel);
-        cards.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                EventBus.getDefault().add(getTableModel().getElementAt(cards.getSelectedRow()));
-            }
-        });
-        TableComparatorChooser.install(
-                cards, sortedCards, TableComparatorChooser.MULTIPLE_COLUMN_MOUSE);
-        //Add custom renderers
-        for (int i = 0; i < getTableModel().getColumnCount(); i++) {
-            TableCellRenderer renderer = getRendererForAttribute(getTableModel().getColumnName(i));
-            if (renderer != null) {
-                cards.getColumnModel().getColumn(i).setCellRenderer(renderer);
-            }
-        }
-        //Enable the controls for the table
-        cards.setColumnControlVisible(true);
-        //Set up the Lookp listener stuff
-        EventBus.getDefault().subscribe(ICard.class, this);
-        //Create Panel for the game
-        ArrayList<String> manaTypes = new ArrayList<String>();
-        manaTypes.add("W");
-        manaTypes.add("U");
-        manaTypes.add("B");
-        manaTypes.add("R");
-        manaTypes.add("G");
-        Panel manaFilterPanel = new Panel();
-        List<ICardCache> impls = getGame().getCardCacheImplementations();
-        if (impls.size() > 0) {
-            for (String mana : manaTypes) {
-                try {
-                    manaFilterPanel.add(new ManaFilterButton(mana, manaFilters,
-                            manaMatcherEditor,
-                            new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(mana))))));
-                } catch (IOException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-        panel = new Panel();
-        panel.setLayout(new BorderLayout());
-        JScrollPane sp = new JScrollPane(cards);
-        Panel filterPane = new Panel();
-        filterPane.add(new JLabel("Filter: "), BorderLayout.WEST);
-        filterPane.add(filterEdit, BorderLayout.CENTER);
-        filterPane.add(manaFilterPanel, BorderLayout.EAST);
-        panel.add(filterPane, BorderLayout.NORTH);
-        panel.add(sp, BorderLayout.CENTER);
     }
 
     @Override
@@ -234,6 +147,95 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
 
     @Override
     public Component getComponent() {
+        if (panel == null) {
+            SetSelect setSelect = new SetSelect(eventList);
+            FilterList<ICard> setsFilteredList = new FilterList<ICard>(sortedCards, setSelect);
+            MatcherEditor<ICard> textMatcherEditor =
+                    new TextComponentMatcherEditor<ICard>(filterEdit,
+                    new TextFilterator<ICard>() {
+
+                        @Override
+                        public void getFilterStrings(List<String> list, ICard e) {
+                            list.add(e.getObjectByField(MagicCardField.NAME).toString());
+                            list.add(e.getObjectByField(MagicCardField.TEXT).toString());
+                            Object value = e.getObjectByField(MagicCardField.NAME);
+                            if (value != null) {
+                                list.add(value.toString());
+                            }
+                            value = e.getObjectByField(MagicCardField.TEXT);
+                            if (value != null) {
+                                list.add(value.toString());
+                            }
+                        }
+                    });
+            textFilteredList = new FilterList<ICard>(setsFilteredList, textMatcherEditor);
+            final ArrayList<String> manaFilters = new ArrayList<String>();
+            TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new TextFilterator<ICard>() {
+
+                @Override
+                public void getFilterStrings(List<String> list, ICard e) {
+                    Object value = e.getObjectByField(MagicCardField.COST);
+                    if (value != null) {
+                        list.add(value.toString());
+                    }
+                }
+            });
+            manaMatcherEditor.setMode(TextMatcherEditor.CONTAINS);
+            manaFilteredList = new FilterList<ICard>(textFilteredList, textMatcherEditor);
+            //Create the card list
+            DefaultEventSelectionModel selectionModel = new DefaultEventSelectionModel(eventList);
+            cards = new JXTable(getTableModel());
+            cards.setSelectionModel(selectionModel);
+            cards.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    EventBus.getDefault().add(getTableModel().getElementAt(cards.getSelectedRow()));
+                }
+            });
+            TableComparatorChooser.install(
+                    cards, sortedCards, TableComparatorChooser.MULTIPLE_COLUMN_MOUSE);
+            //Add custom renderers
+            for (int i = 0; i < getTableModel().getColumnCount(); i++) {
+                TableCellRenderer renderer = getRendererForAttribute(getTableModel().getColumnName(i));
+                if (renderer != null) {
+                    cards.getColumnModel().getColumn(i).setCellRenderer(renderer);
+                }
+            }
+            //Enable the controls for the table
+            cards.setColumnControlVisible(true);
+            //Set up the Lookp listener stuff
+            EventBus.getDefault().subscribe(ICard.class, this);
+            //Create Panel for the game
+            ArrayList<String> manaTypes = new ArrayList<String>();
+            manaTypes.add("W");
+            manaTypes.add("U");
+            manaTypes.add("B");
+            manaTypes.add("R");
+            manaTypes.add("G");
+            Panel manaFilterPanel = new Panel();
+            List<ICardCache> impls = getGame().getCardCacheImplementations();
+            if (impls.size() > 0) {
+                for (String mana : manaTypes) {
+                    try {
+                        manaFilterPanel.add(new ManaFilterButton(mana, manaFilters,
+                                manaMatcherEditor,
+                                new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(mana))))));
+                    } catch (IOException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+            panel = new Panel();
+            panel.setLayout(new BorderLayout());
+            JScrollPane sp = new JScrollPane(cards);
+            Panel filterPane = new Panel();
+            filterPane.add(new JLabel("Filter: "), BorderLayout.WEST);
+            filterPane.add(filterEdit, BorderLayout.CENTER);
+            filterPane.add(manaFilterPanel, BorderLayout.EAST);
+            panel.add(filterPane, BorderLayout.NORTH);
+            panel.add(sp, BorderLayout.CENTER);
+        }
         return panel;
     }
 
