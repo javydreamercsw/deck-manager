@@ -29,6 +29,7 @@ public class CardTableFormat implements TableFormat<ICard> {
         this.game = game;
         try {
             columns.add("Name");
+            columns.add("Set");
             HashMap parameters = new HashMap();
             parameters.put("game", game.getName());
             List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery(
@@ -36,9 +37,9 @@ public class CardTableFormat implements TableFormat<ICard> {
                     + "CardHasCardAttribute chca, Card c, CardSet cs, Game g"
                     + " where cs.game =g and g.name =:game and cs member of c.cardSetList"
                     + " and chca.card =c order by chca.cardAttribute.name", parameters);
-            for(Object obj:result){
-                ICardAttribute attr=(ICardAttribute) obj;
-                if(!columns.contains(attr.getName())){
+            for (Object obj : result) {
+                ICardAttribute attr = (ICardAttribute) obj;
+                if (!columns.contains(attr.getName())) {
                     columns.add(attr.getName());
                 }
             }
@@ -55,7 +56,11 @@ public class CardTableFormat implements TableFormat<ICard> {
     @Override
     public String getColumnName(int column) {
         String name = columns.get(column);
-        return name.equals("CardId") ? "Card Id" : name;
+        if (name.equals("CardId")) {
+            return "Card Id";
+        } else {
+            return name;
+        }
     }
 
     @Override
