@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
+import org.dreamer.event.bus.EventBus;
 import org.openide.util.Lookup;
 
 /**
@@ -28,6 +29,16 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
         this.game = game;
         Lookup.getDefault().lookup(IDataBaseCardStorage.class).addDataBaseStateListener(UpdateRunnable.this);
     }
+    
+    /**
+     * Does a local update to initialize from the plug-in
+     */
+    public abstract void updateLocal();
+    
+    /**
+     * Does a remote update to initialize from a remote place like the Internet or database.
+     */
+    public abstract void updateRemote();
 
     @Override
     public void addListener(UpdateProgressListener listener) {
@@ -157,5 +168,13 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
+    }
+    
+    @Override
+    public void run() {
+        updateLocal();
+        EventBus.getDefault().publish(getGame());
+        updateRemote();
+        reportDone();
     }
 }

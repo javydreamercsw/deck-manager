@@ -79,7 +79,7 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
     }
 
     @Override
-    public void run() {
+    public void updateLocal() {
         //This section updates from the deployed database
         //Create game cache dir
         File cacheDir = Places.getCacheSubdirectory(".Deck Manager");
@@ -183,10 +183,11 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                 emf.close();
             }
         }
-        EventBus.getDefault().publish(getGame());
-        //TODO Load faster
+    }
+    
+    @Override
+    public void updateRemote(){
         getGame().getGameDataManagerImplementation().load();
-        //TODO: Move to the interface to be more generic (updateRemote)V
         if (!dbError) {
             //Now update from the internet
             try {
@@ -316,7 +317,6 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                 LOG.log(Level.SEVERE, null, ex);
             }
         }
-        reportDone();
     }
 
     @Override
