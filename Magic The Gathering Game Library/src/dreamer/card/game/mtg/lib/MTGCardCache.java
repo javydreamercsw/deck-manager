@@ -104,6 +104,16 @@ public class MTGCardCache extends AbstractCardCache {
 
     private class CardImageLoader extends UpdateRunnable implements ActionListener {
 
+        @Override
+        public void updateLocal() {
+            
+        }
+
+        @Override
+        public void updateRemote() {
+            
+        }
+
         private Timer timer;
         private final int period = 10000, pause = 10000;
         private ArrayList<String> mana = new ArrayList<String>();
