@@ -40,6 +40,7 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @ActionReference(path = "Menu/Window" /*
  * , position = 333
  */)
+@TopComponent.OpenActionRegistration(displayName = "#CTL_CardViewerAction")
 @Messages({
     "CTL_CardViewerAction=Card Viewer",
     "CTL_CardViewerTopComponent=Card Viewer Window",
