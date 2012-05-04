@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>common.beanutils</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages>
+                <package>org.apache.commons.beanutils</package>
+                <package>org.apache.commons.beanutils.converters</package>
+                <package>org.apache.commons.beanutils.expression</package>
+                <package>org.apache.commons.beanutils.locale</package>
+                <package>org.apache.commons.beanutils.locale.converters</package>
+                <package>org.apache.commons.collections</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-beanutils-1.8.3-javadoc.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-beanutils-1.8.3-javadoc.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-beanutils-1.8.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-beanutils-1.8.3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-beanutils-1.8.3-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-beanutils-1.8.3-sources.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-beanutils-core-1.8.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-beanutils-core-1.8.3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-beanutils-bean-collections-1.8.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-beanutils-bean-collections-1.8.3.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>

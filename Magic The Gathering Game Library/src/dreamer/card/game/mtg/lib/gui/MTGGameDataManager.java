@@ -12,6 +12,7 @@ import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.IGameDataManager;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import dreamer.card.game.core.Tool;
+import dreamer.card.game.gui.AbstractGameDataManager;
 import dreamer.card.game.gui.glazedlist.CardTableFormat;
 import dreamer.card.game.mtg.lib.MTGCardCache;
 import dreamer.card.game.mtg.lib.MTGRCPGame;
@@ -21,8 +22,10 @@ import java.awt.Dimension;
 import java.awt.Panel;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,10 +34,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableCellRenderer;
 import mtg.card.MagicCardField;
-import org.dreamer.event.bus.EventBus;
-import org.dreamer.event.bus.EventBusListener;
 import org.jdesktop.swingx.JXTable;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
@@ -44,7 +47,7 @@ import org.openide.util.lookup.ServiceProvider;
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
 @ServiceProvider(service = IGameDataManager.class)
-public final class MTGGameDataManager implements IGameDataManager, EventBusListener<ICard> {
+public final class MTGGameDataManager extends AbstractGameDataManager {
 
     private ICardGame game;
     private EventList<ICard> eventList = GlazedListsSwing.swingThreadProxyList(GlazedLists.threadSafeList(new BasicEventList<ICard>()));
@@ -66,9 +69,8 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     }
 
     private TableCellRenderer getRendererForAttribute(String name) {
-        if (name.toLowerCase().equals("cost")) {
+        if (name.toLowerCase(Locale.getDefault()).equals("cost")) {
             return new TableCellRenderer() {
-
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                     if (value != null) {
@@ -104,15 +106,19 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
 
                 // The following methods override the defaults for performance reasons
                 public void validate() {
+                    //Do nothing
                 }
 
                 public void revalidate() {
+                    //Do nothing
                 }
 
                 protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
+                    //Do nothing
                 }
 
                 public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
+                    //Do nothing
                 }
             };
         } else {
@@ -152,7 +158,6 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
             MatcherEditor<ICard> textMatcherEditor =
                     new TextComponentMatcherEditor<ICard>(filterEdit,
                     new TextFilterator<ICard>() {
-
                         @Override
                         public void getFilterStrings(List<String> list, ICard e) {
                             list.add(e.getObjectByField(MagicCardField.NAME).toString());
@@ -170,7 +175,6 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
             textFilteredList = new FilterList<ICard>(setsFilteredList, textMatcherEditor);
             final ArrayList<String> manaFilters = new ArrayList<String>();
             TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new TextFilterator<ICard>() {
-
                 @Override
                 public void getFilterStrings(List<String> list, ICard e) {
                     Object value = e.getObjectByField(MagicCardField.COST);
@@ -186,11 +190,11 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
             cards = new JXTable(getTableModel());
             cards.setSelectionModel(selectionModel);
             cards.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
                     if (cards.getSelectedRow() >= 0) {
-                        EventBus.getDefault().publish(getTableModel().getElementAt(cards.getSelectedRow()));
+                        //TODO: how to do selection?
+//                        EventBus.getDefault().publish(getTableModel().getElementAt(cards.getSelectedRow()));
                     }
                 }
             });
@@ -206,7 +210,6 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
             //Enable the controls for the table
             cards.setColumnControlVisible(true);
             //Set up the Lookp listener stuff
-            EventBus.getDefault().subscribe(ICard.class, this);
             //Create Panel for the game
             ArrayList<String> manaTypes = new ArrayList<String>();
             manaTypes.add("W");
@@ -251,10 +254,22 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
     }
 
     @Override
-    public void notify(ICard card) {
-        if (card != null && !eventList.contains(card)) {
-            LOG.log(Level.FINE, "Adding card: {0}", card.getName());
-            addCard(card);
+    public void resultChanged(LookupEvent le) {
+        Lookup.Result res = (Lookup.Result) le.getSource();
+        Collection instances = res.allInstances();
+
+        if (!instances.isEmpty()) {
+            Iterator it = instances.iterator();
+            while (it.hasNext()) {
+                Object item = it.next();
+                if (item instanceof ICard) {
+                    ICard card = (ICard) item;
+                    if (card != null && !eventList.contains(card)) {
+                        LOG.log(Level.FINE, "Adding card: {0}", card.getName());
+                        addCard(card);
+                    }
+                }
+            }
         }
     }
 
@@ -265,6 +280,13 @@ public final class MTGGameDataManager implements IGameDataManager, EventBusListe
             if (!loaded && !loading) {
                 loading = true;
                 OutputHandler.output("Output", "Loading data into Table...");
+                while (cards == null) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                }
                 cards.setEnabled(loaded);
                 List setsForGame = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(game);
                 LOG.log(Level.FINE, "Cards to load: {0}", setsForGame.size());

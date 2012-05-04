@@ -10,6 +10,7 @@ import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openide.util.Exceptions;
@@ -65,7 +66,7 @@ public class CardTableFormat implements TableFormat<ICard> {
 
     @Override
     public Object getColumnValue(ICard card, int column) {
-        String columnName = getColumnName(column).toLowerCase().replaceAll("_", "");
+        String columnName = getColumnName(column).toLowerCase(Locale.getDefault()).replaceAll("_", "");
         Object result;
         if (columnName.equals("name")) {
             result = card.getName();

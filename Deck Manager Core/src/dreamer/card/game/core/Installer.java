@@ -22,11 +22,16 @@ import org.openide.NotifyDescriptor;
 import org.openide.modules.ModuleInstall;
 import org.openide.modules.Places;
 import org.openide.util.Lookup;
+import org.openide.util.NbPreferences;
 import org.openide.util.lookup.ServiceProvider;
+import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import org.openide.windows.WindowSystemEvent;
+import org.openide.windows.WindowSystemListener;
 
 @ServiceProvider(service = DataBaseStateListener.class)
-public class Installer extends ModuleInstall implements ActionListener, DataBaseStateListener {
+public class Installer extends ModuleInstall implements ActionListener, 
+DataBaseStateListener, WindowSystemListener {
 
     private static final Logger LOG = Logger.getLogger(Installer.class.getName());
     private final ArrayList<GameUpdateAction> updaters = new ArrayList<GameUpdateAction>();
@@ -155,7 +160,6 @@ public class Installer extends ModuleInstall implements ActionListener, DataBase
 //        }
 //        return sqlSrvDrv;
 //    }
-
     @Override
     public void actionPerformed(ActionEvent e) {
         if (afterUpdates()) {
@@ -243,5 +247,24 @@ public class Installer extends ModuleInstall implements ActionListener, DataBase
             Thread runnable = it.next();
             runnable.start();
         }
+    }
+
+    @Override
+    public void beforeLoad(WindowSystemEvent event) {
+        String role = NbPreferences.forModule(TopComponent.class).get("currentScreen", "game_view");
+        WindowManager.getDefault().setRole(role);
+        WindowManager.getDefault().removeWindowSystemListener(this);
+    }
+
+    @Override
+    public void afterLoad(WindowSystemEvent wse) {
+    }
+
+    @Override
+    public void beforeSave(WindowSystemEvent wse) {
+    }
+
+    @Override
+    public void afterSave(WindowSystemEvent wse) {
     }
 }

@@ -1,11 +1,16 @@
 package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICardGame;
-import org.dreamer.event.bus.EventBusListener;
+import java.util.Collection;
+import java.util.Iterator;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
 
 /**
@@ -16,7 +21,7 @@ autostore = false)
 @TopComponent.Description(preferredID = "CollectionWindowTopComponent",
 //iconBase="SET/PATH/TO/ICON/HERE", 
 persistenceType = TopComponent.PERSISTENCE_ALWAYS)
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true)
+@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, roles = "deck_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.CollectionWindowTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(displayName = "#CTL_CollectionWindowAction",
@@ -27,7 +32,9 @@ preferredID = "CollectionWindowTopComponent")
     "HINT_CollectionWindowTopComponent=This is a CollectionWindow window"
 })
 public final class CollectionWindowTopComponent extends TopComponent
-        implements EventBusListener<ICardGame> {
+        implements LookupListener {
+
+    private Lookup.Result<ICardGame> result = Utilities.actionsGlobalContext().lookupResult(ICardGame.class);
 
     public CollectionWindowTopComponent() {
         initComponents();
@@ -36,6 +43,8 @@ public final class CollectionWindowTopComponent extends TopComponent
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_SLIDING_DISABLED, Boolean.FALSE);
+        result.allItems();
+        result.addLookupListener(CollectionWindowTopComponent.this);
     }
 
     /**
@@ -83,7 +92,18 @@ public final class CollectionWindowTopComponent extends TopComponent
     }
 
     @Override
-    public void notify(ICardGame game) {
-        System.out.println("Saw " + game.getName());
+    public void resultChanged(LookupEvent le) {
+        Lookup.Result res = (Lookup.Result) le.getSource();
+        Collection instances = res.allInstances();
+
+        if (!instances.isEmpty()) {
+            Iterator it = instances.iterator();
+            while (it.hasNext()) {
+                Object next = it.next();
+                if(next instanceof ICardGame){
+                    //TODO: Do something
+                }
+            }
+        }
     }
 }
