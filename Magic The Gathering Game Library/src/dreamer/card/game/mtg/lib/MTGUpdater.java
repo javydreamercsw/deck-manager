@@ -28,7 +28,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import mtg.card.MagicCard;
 import mtg.card.sync.ParseGathererSets;
-import org.dreamer.event.bus.EventBus;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.Places;
@@ -524,7 +523,6 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                 Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributesToCard(c, attributes);
                 //Add the card to the set
                 Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
-                EventBus.getDefault().publish((ICard) c);
             } catch (DBException ex) {
                 LOG.log(Level.SEVERE, null, ex);
                 dbError = true;

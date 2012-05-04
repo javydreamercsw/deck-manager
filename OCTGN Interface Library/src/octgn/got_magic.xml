@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<game name="A Game of Thrones the Card Game" id="a12af4e8-be4b-4cda-a6b6-534f9717391f" 
+octgnVersion="0.9.1.0" version="1.0.1" markersize="16" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Game.xsd">
+
+  <card back="r01" front="r02" width="63" height="88">
+	<property name="House" type="String" />
+	<property name="Type" type="String" />
+	<property name="Traits" type="String" />
+	<property name="Text" type="String" />
+	<property name="Keywords" type="String" />
+	<property name="Unique" type="String" />
+	<property name="Cost" type="String" />
+	<property name="Strength" type="String" />
+	<property name="Military" type="String" />
+	<property name="Intrigue" type="String" />
+	<property name="Power" type="String" />
+	<property name="Crest" type="String" />
+	<property name="GoldIncome" type="String" />
+	<property name="Influence" type="String" />
+	<property name="Initiative" type="String" />
+	<property name="PlotGoldIncome" type="String" />
+	<property name="PlotInitiative" type="String" />
+	<property name="PlotClaim" type="String" />
+  </card>
+
+  <table name="Table" visibility="undefined" ordered="false" width="500" height="380" background="r10" backgroundStyle="uniformToFill">
+
+        <groupaction menu="Stand all cards" shortcut="F5" execute="restoreAll" />
+       	<groupaction menu="Flip a Coin" shortcut="ctrl+F" execute="flipCoin" />
+
+	<groupaction menu="Announce M Challenge" shortcut="alt+m" execute="announceMil" />
+	<groupaction menu="Announce I Challenge" shortcut="alt+i" execute="announceInt" />
+	<groupaction menu="Announce P Challenge" shortcut="alt+p" execute="announcePow" />
+	<groupaction menu="Announce Unopposed" shortcut="alt+u" execute="announceUO" />
+	<groupaction menu="Announce Opposition" shortcut="alt+o" execute="announceOpp" />
+
+	<groupaction menu="Hold on please!" shortcut="alt+h" execute="holdOn" />
+	<groupaction menu="Done with turn" shortcut="alt+t" execute="turnDone" />
+
+        <cardaction menu="Kneel/Stand" shortcut="F9" default="true" execute="kneel" />
+        <cardaction menu="Flip Card" shortcut="F8" execute="flipcard" />
+
+ 	<cardaction menu="Add_Power" shortcut="F1" execute="addPower" />
+	<cardaction menu="Add_Gold" shortcut="F3" execute="addGold" />
+ 	<cardaction menu="Sub_Power" shortcut="F2" execute="subPower" />
+	<cardaction menu="Sub_Gold" shortcut="F4" execute="subGold" />
+
+	<groupaction menu="Scoop table for rematch" shortcut="alt+s" execute="scoop" />
+
+  </table>
+
+  <player summary="{#Power} / {#Gold} / {#Draw Cap}">
+    <counter name="Power" icon="r04"/>
+    <counter name="Gold" icon="r03" />
+    <counter name="Draw Cap" icon="r06" />
+
+    <hand name="Hand" visibility="me" ordered="false" width="63" height="88" icon="r05">  
+          
+        <groupaction menu="Random Discard" shortcut="f12" execute="randomDiscard" />
+  	<groupaction menu="Take a mulligan" shortcut="ctrl+M" execute="mulligan" />
+  	
+    </hand>
+
+    <group name="Deck" visibility="none" width="63" height="88" icon="r06">
+
+	<groupaction menu="Shuffle" shortcut="ctrl+S" execute="shuffle" />
+	<groupaction menu="Draw" shortcut="ctrl+D" default="true" execute="draw" />
+	<groupaction menu="Draw Many" shortcut="ctrl+shift+D" execute="drawMany" />
+	<groupaction menu="Discard Many" shortcut="alt+d" execute="discardMany" />
+
+   </group>
+
+    <group name="Plot Deck" visibility="none" width="63" height="88" icon="r07">
+    </group>
+
+    <group name="Dead Pile" visibility="all" width="63" height="88" icon="r08">      
+    </group>
+
+    <group name="Discard Pile" visibility="all" width="63" height="88" icon="r09"> 
+
+	<groupaction menu="Re-Shuffle" shortcut="alt+r" execute="reshuffle" />
+     
+    </group>
+  </player>
+
+  <deck>
+		<section name="House" group="Hand" />
+		<section name="Agenda" group="Hand" />
+		<section name="Characters" group="Deck" />
+		<section name="Locations" group="Deck" />
+		<section name="Events" group="Deck" />
+		<section name="Attachments" group="Deck" />
+		<section name="Plots" group="Plot Deck" />
+  </deck>
+  
+    <scripts>
+    <script src="r11" />
+  </scripts>
+</game>

@@ -11,6 +11,7 @@ import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import dreamer.card.game.core.Tool;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -18,13 +19,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-import org.dreamer.event.bus.EventBus;
-import org.dreamer.event.bus.EventBusListener;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
 
 /**
@@ -35,7 +37,7 @@ autostore = false)
 @TopComponent.Description(preferredID = "CardViewerTopComponent",
 //iconBase="SET/PATH/TO/ICON/HERE", 
 persistenceType = TopComponent.PERSISTENCE_ALWAYS)
-@TopComponent.Registration(mode = "explorer", openAtStartup = true)
+@TopComponent.Registration(mode = "navigator", openAtStartup = true, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.CardViewerTopComponent")
 @ActionReference(path = "Menu/Window" /*
  * , position = 333
@@ -46,9 +48,11 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
     "CTL_CardViewerTopComponent=Card Viewer Window",
     "HINT_CardViewerTopComponent=Card Viewer window"
 })
-public final class CardViewerTopComponent extends TopComponent implements EventBusListener<ICard> {
+public final class CardViewerTopComponent extends TopComponent
+        implements LookupListener {
 
     private static final Logger LOG = Logger.getLogger(CardViewerTopComponent.class.getName());
+    private Lookup.Result<ICard> result = Utilities.actionsGlobalContext().lookupResult(ICard.class);
 
     public CardViewerTopComponent() {
         initComponents();
@@ -58,7 +62,8 @@ public final class CardViewerTopComponent extends TopComponent implements EventB
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
         //Set up the listener stuff
-        EventBus.getDefault().subscribe(ICard.class, CardViewerTopComponent.this);
+        result.allItems();
+        result.addLookupListener(CardViewerTopComponent.this);
     }
 
     /**
@@ -118,40 +123,50 @@ public final class CardViewerTopComponent extends TopComponent implements EventB
     }
 
     @Override
-    public void notify(ICard card) {
-        if (card != null) {
-            try {
-                HashMap parameters = new HashMap();
-                parameters.put("name", card.getSetName());
-                List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
-                if (result.isEmpty()) {
-                    cardLabel.setIcon(null);
-                    cardLabel.setText("No card selected");
-                } else {
-                    ICardSet cs = (ICardSet) result.get(0);
-                    ICardCache cache = null;
-                    for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
-                        ICardGame game = it.next();
-                        if (game.getName().equals(cs.getGameName())) {
-                            List<ICardCache> impl = game.getCardCacheImplementations();
-                            if (!impl.isEmpty()) {
-                                cache = impl.get(0);
+    public void resultChanged(LookupEvent le) {
+        Lookup.Result res = (Lookup.Result) le.getSource();
+        Collection instances = res.allInstances();
+
+        if (!instances.isEmpty()) {
+            Iterator it = instances.iterator();
+            while (it.hasNext()) {
+                Object item = it.next();
+                if (item instanceof ICard) {
+                    ICard card = (ICard) item;
+                    try {
+                        HashMap parameters = new HashMap();
+                        parameters.put("name", card.getSetName());
+                        List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
+                        if (temp.isEmpty()) {
+                            cardLabel.setIcon(null);
+                            cardLabel.setText("No card selected");
+                        } else {
+                            ICardSet cs = (ICardSet) temp.get(0);
+                            ICardCache cache = null;
+                            for (Iterator<? extends ICardGame> it2 = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it2.hasNext();) {
+                                ICardGame game = it2.next();
+                                if (game.getName().equals(cs.getGameName())) {
+                                    List<ICardCache> impl = game.getCardCacheImplementations();
+                                    if (!impl.isEmpty()) {
+                                        cache = impl.get(0);
+                                    }
+                                }
                             }
+                            ImageIcon icon = Tool.loadImage(this, ImageIO.read(cache.getCardImage(card, cs, cache.createRemoteImageURL(card, Editions.getInstance().getEditionByName(cs.getName())), true, false)));
+                            icon.getImage().flush();
+                            cardLabel.setIcon(icon);
+                            cardLabel.setText("");
                         }
+                    } catch (MalformedURLException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    } catch (CannotDetermineSetAbbriviation ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    } catch (DBException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
                     }
-                    ImageIcon icon = Tool.loadImage(this, ImageIO.read(cache.getCardImage(card, cs, cache.createRemoteImageURL(card, Editions.getInstance().getEditionByName(cs.getName())), true, false)));
-                    icon.getImage().flush();
-                    cardLabel.setIcon(icon);
-                    cardLabel.setText("");
                 }
-            } catch (MalformedURLException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            } catch (CannotDetermineSetAbbriviation ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            } catch (DBException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                LOG.log(Level.SEVERE, null, ex);
             }
         }
     }

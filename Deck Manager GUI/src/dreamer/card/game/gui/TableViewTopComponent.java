@@ -8,6 +8,7 @@ import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.awt.Component;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -20,6 +21,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
@@ -32,7 +34,7 @@ autostore = false)
 @TopComponent.Description(preferredID = "TableViewTopComponent",
 //iconBase="SET/PATH/TO/ICON/HERE", 
 persistenceType = TopComponent.PERSISTENCE_ALWAYS)
-@TopComponent.Registration(mode = "editor", openAtStartup = true)
+@TopComponent.Registration(mode = "editor", openAtStartup = true, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.TableViewTopComponent")
 @ActionReference(path = "Menu/Window" /*
  * , position = 333
@@ -57,28 +59,40 @@ public final class TableViewTopComponent extends GameCardComponent {
     }
 
     @Override
-    public void notify(ICardGame game) {
-        //TODO: Enable on platform 7.2
-        //makeBusy(true);
-        try {
-            IGameDataManager implementation = game.getGameDataManagerImplementation();
-            if (implementation != null && !gameManagers.containsKey(game)) {
-                //Create a game data manager
-                gameManagers.put(game, implementation);
-                //Add a table to contain the cards
-                Component component = gameManagers.get(game).getComponent();
-                gameTabbedPane.addTab(game.getName(), new ImageIcon(game.getGameIcon()), component);
-            } else {
-                DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(game.getName()
-                        + " doesn't have a Data Manager implementation. "
-                        + "Some functionality won't work or will be limited.",
-                        NotifyDescriptor.ERROR_MESSAGE));
+    public void resultChanged(LookupEvent le) {
+        Lookup.Result res = (Lookup.Result) le.getSource();
+        Collection instances = res.allInstances();
+
+        if (!instances.isEmpty()) {
+            Iterator it = instances.iterator();
+            while (it.hasNext()) {
+                Object next = it.next();
+                if (next instanceof ICardGame) {
+                    ICardGame game = (ICardGame) next;
+                    //TODO: Enable on platform 7.2
+                    //makeBusy(true);
+                    try {
+                        IGameDataManager implementation = game.getGameDataManagerImplementation();
+                        if (implementation != null && !gameManagers.containsKey(game)) {
+                            //Create a game data manager
+                            gameManagers.put(game, implementation);
+                            //Add a table to contain the cards
+                            Component component = gameManagers.get(game).getComponent();
+                            gameTabbedPane.addTab(game.getName(), new ImageIcon(game.getGameIcon()), component);
+                        } else {
+                            DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(game.getName()
+                                    + " doesn't have a Data Manager implementation. "
+                                    + "Some functionality won't work or will be limited.",
+                                    NotifyDescriptor.ERROR_MESSAGE));
+                        }
+                    } catch (Exception ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
+                    //TODO: Enable on platform 7.2
+                    //makeBusy(false);
+                }
             }
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
         }
-        //TODO: Enable on platform 7.2
-        //makeBusy(false);
     }
 
     /**

@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!--
+    TODO define vocabulary identification
+    PUBLIC ID: -//vendor//vocabulary//EN
+    SYSTEM ID: http://server/path/Game.dtd
+
+-->
+
+<!--
+    An example how to use this DTD from your XML document:
+
+    <?xml version="1.0"?>
+
+    <!DOCTYPE xs:schema SYSTEM "Game.dtd">
+
+    <xs:schema>
+    ...
+    </xs:schema>
+-->
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:schema (xs:simpleType|xs:group|xs:complexType|xs:element)*>
+<!ATTLIST xs:schema
+    xmlns:xs CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:simpleType (xs:restriction|xs:annotation)*>
+<!ATTLIST xs:simpleType
+    name CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:annotation (xs:documentation)*>
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:documentation (#PCDATA)>
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:restriction (xs:pattern|xs:enumeration)*>
+<!ATTLIST xs:restriction
+    base CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:pattern EMPTY>
+<!ATTLIST xs:pattern
+    value CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:enumeration EMPTY>
+<!ATTLIST xs:enumeration
+    value CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:element (xs:annotation|xs:complexType)*>
+<!ATTLIST xs:element
+    type CDATA #IMPLIED
+    maxOccurs CDATA #IMPLIED
+    minOccurs CDATA #IMPLIED
+    name CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:complexType (xs:group|xs:annotation|xs:choice|xs:complexContent|xs:attribute|xs:sequence)*>
+<!ATTLIST xs:complexType
+    abstract CDATA #IMPLIED
+    name CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:sequence (xs:group|xs:choice|xs:element)*>
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:attribute (xs:simpleType|xs:annotation)*>
+<!ATTLIST xs:attribute
+    default CDATA #IMPLIED
+    use CDATA #IMPLIED
+    type CDATA #IMPLIED
+    name CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:choice (xs:element)*>
+<!ATTLIST xs:choice
+    maxOccurs CDATA #IMPLIED
+    minOccurs CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:complexContent (xs:extension)*>
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:extension (xs:group|xs:choice|xs:attribute)*>
+<!ATTLIST xs:extension
+    base CDATA #IMPLIED
+  >
+
+<!--- Put your DTDDoc comment here. -->
+<!ELEMENT xs:group (xs:choice)*>
+<!ATTLIST xs:group
+    name CDATA #IMPLIED
+    maxOccurs CDATA #IMPLIED
+    minOccurs CDATA #IMPLIED
+    ref CDATA #IMPLIED
+  >

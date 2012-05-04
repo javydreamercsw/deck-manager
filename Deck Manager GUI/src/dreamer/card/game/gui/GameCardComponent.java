@@ -6,10 +6,10 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
-import org.dreamer.event.bus.EventBus;
-import org.dreamer.event.bus.EventBusListener;
 import org.openide.explorer.ExplorerManager;
 import org.openide.util.Lookup;
+import org.openide.util.LookupListener;
+import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
 
 /**
@@ -18,25 +18,12 @@ import org.openide.windows.TopComponent;
  */
 public abstract class GameCardComponent extends TopComponent
         implements ExplorerManager.Provider,
-        DataBaseStateListener, EventBusListener<ICardGame> {
+        DataBaseStateListener, LookupListener {
 
-    public GameCardComponent(Lookup lookup) {
-        super(lookup);
-        register();
-    }
+    private Lookup.Result<ICardGame> result = Utilities.actionsGlobalContext().lookupResult(ICardGame.class);
 
     public GameCardComponent() {
-        register();
-    }
-
-    @Override
-    public boolean canClose() {
-        EventBus.getDefault().unsubscribe(ICardGame.class, this);
-        return super.canClose();
-    }
-
-    private void register() {
-        //Register to listen for Card games
-        EventBus.getDefault().subscribe(ICardGame.class, this);
+        result.allItems();
+        result.addLookupListener(GameCardComponent.this);
     }
 }

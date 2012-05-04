@@ -64,6 +64,7 @@ public class ICardNode extends BeanNode {
 
     @Override
     public Action[] getActions(boolean popup) {
+        //TODO: Actions?
         actions = new Action[]{ //            SystemAction.get(DeleteAction.class),
         //            null,
         //            new MarauroaApplicationNode.ConfigureAction(),
