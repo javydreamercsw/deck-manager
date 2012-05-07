@@ -70,57 +70,7 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
 
     private TableCellRenderer getRendererForAttribute(String name) {
         if (name.toLowerCase(Locale.getDefault()).equals("cost")) {
-            return new TableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                    if (value != null) {
-                        List<ICardCache> impls = getGame().getCardCacheImplementations();
-                        if (impls.size() > 0 && ((String) value).contains("{") && ((String) value).contains("}")) {
-                            JLabel container = new JLabel();
-                            container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
-                            ArrayList<String> values = new ArrayList<String>();
-                            StringTokenizer st = new StringTokenizer((String) value, "}");
-                            while (st.hasMoreTokens()) {
-                                String token = st.nextToken();
-                                values.add(token.substring(1));
-                            }
-                            for (Iterator<String> it = values.iterator(); it.hasNext();) {
-                                String v = it.next();
-                                try {
-                                    JLabel iconLabel = new JLabel(new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(v)))));
-                                    container.add(iconLabel);
-                                    if (it.hasNext()) {
-                                        container.add(Box.createRigidArea(new Dimension(5, 0)));
-                                    }
-                                } catch (IOException ex) {
-                                    LOG.log(Level.SEVERE, null, ex);
-                                }
-                            }
-                            return container;
-                        }
-                        return new JLabel(((String) value));
-                    } else {
-                        return new JLabel();
-                    }
-                }
-
-                // The following methods override the defaults for performance reasons
-                public void validate() {
-                    //Do nothing
-                }
-
-                public void revalidate() {
-                    //Do nothing
-                }
-
-                protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
-                    //Do nothing
-                }
-
-                public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
-                    //Do nothing
-                }
-            };
+            return new GDMTableCellRenderer();
         } else {
             return null;
         }
@@ -157,32 +107,10 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
             FilterList<ICard> setsFilteredList = new FilterList<ICard>(sortedCards, setSelect);
             MatcherEditor<ICard> textMatcherEditor =
                     new TextComponentMatcherEditor<ICard>(filterEdit,
-                    new TextFilterator<ICard>() {
-                        @Override
-                        public void getFilterStrings(List<String> list, ICard e) {
-                            list.add(e.getObjectByField(MagicCardField.NAME).toString());
-                            list.add(e.getObjectByField(MagicCardField.TEXT).toString());
-                            Object value = e.getObjectByField(MagicCardField.NAME);
-                            if (value != null) {
-                                list.add(value.toString());
-                            }
-                            value = e.getObjectByField(MagicCardField.TEXT);
-                            if (value != null) {
-                                list.add(value.toString());
-                            }
-                        }
-                    });
+                    new GDMTextFilterator());
             textFilteredList = new FilterList<ICard>(setsFilteredList, textMatcherEditor);
             final ArrayList<String> manaFilters = new ArrayList<String>();
-            TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new TextFilterator<ICard>() {
-                @Override
-                public void getFilterStrings(List<String> list, ICard e) {
-                    Object value = e.getObjectByField(MagicCardField.COST);
-                    if (value != null) {
-                        list.add(value.toString());
-                    }
-                }
-            });
+            TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new GDMManaTextFilterator());
             manaMatcherEditor.setMode(TextMatcherEditor.CONTAINS);
             manaFilteredList = new FilterList<ICard>(textFilteredList, textMatcherEditor);
             //Create the card list
@@ -264,7 +192,7 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
                 Object item = it.next();
                 if (item instanceof ICard) {
                     ICard card = (ICard) item;
-                    if (card != null && !eventList.contains(card)) {
+                    if (!eventList.contains(card)) {
                         LOG.log(Level.FINE, "Adding card: {0}", card.getName());
                         addCard(card);
                     }
@@ -320,5 +248,95 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
     @Override
     public void stop() {
         stop = true;
+    }
+
+    private class GDMTableCellRenderer implements TableCellRenderer {
+
+        public GDMTableCellRenderer() {
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            if (value != null) {
+                List<ICardCache> impls = getGame().getCardCacheImplementations();
+                if (impls.size() > 0 && ((String) value).contains("{") && ((String) value).contains("}")) {
+                    JLabel container = new JLabel();
+                    container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
+                    ArrayList<String> values = new ArrayList<String>();
+                    StringTokenizer st = new StringTokenizer((String) value, "}");
+                    while (st.hasMoreTokens()) {
+                        String token = st.nextToken();
+                        values.add(token.substring(1));
+                    }
+                    for (Iterator<String> it = values.iterator(); it.hasNext();) {
+                        String v = it.next();
+                        try {
+                            JLabel iconLabel = new JLabel(new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(v)))));
+                            container.add(iconLabel);
+                            if (it.hasNext()) {
+                                container.add(Box.createRigidArea(new Dimension(5, 0)));
+                            }
+                        } catch (IOException ex) {
+                            LOG.log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    return container;
+                }
+                return new JLabel(((String) value));
+            } else {
+                return new JLabel();
+            }
+        }
+
+        // The following methods override the defaults for performance reasons
+        public void validate() {
+            //Do nothing
+        }
+
+        public void revalidate() {
+            //Do nothing
+        }
+
+        protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
+            //Do nothing
+        }
+
+        public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
+            //Do nothing
+        }
+    }
+
+    static class GDMTextFilterator implements TextFilterator<ICard> {
+
+        public GDMTextFilterator() {
+        }
+
+        @Override
+        public void getFilterStrings(List<String> list, ICard e) {
+            list.add(e.getObjectByField(MagicCardField.NAME).toString());
+            list.add(e.getObjectByField(MagicCardField.TEXT).toString());
+            Object value = e.getObjectByField(MagicCardField.NAME);
+            if (value != null) {
+                list.add(value.toString());
+            }
+            value = e.getObjectByField(MagicCardField.TEXT);
+            if (value != null) {
+                list.add(value.toString());
+            }
+        }
+    }
+
+    static class GDMManaTextFilterator implements TextFilterator<ICard> {
+
+        public GDMManaTextFilterator() {
+        }
+
+        @Override
+        public void getFilterStrings(List<String> list, ICard e) {
+            Object value = e.getObjectByField(MagicCardField.COST);
+            if (value != null) {
+                list.add(value.toString());
+            }
+        }
     }
 }
