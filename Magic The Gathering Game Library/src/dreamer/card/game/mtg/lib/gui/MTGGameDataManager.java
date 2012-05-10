@@ -40,6 +40,7 @@ import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
+import org.openide.util.lookup.ProxyLookup;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -60,6 +61,7 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
     private FilterList<ICard> textFilteredList, manaFilteredList;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
+    private ProxyLookup proxy = new ProxyLookup(dynamicLookup, Lookup.getDefault()); 
     private static final Logger LOG = Logger.getLogger(MTGGameDataManager.class.getName());
     private CardTableFormat tableFormat;
     private boolean stop;
@@ -121,8 +123,7 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
                     if (cards.getSelectedRow() >= 0) {
-                        //TODO: how to do selection?
-//                        EventBus.getDefault().publish(getTableModel().getElementAt(cards.getSelectedRow()));
+                        content.add(getTableModel().getElementAt(cards.getSelectedRow()));
                     }
                 }
             });
@@ -173,7 +174,7 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
 
     @Override
     public Lookup getLookup() {
-        return dynamicLookup;
+        return proxy;
     }
 
     @Override

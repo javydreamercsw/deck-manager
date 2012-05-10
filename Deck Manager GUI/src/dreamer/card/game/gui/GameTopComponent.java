@@ -1,5 +1,6 @@
 package dreamer.card.game.gui;
 
+import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.DefaultCardGame;
 import com.reflexit.magiccards.core.model.ICardAttribute;
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
@@ -7,12 +8,14 @@ import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.awt.Image;
+import java.beans.IntrospectionException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import javax.swing.JLabel;
+import java.util.logging.Level;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
@@ -24,8 +27,6 @@ import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.OutlineView;
-import org.openide.nodes.AbstractNode;
-import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
@@ -69,7 +70,11 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
 
         @Override
         public Image getGameIcon() {
-            return null;
+            try {
+                return Lookup.getDefault().lookup(ICardCache.class).getGameIcon((ICardGame) this);
+            } catch (IOException ex) {
+                return null;
+            }
         }
 
         @Override
@@ -80,7 +85,12 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
 
     public GameTopComponent() {
         initComponents();
-        final Node root = new AbstractNode(Children.create(new ICardSetChildFactory((ICardGame) game), true));
+        Node root = null;
+        try {
+            root = new IGameNode(game, new ICardSetChildFactory((ICardGame) game));
+        } catch (IntrospectionException ex) {
+            Exceptions.printStackTrace(ex);
+        }
         setName(Bundle.CTL_GameTopComponent());
         setToolTipText(Bundle.HINT_GameTopComponent());
         final List<String> columns = getColumns();
@@ -94,118 +104,10 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
             i++;
         }
         ((OutlineView) gamePane).setPropertyColumns(properties);
-        ((OutlineView) gamePane).getOutline().setModel(DefaultOutlineModel.createOutlineModel(new TreeModel() {
-            @Override
-            public Object getRoot() {
-                return root;
-            }
-
-            @Override
-            public Object getChild(Object parent, int index) {
-                Node n = (Node) parent;
-                return n.getChildren().getNodeAt(index);
-            }
-
-            @Override
-            public int getChildCount(Object parent) {
-                Node n = (Node) parent;
-                return n.getChildren().getNodesCount();
-            }
-
-            @Override
-            public boolean isLeaf(Object node) {
-                if (node instanceof Node) {
-                    Node n = (Node) node;
-                    return n.isLeaf();
-                } else {
-                    return true;
-                }
-            }
-
-            @Override
-            public void valueForPathChanged(TreePath path, Object newValue) {
-                //Do nothing
-            }
-
-            @Override
-            public int getIndexOfChild(Object parent, Object child) {
-                Node n = (Node) parent;
-                int i = 0;
-                for (Node c : n.getChildren().getNodes()) {
-                    if (c.equals(child)) {
-                        return i;
-                    }
-                    i++;
-                }
-                return -1;
-            }
-
-            @Override
-            public void addTreeModelListener(TreeModelListener l) {
-                //Do nothing
-            }
-
-            @Override
-            public void removeTreeModelListener(TreeModelListener l) {
-                //Do nothing
-            }
-        },
-                new RowModel() {
-                    @Override
-                    public int getColumnCount() {
-                        return columns.size();
-                    }
-
-                    @Override
-                    public Object getValueFor(Object o, int i) {
-                        Object result = null;
-                        if (o instanceof ICardNode) {
-                            ICardNode node = (ICardNode) o;
-                            String columnName = columns.get(i).toLowerCase(Locale.getDefault()).replaceAll("_", "");
-                            if (columnName.equals("name")) {
-                                result = node.getCard().getName();
-                            } else if (columnName.equals("cardid")) {
-                                result = node.getCard().getCardId();
-                            } else if (columnName.equals("set")) {
-                                result = node.getCard().getSetName();
-                            } else {
-                                result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(node.getCard(), getColumnName(i));
-                            }
-                            for (ICardAttributeFormatter formatter : game.getGameCardAttributeFormatterImplementations()) {
-                                if (result instanceof String) {
-                                    String string = (String) result;
-                                    result = formatter.format(string);
-                                }
-                            }
-                        }
-                        return result == null ? "" : result.toString();
-                    }
-
-                    @Override
-                    public Class getColumnClass(int i) {
-                        return Integer.class;
-                    }
-
-                    @Override
-                    public boolean isCellEditable(Object o, int i) {
-                        return false;
-                    }
-
-                    @Override
-                    public void setValueFor(Object o, int i, Object o1) {
-                        //Do nothing
-                    }
-
-                    @Override
-                    public String getColumnName(int column) {
-                        String name = columns.get(column);
-                        if (name.equals("CardId")) {
-                            return "Card Id";
-                        } else {
-                            return name;
-                        }
-                    }
-                },
+        ((OutlineView) gamePane).getOutline().setModel(DefaultOutlineModel.createOutlineModel(
+                new GameTreeModel(root),
+                new GameRowModel(columns),
+                //TODO: use resource bundle
                 true, "Set"));
         em.setRootContext(root);
         associateLookup(ExplorerUtils.createLookup(getExplorerManager(), getActionMap()));
@@ -291,5 +193,133 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
     @Override
     public ExplorerManager getExplorerManager() {
         return em;
+    }
+
+    private static class GameTreeModel implements TreeModel {
+
+        private final Node root;
+
+        public GameTreeModel(Node root) {
+            this.root = root;
+        }
+
+        @Override
+        public Object getRoot() {
+            return root;
+        }
+
+        @Override
+        public Object getChild(Object parent, int index) {
+            Node n = (Node) parent;
+            return n.getChildren().getNodeAt(index);
+        }
+
+        @Override
+        public int getChildCount(Object parent) {
+            Node n = (Node) parent;
+            return n.getChildren().getNodesCount();
+        }
+
+        @Override
+        public boolean isLeaf(Object node) {
+            if (node instanceof Node) {
+                Node n = (Node) node;
+                return n.isLeaf();
+            } else {
+                return true;
+            }
+        }
+
+        @Override
+        public void valueForPathChanged(TreePath path, Object newValue) {
+            //Do nothing
+        }
+
+        @Override
+        public int getIndexOfChild(Object parent, Object child) {
+            Node n = (Node) parent;
+            int i = 0;
+            for (Node c : n.getChildren().getNodes()) {
+                if (c.equals(child)) {
+                    return i;
+                }
+                i++;
+            }
+            return -1;
+        }
+
+        @Override
+        public void addTreeModelListener(TreeModelListener l) {
+            //Do nothing
+        }
+
+        @Override
+        public void removeTreeModelListener(TreeModelListener l) {
+            //Do nothing
+        }
+    }
+
+    private class GameRowModel implements RowModel {
+
+        private final List<String> columns;
+
+        public GameRowModel(List<String> columns) {
+            this.columns = columns;
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columns.size();
+        }
+
+        @Override
+        public Object getValueFor(Object o, int i) {
+            Object result = null;
+            if (o instanceof ICardNode) {
+                ICardNode node = (ICardNode) o;
+                String columnName = columns.get(i).toLowerCase(Locale.getDefault()).replaceAll("_", "");
+                if (columnName.equals("name")) {
+                    result = node.getCard().getName();
+                } else if (columnName.equals("cardid")) {
+                    result = node.getCard().getCardId();
+                } else if (columnName.equals("set")) {
+                    result = node.getCard().getSetName();
+                } else {
+                    result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(node.getCard(), getColumnName(i));
+                }
+                for (ICardAttributeFormatter formatter : game.getGameCardAttributeFormatterImplementations()) {
+                    if (result instanceof String) {
+                        String string = (String) result;
+                        result = formatter.format(string);
+                    }
+                }
+            }
+            return result == null ? "" : result.toString();
+        }
+
+        @Override
+        public Class getColumnClass(int i) {
+            return Integer.class;
+        }
+
+        @Override
+        public boolean isCellEditable(Object o, int i) {
+            return false;
+        }
+
+        @Override
+        public void setValueFor(Object o, int i, Object o1) {
+            //Do nothing
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            String name = columns.get(column);
+            if (name.equals("CardId")) {
+                return "Card Id";
+            } else {
+                return name;
+            }
+        }
     }
 }

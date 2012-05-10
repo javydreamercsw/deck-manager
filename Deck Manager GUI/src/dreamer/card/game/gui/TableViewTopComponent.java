@@ -19,9 +19,9 @@ import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.explorer.ExplorerManager;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
@@ -44,11 +44,13 @@ persistenceType = TopComponent.PERSISTENCE_ALWAYS)
     "HINT_TableViewTopComponent=This is a Game Card List window"
 })
 @ServiceProvider(service = DataBaseStateListener.class)
-public final class TableViewTopComponent extends GameCardComponent {
+public final class TableViewTopComponent extends TopComponent
+        implements DataBaseStateListener, LookupListener {
 
-    private final ExplorerManager mgr = new ExplorerManager();
     private HashMap<ICardGame, IGameDataManager> gameManagers = new HashMap<ICardGame, IGameDataManager>();
     private static final Logger LOG = Logger.getLogger(TableViewTopComponent.class.getName());
+    private Lookup.Result<ICardGame> result = Lookup.getDefault().lookupResult(ICardGame.class);
+    private boolean dbInit = false;
 
     public TableViewTopComponent() {
         super();
@@ -56,6 +58,8 @@ public final class TableViewTopComponent extends GameCardComponent {
         setName(Bundle.CTL_TableViewTopComponent());
         setToolTipText(Bundle.HINT_TableViewTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
+        result.allItems();
+        result.addLookupListener(TableViewTopComponent.this);
     }
 
     @Override
@@ -68,31 +72,51 @@ public final class TableViewTopComponent extends GameCardComponent {
             while (it.hasNext()) {
                 Object next = it.next();
                 if (next instanceof ICardGame) {
-                    ICardGame game = (ICardGame) next;
+                    ICardGame iCardGame = (ICardGame) next;
+                    LOG.log(Level.INFO, "Received notification of game: {0}", iCardGame.getName());
+                    if (dbInit) {
+                        update();
+                    }
+                }
+            }
+        }
+    }
+
+    private void update() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
                     //TODO: Enable on platform 7.2
                     //makeBusy(true);
-                    try {
-                        IGameDataManager implementation = game.getGameDataManagerImplementation();
-                        if (implementation != null && !gameManagers.containsKey(game)) {
-                            //Create a game data manager
-                            gameManagers.put(game, implementation);
-                            //Add a table to contain the cards
-                            Component component = gameManagers.get(game).getComponent();
-                            gameTabbedPane.addTab(game.getName(), new ImageIcon(game.getGameIcon()), component);
-                        } else {
-                            DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(game.getName()
-                                    + " doesn't have a Data Manager implementation. "
-                                    + "Some functionality won't work or will be limited.",
-                                    NotifyDescriptor.ERROR_MESSAGE));
-                        }
-                    } catch (Exception ex) {
-                        LOG.log(Level.SEVERE, null, ex);
+                    IGameDataManager implementation = game.getGameDataManagerImplementation();
+                    if (implementation != null && !gameManagers.containsKey(game)) {
+                        //Create a game data manager
+                        gameManagers.put(game, implementation);
+                        //Add a table to contain the cards
+                        Component component = gameManagers.get(game).getComponent();
+                        ImageIcon icon = new ImageIcon(game.getGameIcon());
+                        String name = game.getName();
+//                        javax.swing.JFrame jFrame = new javax.swing.JFrame(name);
+//                        javax.swing.JTabbedPane jtp= new javax.swing.JTabbedPane();
+//                        jtp.addTab(name, icon, component);
+//                        jFrame.add(jtp);
+//                        jFrame.setVisible(true);
+//                        jFrame.setIconImage(icon.getImage());
+//                        jFrame.setSize(500, 250);
+                        gameTabbedPane.addTab(name, icon, component);
+                    } else {
+                        DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
+                                game.getName()
+                                + " doesn't have a Data Manager implementation. "
+                                + "Some functionality won't work or will be limited.",
+                                NotifyDescriptor.ERROR_MESSAGE));
                     }
                     //TODO: Enable on platform 7.2
                     //makeBusy(false);
                 }
             }
-        }
+        }).start();
     }
 
     /**
@@ -139,20 +163,24 @@ public final class TableViewTopComponent extends GameCardComponent {
     }
 
     @Override
-    public ExplorerManager getExplorerManager() {
-        return mgr;
-    }
-
-    @Override
     public void initialized() {
+        dbInit = true;
         try {
+            update();
             System.out.println("Collections:");
+
+
+
+
             for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardCollection.findAll").iterator(); it.hasNext();) {
                 ICardCollection cc = (ICardCollection) it.next();
                 System.out.println(cc.getName());
             }
-            System.out.println("Collection Types:");
-            for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardCollectionType.findAll").iterator(); it.hasNext();) {
+
+            System.out.println(
+                    "Collection Types:");
+            for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardCollectionType.findAll").iterator();
+                    it.hasNext();) {
                 ICardCollectionType cc = (ICardCollectionType) it.next();
                 System.out.println(cc.getName());
             }
