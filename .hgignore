@@ -9,3 +9,4 @@ dist/*
 private/*
 netbeans_platform/*
 data/*
+pom.xml

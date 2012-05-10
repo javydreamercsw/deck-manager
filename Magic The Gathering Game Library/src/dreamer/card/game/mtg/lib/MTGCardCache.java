@@ -237,7 +237,7 @@ public class MTGCardCache extends AbstractCardCache {
                     LOG.log(Level.FINE, "Done adding cards to the download queue");
                     timer.restart();
                 }
-            }).start();
+            },getGame().getName()+" download thread").start();
             timer.restart();
         }
 

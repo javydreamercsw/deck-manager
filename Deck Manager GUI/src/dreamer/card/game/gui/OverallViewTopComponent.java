@@ -21,7 +21,7 @@ autostore = false)
     preferredID = "OverallViewTopComponent",
 //iconBase="SET/PATH/TO/ICON/HERE", 
 persistenceType = TopComponent.PERSISTENCE_NEVER)
-@TopComponent.Registration(mode = "properties", openAtStartup = true, roles = "game_view")
+@TopComponent.Registration(mode = "properties", openAtStartup = false, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.OverallViewTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(

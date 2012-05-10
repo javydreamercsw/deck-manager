@@ -1,7 +1,9 @@
 package dreamer.card.game;
 
 import com.reflexit.magiccards.core.model.DefaultCardGame;
+import com.reflexit.magiccards.core.model.IGameCellRendererImageFactory;
 import java.awt.Image;
+import javax.swing.JLabel;
 
 /**
  *
@@ -22,5 +24,17 @@ public class MTGGame extends DefaultCardGame{
     @Override
     public Image getGameIcon() {
         return null;
+    }
+
+    @Override
+    public IGameCellRendererImageFactory getCellRendererImageFactory() {
+        return new IGameCellRendererImageFactory() {
+
+            @Override
+            public JLabel getRendering(String string, Object o) {
+                //Return the same object in a JLabel by default
+                return new JLabel(o.toString());
+            }
+        };
     }
 }

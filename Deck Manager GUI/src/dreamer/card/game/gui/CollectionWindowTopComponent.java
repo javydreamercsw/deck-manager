@@ -21,7 +21,7 @@ autostore = false)
 @TopComponent.Description(preferredID = "CollectionWindowTopComponent",
 //iconBase="SET/PATH/TO/ICON/HERE", 
 persistenceType = TopComponent.PERSISTENCE_ALWAYS)
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, roles = "deck_view")
+@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.CollectionWindowTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(displayName = "#CTL_CollectionWindowAction",
