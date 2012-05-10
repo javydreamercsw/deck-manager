@@ -5,4 +5,586 @@
 <project name="Deck Manager" basedir=".">
     <description>Builds the module suite Deck Manager.</description>
     <import file="nbproject/build-impl.xml"/>
+    <import file="preparation.xml"/>
+    
+    <target name="branding" depends="-init-netbeans, -init-hudson"><!--, -update-lookup-lib">-->
+        <if>
+            <isset property="app.icon"/>
+            <then>
+                <copy file="${app.icon}" tofile="resources/${app.name}.ico"/>
+                <copy file="${app.icon}" tofile="resources/${app.name}.gif"/>
+            </then>
+        </if>
+        <!--Update the current version in branding Bundle files-->
+        <propertyfile file="${basedir}/branding/core/core.jar/org/netbeans/core/startup/Bundle.properties">
+            <entry  key="currentVersion" value="${app.title} ${app.version}"/>
+            <entry  key="LBL_splash_window_title" value="Starting ${app.title}"/>
+        </propertyfile>
+ 
+        <propertyfile file="${basedir}/branding/modules/org-netbeans-core-windows.jar/org/netbeans/core/windows/view/ui/Bundle.properties">
+            <entry key="CTL_MainWindow_Title" value="${app.title} ${app.version}" />
+            <entry key="CTL_MainWindow_Title_No_Project" value="${app.title} ${app.version}" />
+        </propertyfile>
+        <!--Update version on all localization files-->
+        <for param="file">
+            <fileset dir="branding/" includes="**/*_*.properties"/>
+            <sequential>
+                <replaceregexp file="@{file}"
+                               match="[0-9]+\.[0-9]+"
+                               replace="${app.version}"
+                               byline="true"/>
+            </sequential>
+        </for>
+        <if>
+            <available file="${suite.dir}/resources/Splash.png"/>
+            <then>
+                <copy file="${suite.dir}/resources/Splash.png" 
+                      tofile="${suite.dir}/branding/modules/ext/updater.jar/org/netbeans/updater/resources/updatersplash.gif"/>
+            </then>
+        </if>
+        <!--Create pom.xml-->
+        <echo file="${suite.dir}/pom.xml"><![CDATA[<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>simple.marauroa.rcp.server</groupId>
+    <artifactId>MSM</artifactId>
+    <version>]]>${app.version}<![CDATA[</version>
+    <packaging>pom</packaging>
+    <name>]]>${app.title}<![CDATA[</name>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>]]>
+        </echo>
+        <for list="${modules}" delimiter=":" param="cur" trim="true">
+            <sequential>
+                <echo file="${suite.dir}/pom.xml" append="true"><![CDATA[
+                <source>./]]>@{cur}/src<![CDATA[</source>]]>
+                </echo>
+            </sequential>
+        </for>
+        <echo file="${suite.dir}/pom.xml" append="true"><![CDATA[</sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <properties>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.phase>generate-sources</sonar.phase>
+        <sonar.cobertura.reportPath>/build/test/cobertura-report/coverage.xml</sonar.cobertura.reportPath>
+</properties>
+</project>]]>
+        </echo>
+        <antcall target="suite.branding"/>
+    </target>
+    
+    <target name="build-zip" depends="suite.build-zip">
+        <unzip src="${dist.dir}/${app.name}.zip" dest="${dist.dir}"/>
+        <replace file="${dist.dir}/${app.name}/etc/${app.name}.conf">
+            <replacefilter token="/dev" value="/${app.version}" />
+            <replacefilter token="-J-Xms24m -J-Xmx64m" value="${run.args.extra}" />
+        </replace>
+        <delete file="${dist.dir}/${app.name}.zip"/>
+        <zip destfile="${dist.dir}/${app.name}.zip" basedir="${dist.dir}"/>
+        <delete dir="${dist.dir}/${app.name}"/>
+    </target>
+    
+    <target name="build-installer" description="Create Installer" depends="-init-netbeans, -init-hudson, -replaceWindowsLauncherIcon, branding">
+        <echo message="Setting property and task for installer creation" />
+        <property name="nbdist.dir" value="dist"/>
+        <property name="nbdist-app.dir" value="${nbdist.dir}/${app.name}"/>
+
+        <echo message="Preparing ...." />
+        <!--Delete the folder just in case-->
+        <delete dir="${app.name}"/>
+        <echo message="Creating zip distribution." />
+        <antcall target="build-zip"/>
+        <unzip src="${nbdist.dir}/${app.name}.zip" dest="${nbdist.dir}"/>
+
+        <replace file="${nbdist.dir}/${app.name}/etc/${app.name}.conf">
+            <replacefilter token="/dev" value="/${app.version}" />
+            <replacefilter token="-J-Xms24m -J-Xmx64m" value="${run.args.extra}" />
+        </replace>
+        <antcall target="-use-izpack"/>
+    </target>
+    
+    <target name="-update-izpack-config" depends="-init-netbeans, -init-hudson">
+        <!-- Update nizpack.xml -->
+        <echo file="${suite.dir}/nizpack.xml"><![CDATA[<installation version="1.0">
+<info>
+    <appname>]]>${app.title}<![CDATA[</appname>
+    <appversion>]]>${app.version}<![CDATA[</appversion>
+    <appsubpath>]]>${app.title}<![CDATA[</appsubpath>
+    <javaversion>1.6+</javaversion>
+    <authors>
+        <author name="Javier A. Ortiz Bultr&#xf3;n" email="javier.ortiz.78@gmail.com"/>
+    </authors>
+</info>
+<guiprefs height="450" resizable="yes" width="600">
+    <modifier key="useFlags" value="no"/>
+    <modifier key="langDisplayType" value="native"/>
+    <modifier key="allYGap" value="8"/>
+    <modifier key="allXGap" value="4"/>
+    <modifier key="layoutAnchor" value="NORTHWEST"/>
+    <modifier key="useHeadingPanel" value="yes"/>
+    <modifier key="headingLineCount" value="1"/>
+</guiprefs>
+<locale>
+    <langpack iso3="eng"/>
+</locale>
+<native name="ShellLink.dll" type="izpack">
+    <os family="windows"/>
+</native>
+<native stage="both" name="COIOSHelper.dll" type="3rdparty">
+    <os family="windows"/>
+</native>
+<listeners>
+    <listener installer="RegistryInstallerListener" uninstaller="RegistryUninstallerListener">
+        <os family="windows"/>
+    </listener>
+    <listener installer="SummaryLoggerInstallerListener" uninstaller="RegistryUninstallerListener">
+        <os family="windows"/>
+    </listener>
+</listeners>
+<variables/>
+<resources>
+    <res src="resources/]]>${app.name}<![CDATA[.gif" id="Installer.image"/>
+    <res src="resources/]]>${app.name}<![CDATA[.gif" id="Heading.image"/>
+    <res src="shortcutSpec.xml" id="shortcutSpec.xml"/>
+    <res src="resources/License.txt" id="HTMLLicencePanel.licence"/>
+</resources>
+<panels>
+    <panel classname="CheckedHelloPanel"/>
+    <panel classname="HTMLLicencePanel"/>
+    <panel classname="TargetPanel"/>
+    <panel classname="PacksPanel"/>
+    <panel classname="InstallPanel"/>
+    <panel classname="ShortcutPanel"/>
+    <panel classname="SimpleFinishPanel"/>
+</panels>
+<conditions>
+        <condition type="packselection" id="jWrestling_Selected">
+            <packid>jWrestling</packid>
+        </condition>
+    </conditions>
+    <packs>
+        <pack name="Core" installGroups="]]>${app.name}<![CDATA[" required="yes">
+            <description>Core Files</description>]]>
+        </echo>
+        <echo>Adding core Package definition</echo>
+        <length string="${suite.dir}" property="suite.dir.length" />
+        <length string="${suite.dir}/dist/${app.name}" property="suite.dir.app.folder.length" />
+        <pathconvert pathsep="|" property="optional.packages.names">
+            <mapper type="flatten"/>
+            <path path="${optional.packages}"/>
+        </pathconvert>
+        <var name="core.package.excludes" value=""/>
+        <for list="${optional.packages.names}" delimiter="|" param="cur" trim="true">
+            <sequential>
+                <var name="core.package.excludes" value="^(?!.*(?i)@{cur})${core.package.excludes}"/>
+            </sequential>
+        </for>
+        <for param="file">
+            <fileset dir="dist/${app.name}">
+                <filename regex="${core.package.excludes}"/>
+            </fileset>
+            <sequential>
+                <length string="@{file}" property="file.length" />
+                <lastIndexOf text="@{file}" searchstring="\" property="result"/>
+                <substring text="@{file}" 
+                           start="${suite.dir.length}" 
+                           end="${file.length}" 
+                           property="final.path" />
+                <substring text="@{file}" 
+                           start="${suite.dir.app.folder.length}" 
+                           end="${result}" 
+                           property="final.install.path" />
+                <echo file="${suite.dir}/nizpack.xml" append="true"><![CDATA[<file targetdir="$INSTALL_PATH]]>${final.install.path}<![CDATA[" src="]]>${final.path}<![CDATA["/>]]>
+                </echo>
+                <var name="file.length" unset="true"/>
+                <var name="final.path" unset="true"/>
+                <var name="final.install.path" unset="true"/>
+                <var name="result" unset="true"/>
+            </sequential>
+        </for>
+        <echo file="${suite.dir}/nizpack.xml" append="true"><![CDATA[</pack>]]>
+        </echo>
+        <!--Now create the separate packages-->
+        <pathconvert pathsep="|" property="optional.packages.names">
+            <mapper type="flatten"/>
+            <path path="${optional.packages}"/>
+        </pathconvert>
+        <for list="${optional.packages.names}" delimiter="|" param="cur" trim="true">
+            <sequential>
+                <echo>Creating @{cur} package.</echo>
+                <echo file="${suite.dir}/nizpack.xml" append="true"><![CDATA[<pack name="]]>@{cur}<![CDATA[" preselected="no" installGroups="]]>${app.name}<![CDATA[" required="no" hidden="false">]]>
+                </echo>
+                <echo file="${suite.dir}/nizpack.xml" append="true"><![CDATA[<description>]]>@{cur}<![CDATA[ plugin</description>>]]>
+                </echo>
+                <for param="file">
+                    <fileset dir="dist/${app.name}">
+                        <filename regex="^(.*(?i)@{cur})"/>
+                    </fileset>
+                    <sequential>
+                        <length string="@{file}" property="file.length" />
+                        <lastIndexOf text="@{file}" searchstring="\" property="result"/>
+                        <substring text="@{file}" 
+                                   start="${suite.dir.length}" 
+                                   end="${file.length}" 
+                                   property="final.path" />
+                        <substring text="@{file}" 
+                                   start="${suite.dir.app.folder.length}" 
+                                   end="${result}" 
+                                   property="final.install.path" />
+                        <echo file="${suite.dir}/nizpack.xml" append="true"><![CDATA[<file targetdir="$INSTALL_PATH]]>${final.install.path}<![CDATA[" src="]]>${final.path}<![CDATA["/>]]>
+                        </echo>
+                        <var name="file.length" unset="true"/>
+                        <var name="final.path" unset="true"/>
+                        <var name="final.install.path" unset="true"/>
+                        <var name="result" unset="true"/>
+                    </sequential>
+                </for>
+                <echo file="${suite.dir}/nizpack.xml" append="true"><![CDATA[</pack>]]>
+                </echo>
+            </sequential>
+        </for>
+        <echo file="${suite.dir}/nizpack.xml" append="true"><![CDATA[</packs>
+        </installation>]]>
+        </echo>
+        <antcall target="suite.branding"/>
+    </target>
+    
+    <target name="-use-izpack" depends="-init-netbeans, -init-hudson, -update-izpack-config">
+        <property name="izpack.dir" location="../Simple Libs/tools/IzPack"/>
+        <property name="exeName" value="${app.title}-Setup"/>
+        <property name="izpack-installer" value="${exeName}.jar"/>
+        <taskdef name="izpack" classpath="${izpack.dir}/lib/compiler.jar"
+                 classname="com.izforge.izpack.ant.IzPackTask"/>
+        <property name="launch4j.dir" location="../Simple Libs/tools/launch4j"/>
+        <echo message="Makes the installer using IzPack into ${izpack-installer}"/>
+        <echo file="${suite.dir}/shortcutSpec.xml"><![CDATA[<shortcuts>
+    <skipIfNotSupported/>
+    <programGroup location="applications" defaultName="$APP_NAME"/>
+    <shortcut name="$APP-NAME" type="Application" 
+    encoding="UTF-8" description="$APP_NAME" 
+    target="$INSTALL_PATH/bin/$APP-NAME.exe" applications="no" 
+    programGroup="yes" desktop="yes"/>
+    <shortcut name="Uninstall $APP_NAME" type="Application" 
+    encoding="UTF-8" description="$APP_NAME Uninstaller" 
+    target="$INSTALL_PATH/Uninstaller/uninstaller.jar" 
+    programGroup="yes"/>
+</shortcuts>]]>
+        </echo>
+        <replace file="shortcutSpec.xml">
+            <replacefilter token="$APP-VERSION" value="${app.version}" />
+            <replacefilter token="$APP_TITLE" value="${app.title}" />
+            <replacefilter token="$APP-NAME" value="${app.name}" />
+        </replace>
+        <izpack input="${basedir}/nizpack.xml"
+                output="${basedir}/${izpack-installer}"
+                installerType="standard"
+                basedir="${basedir}"
+                izPackDir="${izpack.dir}/"/>
+        <!--Launch 4J task-->
+        <taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask"
+                 classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
+        <antcall target="-create-launch4j-installer"/>
+        <echo message="Cleaning and finalizing release..." />
+        <delete dir="${nbdist-app.dir}"/>
+        <delete file="${izpack-installer}"/>
+        <delete file="${app.title}.xml"/>
+        <delete file="shortcutSpec.xml"/>
+        <delete file="nizpack.xml"/>
+    </target>
+    
+    <target name="-create-launch4j-installer">
+        <delete>
+            <fileset dir="." includes="*.exe"/>
+        </delete>
+        <echo file="${suite.dir}/${app.title}.xml"><![CDATA[<launch4jConfig>
+        <dontWrapJar>false</dontWrapJar>
+        <headerType>gui</headerType>
+        <jar>]]>${izpack-installer}<![CDATA[</jar>
+        <outfile>]]>${exeName}<![CDATA[.exe</outfile>
+    <errTitle/>
+    <cmdLine/>
+    <chdir/>
+    <priority>normal</priority>
+    <downloadUrl>http://java.com/download</downloadUrl>
+    <supportUrl/>
+    <customProcName>false</customProcName>
+    <stayAlive>false</stayAlive>
+    <manifest/>
+    <icon>nizpack.ico</icon>
+    <singleInstance>
+        <mutexName>NIzPack</mutexName>
+        <windowTitle/>
+    </singleInstance>
+    <jre>
+        <path/>
+        <minVersion>1.6.0</minVersion>
+        <maxVersion/>
+        <jdkPreference>jreOnly</jdkPreference>
+    </jre>
+</launch4jConfig>]]>
+        </echo>
+        <launch4j configFile="${app.title}.xml"/>
+    </target>
+
+    <target name="nbms" depends="-init-netbeans,-init-hudson">
+        <!--Update keystore info in projects-->
+        <antcall target="-update-keystore-info"/>
+        <!--Create/Update keystore-->
+        <delete file="${keystore.location}${keystore.name}"/>
+        <mkdir dir="${keystore.location}"/>
+        <genkey alias="${keystore.alias}" storepass="${keystore.password}"
+                dname="${keystore.dname}"
+                keystore="${keystore.location}${keystore.name}"/> 
+        <!--Generate nbms and javadoc for applicable projects-->
+        <antcall target="suite.nbms"/>
+    </target>
+    
+    <target name="create-doxygen-docs">
+        <doxygen doxygenPath="${suite.dir}/../Simple Libs/tools/doxygen/doxygen.exe" >
+            <property name="INPUT" value="${suite.dir}" />
+            <property name="PROJECT_NAME" value="${app.title}" />
+            <property name="PROJECT_NUMBER" value="${app.version}" />
+            <property name="OUTPUT_DIRECTORY" value="${suite.dir}/doxygen" />
+            <property name="OPTIMIZE_OUTPUT_JAVA" value="YES"/>
+            <property name="EXTRACT_PRIVATE" value="YES"/>
+            <property name="EXTRACT_STATIC" value="YES"/>
+            <property name="SORT_GROUP_NAMES" value="YES"/>
+            <property name="RECURSIVE" value="YES"/>
+            <property name="INLINE_SOURCES" value="YES"/>
+            <property name="REFERENCED_BY_RELATION" value="YES"/>
+            <property name="REFERENCES_RELATION" value="YES"/>
+            <property name="GENERATE_LATEX" value="NO"/>
+            <property name="CLASS_DIAGRAMS" value="YES"/>
+            <property name="HAVE_DOT" value="NO"/>
+        </doxygen>
+    </target>
+
+    <target name="source-distribution" description="Create Source Distribution (All suite)" depends="-init-netbeans, -init-hudson">
+        <echo>Create Source zip (skiping the netbeans folder with the platform)</echo>
+        <delete file="${suite.dir}/dist/${app.version}.zip"/>
+        <zip destfile="${suite.dir}/dist/${app.version}.zip" basedir="../" update="true">
+            <exclude name="**/netbeans/"/>
+            <exclude name="**/**/build"/>
+            <exclude name="**/**/dist"/>
+            <exclude name="*.exe"/>
+        </zip>
+        <echo>Add the platform</echo>
+        <zip destfile="${suite.dir}/dist/${app.version}.zip" basedir="../" update="true">
+            <include name="netbeans/*.zip"/>
+        </zip>
+        <available file="${suite.dir}/build/updates" property="nbms.present" type="dir"/>
+        <if>
+            <not>
+                <isset property="nbms.present"/>
+            </not>
+            <then>
+                <antcall target="nbms"/>
+            </then>
+        </if>
+        <echo>Add the nbms/update folder</echo>
+        <zip destfile="${suite.dir}/dist/${app.version}.zip" basedir="${suite.dir}/build/updates" update="true"/>
+        <echo> Source distribution file available at ${suite.dir}/dist/${app.version}.zip</echo>
+    </target>
+
+    <target name="module-source-distribution" description="Create Source Distribution for each separated module" depends="-init, -init-netbeans, -init-hudson">
+        <for list="${modules}" delimiter=":" param="cur" trim="true">
+            <sequential>
+                <property file="@{cur}/manifest.mf" prefix="@{cur}"/>
+                <property file="@{cur}/src/${@{cur}.OpenIDE-Module-Localizing-Bundle}" prefix="@{cur}"/>
+                <if>
+                    <not>
+                        <equals arg1="${@{cur}.general.info.partnumber}" arg2="$${@{cur}.general.info.partnumber}" />
+                    </not>
+                    <then>
+                        <if>
+                            <not>
+                                <equals arg1="${@{cur}.general.info.partnumber}" arg2="Dummy" />
+                            </not>
+                            <then>
+                                <echo>Creating Source zip for Module @{cur}</echo>
+                                <delete file="${suite.dir}/dist/@{cur} ${@{cur}.general.info.partnumber}.zip"/>
+                                <zip destfile="${suite.dir}/dist/@{cur} ${@{cur}.general.info.partnumber}.zip"
+                                     basedir="@{cur}" update="false" excludes="build/**"/>
+                            </then>
+                        </if>
+                    </then>
+                </if>
+            </sequential>
+        </for>
+        <echo>Source distribution file available at ${suite.dir}/dist/</echo>
+    </target>
+    
+    <target name="-update-keystore-info" depends="-init-netbeans, -init-hudson">
+        <for list="${modules}" delimiter=":" param="cur" trim="true">
+            <sequential>
+                <echo>Uptading module: @{cur}...</echo>
+                <mkdir dir="@{cur}/nbproject/"/>
+                <!--Place the information in the properties file-->
+                <propertyfile file="@{cur}/nbproject/project.properties">
+                    <entry  key="keystore" value="../${keystore.location}${keystore.name}"/>
+                    <entry  key="nbm_alias" value="${keystore.alias}"/>
+                </propertyfile>
+                <mkdir dir="@{cur}/nbproject/private/"/>
+                <!--Place the password in the private properties file-->
+                <propertyfile file="@{cur}/nbproject/private/private.properties">
+                    <entry  key="storepass" value="${keystore.password}"/>
+                </propertyfile>
+                <echo>Done!</echo>
+            </sequential>
+        </for>
+    </target>
+    
+    <target name="fix-dependencies" depends="-init-netbeans, -init-hudson" description="Removes unused compilation dependencies on other modules.">
+        <echo>Fixing dependencies for suite...</echo>
+        <!--Define custom task-->
+        <taskdef resource="org/netbeans/nbbuild/taskdefs.properties">
+            <classpath>
+                <pathelement location="${harness.dir}/tasks.jar"/>
+            </classpath>
+        </taskdef>
+        <taskdef name="stringutil" classname="ise.antelope.tasks.StringUtilTask">
+            <classpath>
+                <pathelement location="${suite.dir}/../Simple Libs/tools/AntelopeTasks_3.5.3.jar"/>
+            </classpath>
+        </taskdef>
+        <echo>Create the ant script...</echo>
+        <!--Create the ant script-->
+        <echo file="versions.xml"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<project name="Fix Versions" basedir="." default="fix">
+    <taskdef resource="org/netbeans/nbbuild/taskdefs.properties">
+            <classpath>
+                <pathelement location="${harness.dir}/tasks.jar"/>
+            </classpath>
+    </taskdef>
+    <target name="fix">
+        <property name="build.compiler.deprecation" value="false" />
+        <fixdependencies antfile="../../build.xml" 
+                        buildtarget="netbeans" cleantarget="clean" failonerror="true" sanitycheck="false">]]>
+        </echo>
+        <for list="${modules}" delimiter=":" param="cur" trim="true">
+            <sequential>
+                <property file="@{cur}/manifest.mf" prefix="@{cur}"/>
+                <if>
+                    <contains string="${@{cur}.OpenIDE-Module}" substring="/"/>
+                    <then>
+                        <length string="${@{cur}.OpenIDE-Module}" property="@{cur}.length.dist" />
+                        <stringutil string="${@{cur}.OpenIDE-Module}" 
+                                    property="@{cur}.OpenIDE-Module.indexOf">
+                            <indexof string="/"/>
+                        </stringutil>
+                        <math result="@{cur}.after" operand1="1" operation="+" 
+                              operand2="${@{cur}.OpenIDE-Module.indexOf}" datatype="int"/>
+                        <substring text="${@{cur}.OpenIDE-Module}" 
+                                   start="${@{cur}.after}" 
+                                   end="${@{cur}.length.dist}" 
+                                   property="@{cur}.release-version" />
+                        <substring text="${@{cur}.OpenIDE-Module}" start="0" 
+                                   end="${@{cur}.OpenIDE-Module.indexOf}" 
+                                   property="@{cur}.OpenIDE-Module" />
+                    </then>
+                </if>
+                <property file="@{cur}/nbproject/project.properties" prefix="@{cur}."/>
+                <if>
+                    <or>
+                        <isset property="@{cur}.release-version"/>
+                        <isset property="@{cur}.spec.version.base"/>
+                    </or>
+                    <then>
+                        <echo file="versions.xml" append="true"><![CDATA[
+                <replace codenamebase="]]>${@{cur}.OpenIDE-Module}<![CDATA[" addcompiletime="true">
+                    <module codenamebase="]]>${@{cur}.OpenIDE-Module}
+                        </echo>
+                        <if>
+                            <isset property="@{cur}.spec.version.base"/>
+                            <then>
+                                <echo file="versions.xml" append="true"><![CDATA[" spec="]]>${@{cur}.spec.version.base}<![CDATA["]]>
+                                </echo>
+                            </then>
+                            <else>
+                                <echo file="versions.xml" append="true"><![CDATA[/>]]>
+                                </echo>
+                            </else>
+                        </if>
+                        <if>
+                            <isset property="@{cur}.release-version"/>
+                            <then>
+                                <echo file="versions.xml" append="true"><![CDATA[ release="]]>${@{cur}.release-version}<![CDATA["/>]]>
+                                </echo>
+                            </then>
+                            <else>
+                                <echo file="versions.xml" append="true"><![CDATA[/>]]>
+                                </echo>
+                            </else>
+                        </if>
+                        <echo file="versions.xml" append="true"><![CDATA[
+                </replace>]]>
+                        </echo>
+                    </then>
+                </if>
+            </sequential>
+        </for>
+        <echo file="versions.xml" append="true"><![CDATA[
+            <fileset dir="nbproject" >
+                <include name="project.xml" />
+            </fileset>
+        </fixdependencies>
+    </target>
+</project>]]>
+        </echo>
+        <echo>Create the ant script...Done!</echo>
+        <!--Now update modules-->
+        <echo>Fixing module dependencies...</echo>
+        <property name="build.compiler.deprecation" value="false" />
+        <subant target="module-fix-dependencies">
+            <fileset dir="." includes="**/build.xml" excludes="build.xml"/>
+        </subant>
+        <echo>Fixing module dependencies...Done!</echo>
+        <delete file="versions.xml"/>
+        <echo>Fixing dependencies for suite...Done!</echo>
+    </target>
+    
+    <!--<target name="-update-lookup-lib">
+        <fileset id="finder" dir="${harness.dir}/.." includes="**/org-openide-util-lookup.jar" />
+        <pathconvert property="lookup-lib" refid="finder" />
+        <copy file="${lookup-lib}" tofile="../Simple Libs/org-openide-util-lookup.jar"/>
+    </target>-->
+    
+    <!-- Windows-only target that replaces the icon for the launcher exe with our own icon. -->
+    <target name="-replaceWindowsLauncherIcon" if="isWindows" description="Replace the icon for the Windows launcher exe">
+        <property name="ReplaceVistaIcon.path" value="../Simple Libs/tools/ReplaceVistaIcon.exe"/>
+        <if>
+            <available file="${ReplaceVistaIcon.path}"/>
+            <then>
+                <echo message="Replacing icon of Windows launcher executable."/>
+                <exec executable="${ReplaceVistaIcon.path}" resolveexecutable="true">
+                    <arg line="build/launcher/bin/${app.name}.exe resources/${app.name}.ico"/>
+                </exec>
+            </then>
+        </if>
+    </target>
 </project>

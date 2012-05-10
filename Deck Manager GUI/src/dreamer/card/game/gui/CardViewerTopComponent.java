@@ -20,8 +20,6 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -38,10 +36,6 @@ autostore = false)
 //iconBase="SET/PATH/TO/ICON/HERE", 
 persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @TopComponent.Registration(mode = "navigator", openAtStartup = true, roles = "game_view")
-@ActionID(category = "Window", id = "dreamer.card.game.gui.CardViewerTopComponent")
-@ActionReference(path = "Menu/Window" /*
- * , position = 333
- */)
 @TopComponent.OpenActionRegistration(displayName = "#CTL_CardViewerAction")
 @Messages({
     "CTL_CardViewerAction=Card Viewer",

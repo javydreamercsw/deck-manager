@@ -1,21 +1,12 @@
 package dreamer.card.game.gui;
 
-import com.reflexit.magiccards.core.cache.ICardCache;
-import com.reflexit.magiccards.core.model.DefaultCardGame;
 import com.reflexit.magiccards.core.model.ICardAttribute;
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
-import java.awt.Image;
 import java.beans.IntrospectionException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.logging.Level;
+import java.util.*;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
@@ -36,18 +27,17 @@ import org.openide.windows.TopComponent;
 /**
  * Top component which displays something.
  */
-@ConvertAsProperties(
-    dtd = "-//dreamer.card.game.gui//Game//EN",
+@ConvertAsProperties(dtd = "-//dreamer.card.game.gui//Game//EN",
 autostore = false)
-@TopComponent.Description(
-    preferredID = "GameTopComponent",
+@TopComponent.Description(preferredID = "GameTopComponent",
 //iconBase="SET/PATH/TO/ICON/HERE", 
 persistenceType = TopComponent.PERSISTENCE_NEVER)
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = true, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.GameTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
-@TopComponent.OpenActionRegistration(
-    displayName = "#CTL_GameAction",
+@ActionReference(path = "Menu/Window" /*
+ * , position = 333
+ */)
+@TopComponent.OpenActionRegistration(displayName = "#CTL_GameAction",
 preferredID = "GameTopComponent")
 @Messages({
     "CTL_GameAction=Game",
@@ -57,34 +47,16 @@ preferredID = "GameTopComponent")
 public final class GameTopComponent extends TopComponent implements ExplorerManager.Provider {
 
     private ExplorerManager em = new ExplorerManager();
-    private ICardGame game = new DefaultCardGame() {
-        @Override
-        public Runnable getUpdateRunnable() {
-            return null;
-        }
-
-        @Override
-        public Image getBackCardIcon() {
-            return null;
-        }
-
-        @Override
-        public Image getGameIcon() {
-            try {
-                return Lookup.getDefault().lookup(ICardCache.class).getGameIcon((ICardGame) this);
-            } catch (IOException ex) {
-                return null;
-            }
-        }
-
-        @Override
-        public String getName() {
-            return "Magic the Gathering";
-        }
-    };
+    private ICardGame game = null;
 
     public GameTopComponent() {
         initComponents();
+        for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
+            ICardGame g = it.next();
+            if (g.getName().equals("Magic the Gathering")) {
+                game = g;
+            }
+        }
         Node root = null;
         try {
             root = new IGameNode(game, new ICardSetChildFactory((ICardGame) game));
@@ -104,6 +76,7 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
             i++;
         }
         ((OutlineView) gamePane).setPropertyColumns(properties);
+        ((OutlineView) gamePane).getOutline().setDefaultRenderer(String.class, new ICardOutlineCellRenderer(game));
         ((OutlineView) gamePane).getOutline().setModel(DefaultOutlineModel.createOutlineModel(
                 new GameTreeModel(root),
                 new GameRowModel(columns),
@@ -299,7 +272,7 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
 
         @Override
         public Class getColumnClass(int i) {
-            return Integer.class;
+            return String.class;
         }
 
         @Override

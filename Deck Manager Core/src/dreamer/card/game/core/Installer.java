@@ -30,8 +30,8 @@ import org.openide.windows.WindowSystemEvent;
 import org.openide.windows.WindowSystemListener;
 
 @ServiceProvider(service = DataBaseStateListener.class)
-public class Installer extends ModuleInstall implements ActionListener, 
-DataBaseStateListener, WindowSystemListener {
+public class Installer extends ModuleInstall implements ActionListener,
+        DataBaseStateListener, WindowSystemListener {
 
     private static final Logger LOG = Logger.getLogger(Installer.class.getName());
     private final ArrayList<GameUpdateAction> updaters = new ArrayList<GameUpdateAction>();
@@ -40,6 +40,7 @@ DataBaseStateListener, WindowSystemListener {
     private final int period = 30000, pause = 10000;
     private final HashMap<String, String> dbProperties = new HashMap<String, String>();
     private long start;
+    private boolean waitDBInit = true;
 
     @Override
     public void restored() {
@@ -107,6 +108,9 @@ DataBaseStateListener, WindowSystemListener {
                         Lookup.getDefault().lookup(ClassLoader.class).loadClass(dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
                         LOG.log(Level.INFO, "Succesfully loaded driver: {0}", dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
                         Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
+                        while (waitDBInit) {
+                            Thread.currentThread().sleep(100);
+                        }
                     } catch (Exception ex) {
                         LOG.log(Level.SEVERE, null, ex);
                         DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
@@ -200,6 +204,7 @@ DataBaseStateListener, WindowSystemListener {
     @Override
     public void initialized() {
         LOG.info("DB ready!");
+        waitDBInit = false;
         //Code to be done after the db is ready
         LOG.log(Level.FINE, "Database initialized");
         OutputHandler.output("Output", "Database initialized");
@@ -218,7 +223,7 @@ DataBaseStateListener, WindowSystemListener {
                     updaters.add(new GameUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task));
+                    runnables.add(new Thread(task, game.getName()+" game updater"));
                 }
             }
         }
@@ -234,7 +239,7 @@ DataBaseStateListener, WindowSystemListener {
                     updaters.add(new CacheUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task));
+                    runnables.add(new Thread(task, cache.getGameName()+" cache updater"));
                 }
             }
         }
