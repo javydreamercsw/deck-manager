@@ -2,6 +2,7 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICardGame;
 import java.beans.IntrospectionException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,14 +17,23 @@ import org.openide.util.Lookup;
 public class IGameChildFactory extends ChildFactory<ICardGame> {
 
     private static final Logger LOG = Logger.getLogger(IGameChildFactory.class.getName());
+    private ArrayList<ICardGame> games = new ArrayList<ICardGame>();
 
     public void refresh() {
+        for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
+            if (!games.contains(game)) {
+                games.add(game);
+            }
+        }
         refresh(true);
     }
 
     @Override
     protected boolean createKeys(List<ICardGame> toPopulate) {
-        toPopulate.addAll(Lookup.getDefault().lookupAll(ICardGame.class));
+        if (games.isEmpty()) {
+            refresh();
+        }
+        toPopulate.addAll(games);
         return true;
     }
 

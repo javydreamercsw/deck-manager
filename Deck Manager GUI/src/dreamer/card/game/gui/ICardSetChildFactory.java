@@ -4,6 +4,8 @@ import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.beans.IntrospectionException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +21,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> {
 
     private final ICardGame game;
     private static final Logger LOG = Logger.getLogger(ICardSetChildFactory.class.getName());
+    private ArrayList<ICardSet> sets = new ArrayList<ICardSet>();
 
     public ICardSetChildFactory(ICardGame game) {
         this.game = game;
@@ -26,7 +29,10 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> {
 
     @Override
     protected boolean createKeys(List<ICardSet> list) {
-        list.addAll(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(getGame()));
+        if (sets.isEmpty()) {
+            refresh();
+        }
+        list.addAll(sets);
         return true;
     }
 
@@ -46,6 +52,12 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> {
     }
 
     public void refresh() {
+        for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(getGame()).iterator(); it.hasNext();) {
+            ICardSet set = (ICardSet) it.next();
+            if (!sets.contains(set)) {
+                sets.add(set);
+            }
+        }
         refresh(true);
     }
 

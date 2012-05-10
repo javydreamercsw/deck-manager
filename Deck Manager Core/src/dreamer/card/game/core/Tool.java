@@ -83,7 +83,8 @@ public final class Tool {
         if (frameSize.width > screenSize.width) {
             frameSize.width = screenSize.width;
         }
-        component.setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
+        component.setLocation((screenSize.width - frameSize.width) / 2,
+                (screenSize.height - frameSize.height) / 2);
     }
 
     /**
@@ -165,12 +166,7 @@ public final class Tool {
         File icon = InstalledFileLocator.getDefault().locate(path,
                 module_id, false);
         URL imageURL = icon.toURI().toURL();
-
-        if (imageURL == null) {
-            throw new Exception("Resource not found: " + path);
-        } else {
-            return (new ImageIcon(imageURL, description)).getImage();
-        }
+        return (new ImageIcon(imageURL, description)).getImage();
     }
 
     /**
@@ -187,7 +183,7 @@ public final class Tool {
             tracker.waitForAll();
         } catch (InterruptedException e) {
             Logger.getLogger(Tool.class.getSimpleName()).log(Level.FINE,
-                    "Interrupted while loading Image", false);
+                    "Interrupted while loading Image. " + e, false);
         }
         return new ImageIcon(image);
     }
@@ -260,6 +256,8 @@ public final class Tool {
         try {
             pg.grabPixels();
         } catch (InterruptedException e) {
+            Logger.getLogger(Tool.class.getSimpleName()).log(Level.SEVERE,
+                    null, e);
             return false;
         }
 

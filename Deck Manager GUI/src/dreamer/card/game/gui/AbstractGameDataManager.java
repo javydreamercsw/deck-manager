@@ -9,7 +9,7 @@ import org.openide.util.Utilities;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public abstract class AbstractGameDataManager implements IGameDataManager {
+public abstract class AbstractGameDataManager implements IGameDataManager, Lookup.Provider {
 
     private Lookup.Result<ICard> result = Utilities.actionsGlobalContext().lookupResult(ICard.class);
 
