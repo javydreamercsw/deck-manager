@@ -1,9 +1,5 @@
 package dreamer.card.game.mtg.lib.gui;
 
-import ca.odell.glazedlists.*;
-import ca.odell.glazedlists.matchers.MatcherEditor;
-import ca.odell.glazedlists.matchers.TextMatcherEditor;
-import ca.odell.glazedlists.swing.*;
 import com.dreamer.outputhandler.OutputHandler;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICard;
@@ -13,7 +9,6 @@ import com.reflexit.magiccards.core.model.IGameDataManager;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import dreamer.card.game.core.Tool;
 import dreamer.card.game.gui.AbstractGameDataManager;
-import dreamer.card.game.gui.glazedlist.CardTableFormat;
 import dreamer.card.game.mtg.lib.MTGCardCache;
 import dreamer.card.game.mtg.lib.MTGRCPGame;
 import java.awt.BorderLayout;
@@ -25,15 +20,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableCellRenderer;
-import mtg.card.MagicCardField;
 import org.jdesktop.swingx.JXTable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
@@ -51,31 +42,18 @@ import org.openide.util.lookup.ServiceProvider;
 public final class MTGGameDataManager extends AbstractGameDataManager {
 
     private ICardGame game;
-    private EventList<ICard> eventList = GlazedListsSwing.swingThreadProxyList(GlazedLists.threadSafeList(new BasicEventList<ICard>()));
-    private DefaultEventTableModel<ICard> tableModel;
-    private SortedList<ICard> sortedCards = new SortedList<ICard>(eventList);
     private boolean loaded = false, loading = false;
     private JXTable cards;
     private JTextField filterEdit = new JTextField(10);
     private Panel panel;
-    private FilterList<ICard> textFilteredList, manaFilteredList;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
     private ProxyLookup proxy = new ProxyLookup(dynamicLookup, Lookup.getDefault()); 
     private static final Logger LOG = Logger.getLogger(MTGGameDataManager.class.getName());
-    private CardTableFormat tableFormat;
     private boolean stop;
 
     public MTGGameDataManager() {
         setGame(new MTGRCPGame());
-    }
-
-    private TableCellRenderer getRendererForAttribute(String name) {
-        if (name.toLowerCase(Locale.getDefault()).equals("cost")) {
-            return new GDMTableCellRenderer();
-        } else {
-            return null;
-        }
     }
 
     @Override
@@ -90,54 +68,10 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
         }
     }
 
-    /**
-     * @return the tableModel
-     */
-    public DefaultEventTableModel<ICard> getTableModel() {
-        if (tableModel == null) {
-            tableFormat = new CardTableFormat(game);
-            tableModel = new DefaultEventTableModel<ICard>(manaFilteredList,
-                    tableFormat);
-        }
-        return tableModel;
-    }
-
     @Override
     public Component getComponent() {
         if (panel == null) {
-            SetSelect setSelect = new SetSelect(eventList);
-            FilterList<ICard> setsFilteredList = new FilterList<ICard>(sortedCards, setSelect);
-            MatcherEditor<ICard> textMatcherEditor =
-                    new TextComponentMatcherEditor<ICard>(filterEdit,
-                    new GDMTextFilterator());
-            textFilteredList = new FilterList<ICard>(setsFilteredList, textMatcherEditor);
-            final ArrayList<String> manaFilters = new ArrayList<String>();
-            TextMatcherEditor<ICard> manaMatcherEditor = new TextMatcherEditor<ICard>(new GDMManaTextFilterator());
-            manaMatcherEditor.setMode(TextMatcherEditor.CONTAINS);
-            manaFilteredList = new FilterList<ICard>(textFilteredList, textMatcherEditor);
-            //Create the card list
-            DefaultEventSelectionModel selectionModel = new DefaultEventSelectionModel(eventList);
-            cards = new JXTable(getTableModel());
-            cards.setSelectionModel(selectionModel);
-            cards.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    if (cards.getSelectedRow() >= 0) {
-                        content.add(getTableModel().getElementAt(cards.getSelectedRow()));
-                    }
-                }
-            });
-            TableComparatorChooser.install(
-                    cards, sortedCards, TableComparatorChooser.MULTIPLE_COLUMN_MOUSE);
-            //Add custom renderers
-            for (int i = 0; i < getTableModel().getColumnCount(); i++) {
-                TableCellRenderer renderer = getRendererForAttribute(getTableModel().getColumnName(i));
-                if (renderer != null) {
-                    cards.getColumnModel().getColumn(i).setCellRenderer(renderer);
-                }
-            }
-            //Enable the controls for the table
-            cards.setColumnControlVisible(true);
+            final List<String> manaFilters = new ArrayList<String>();
             //Set up the Lookp listener stuff
             //Create Panel for the game
             ArrayList<String> manaTypes = new ArrayList<String>();
@@ -152,7 +86,6 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
                 for (String mana : manaTypes) {
                     try {
                         manaFilterPanel.add(new ManaFilterButton(mana, manaFilters,
-                                manaMatcherEditor,
                                 new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(mana))))));
                     } catch (IOException ex) {
                         LOG.log(Level.SEVERE, null, ex);
@@ -193,10 +126,8 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
                 Object item = it.next();
                 if (item instanceof ICard) {
                     ICard card = (ICard) item;
-                    if (!eventList.contains(card)) {
                         LOG.log(Level.FINE, "Adding card: {0}", card.getName());
                         addCard(card);
-                    }
                 }
             }
         }
@@ -243,7 +174,6 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
 
     private void addCard(ICard card) {
         content.add(card);
-        eventList.add(card);
     }
 
     @Override
@@ -304,40 +234,6 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
 
         public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
             //Do nothing
-        }
-    }
-
-    static class GDMTextFilterator implements TextFilterator<ICard> {
-
-        public GDMTextFilterator() {
-        }
-
-        @Override
-        public void getFilterStrings(List<String> list, ICard e) {
-            list.add(e.getObjectByField(MagicCardField.NAME).toString());
-            list.add(e.getObjectByField(MagicCardField.TEXT).toString());
-            Object value = e.getObjectByField(MagicCardField.NAME);
-            if (value != null) {
-                list.add(value.toString());
-            }
-            value = e.getObjectByField(MagicCardField.TEXT);
-            if (value != null) {
-                list.add(value.toString());
-            }
-        }
-    }
-
-    static class GDMManaTextFilterator implements TextFilterator<ICard> {
-
-        public GDMManaTextFilterator() {
-        }
-
-        @Override
-        public void getFilterStrings(List<String> list, ICard e) {
-            Object value = e.getObjectByField(MagicCardField.COST);
-            if (value != null) {
-                list.add(value.toString());
-            }
         }
     }
 }
