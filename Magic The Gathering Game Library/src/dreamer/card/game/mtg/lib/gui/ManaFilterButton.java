@@ -1,7 +1,5 @@
 package dreamer.card.game.mtg.lib.gui;
 
-import ca.odell.glazedlists.matchers.TextMatcherEditor;
-import com.reflexit.magiccards.core.model.ICard;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -14,8 +12,7 @@ import javax.swing.JButton;
  */
 public class ManaFilterButton extends JButton {
 
-    public ManaFilterButton(final String mana, final List<String> manaFilters,
-            final TextMatcherEditor<ICard> manaMatcherEditor, Icon icon) {
+    public ManaFilterButton(final String mana, final List<String> manaFilters, Icon icon) {
         super(icon);
         addActionListener(new ActionListener() {
             boolean enabled = false;
@@ -32,7 +29,7 @@ public class ManaFilterButton extends JButton {
                     enabled = true;
                 }
                 String[] filters = manaFilters.toArray(new String[manaFilters.size()]);
-                manaMatcherEditor.setFilterText(filters);
+                //TODO Implement filtering
             }
         });
     }
