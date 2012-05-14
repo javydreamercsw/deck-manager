@@ -31,6 +31,7 @@ import mtg.card.sync.ParseGathererSets;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.Places;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -183,9 +184,9 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
             }
         }
     }
-    
+
     @Override
-    public void updateRemote(){
+    public void updateRemote() {
         getGame().getGameDataManagerImplementation().load();
         if (!dbError) {
             //Now update from the internet
@@ -226,6 +227,11 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                         LOG.log(Level.WARNING, "Unable to find set: {0}", edition.getName());
                         setsToLoad.add(edition);
                     }
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
                 }
                 if (!setsToLoad.isEmpty()) {
                     updateProgressMessage("Calculating amount of pages to process...");
@@ -257,6 +263,11 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                             } else {
                                 break;
                             }
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException ex) {
+                                Exceptions.printStackTrace(ex);
+                            }
                         }
                     } catch (DBException e) {
                         LOG.log(Level.SEVERE, null, e);
@@ -282,6 +293,11 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                                     LOG.log(Level.FINE, "Created set: {0}", edition.getName());
                                 }
                             }
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException ex) {
+                                Exceptions.printStackTrace(ex);
+                            }
                         }
                         for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
                             if (!dbError) {
@@ -293,6 +309,11 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                                 createCardsForSet(setData.getUrl());
                             } else {
                                 break;
+                            }
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException ex) {
+                                Exceptions.printStackTrace(ex);
                             }
                         }
                     }

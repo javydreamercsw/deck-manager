@@ -13,18 +13,15 @@ import dreamer.card.game.mtg.lib.MTGCardCache;
 import dreamer.card.game.mtg.lib.MTGRCPGame;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Panel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
-import javax.swing.table.TableCellRenderer;
 import org.jdesktop.swingx.JXTable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
@@ -48,7 +45,7 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
     private Panel panel;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
-    private ProxyLookup proxy = new ProxyLookup(dynamicLookup, Lookup.getDefault()); 
+    private ProxyLookup proxy = new ProxyLookup(dynamicLookup, Lookup.getDefault());
     private static final Logger LOG = Logger.getLogger(MTGGameDataManager.class.getName());
     private boolean stop;
 
@@ -126,8 +123,8 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
                 Object item = it.next();
                 if (item instanceof ICard) {
                     ICard card = (ICard) item;
-                        LOG.log(Level.FINE, "Adding card: {0}", card.getName());
-                        addCard(card);
+                    LOG.log(Level.FINE, "Adding card: {0}", card.getName());
+                    addCard(card);
                 }
             }
         }
@@ -161,6 +158,11 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
                         card.setSetName(set.getName());
                         addCard(card);
                         count++;
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException ex) {
+                            Exceptions.printStackTrace(ex);
+                        }
                     }
                 }
                 LOG.log(Level.FINEST, "Cards loaded: {0}", count);
@@ -179,61 +181,5 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
     @Override
     public void stop() {
         stop = true;
-    }
-
-    private class GDMTableCellRenderer implements TableCellRenderer {
-
-        public GDMTableCellRenderer() {
-        }
-
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            if (value != null) {
-                List<ICardCache> impls = getGame().getCardCacheImplementations();
-                if (impls.size() > 0 && ((String) value).contains("{") && ((String) value).contains("}")) {
-                    JLabel container = new JLabel();
-                    container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
-                    ArrayList<String> values = new ArrayList<String>();
-                    StringTokenizer st = new StringTokenizer((String) value, "}");
-                    while (st.hasMoreTokens()) {
-                        String token = st.nextToken();
-                        values.add(token.substring(1));
-                    }
-                    for (Iterator<String> it = values.iterator(); it.hasNext();) {
-                        String v = it.next();
-                        try {
-                            JLabel iconLabel = new JLabel(new ImageIcon((Tool.toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(v)))));
-                            container.add(iconLabel);
-                            if (it.hasNext()) {
-                                container.add(Box.createRigidArea(new Dimension(5, 0)));
-                            }
-                        } catch (IOException ex) {
-                            LOG.log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    return container;
-                }
-                return new JLabel(((String) value));
-            } else {
-                return new JLabel();
-            }
-        }
-
-        // The following methods override the defaults for performance reasons
-        public void validate() {
-            //Do nothing
-        }
-
-        public void revalidate() {
-            //Do nothing
-        }
-
-        protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
-            //Do nothing
-        }
-
-        public void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
-            //Do nothing
-        }
     }
 }

@@ -32,7 +32,7 @@ autostore = false)
 @TopComponent.Description(preferredID = "GameTopComponent",
 //iconBase="SET/PATH/TO/ICON/HERE", 
 persistenceType = TopComponent.PERSISTENCE_NEVER)
-@TopComponent.Registration(mode = "editor", openAtStartup = true, roles = "game_view")
+@TopComponent.Registration(mode = "editor", openAtStartup = false, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.GameTopComponent")
 @ActionReference(path = "Menu/Window" /*
  * , position = 333
@@ -141,16 +141,6 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
     private javax.swing.JScrollPane gamePane;
     // End of variables declaration//GEN-END:variables
 
-    @Override
-    public void componentOpened() {
-        // TODO add custom code on component opening
-    }
-
-    @Override
-    public void componentClosed() {
-        // TODO add custom code on component closing
-    }
-
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
@@ -258,7 +248,7 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
                 } else if (columnName.equals("set")) {
                     result = node.getCard().getSetName();
                 } else {
-                    result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(node.getCard(), getColumnName(i));
+                    result = node.getAttribute(getColumnName(i));
                 }
                 for (ICardAttributeFormatter formatter : game.getGameCardAttributeFormatterImplementations()) {
                     if (result instanceof String) {

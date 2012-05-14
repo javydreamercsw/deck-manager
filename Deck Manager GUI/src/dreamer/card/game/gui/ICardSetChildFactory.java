@@ -3,8 +3,9 @@ package dreamer.card.game.gui;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
+import dreamer.card.game.core.Tool;
 import java.beans.IntrospectionException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -21,7 +22,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> {
 
     private final ICardGame game;
     private static final Logger LOG = Logger.getLogger(ICardSetChildFactory.class.getName());
-    private ArrayList<ICardSet> sets = new ArrayList<ICardSet>();
+    private HashMap<ICardSet, ICardSetNode> sets = new HashMap<ICardSet, ICardSetNode>();
 
     public ICardSetChildFactory(ICardGame game) {
         this.game = game;
@@ -30,16 +31,31 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> {
     @Override
     protected boolean createKeys(List<ICardSet> list) {
         if (sets.isEmpty()) {
-            refresh();
+            long start = System.currentTimeMillis();
+            for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(getGame()).iterator(); it.hasNext();) {
+                ICardSet set = (ICardSet) it.next();
+                if (!sets.containsKey(set)) {
+                    sets.put(set, null);
+                }
+            }
+            LOG.log(Level.INFO, "DB query for Game: {1} took: {0} hits: {2}",
+                    new Object[]{Tool.elapsedTime(start), game.getName(), sets.size()});
         }
-        list.addAll(sets);
+        list.addAll(sets.keySet());
         return true;
     }
 
     @Override
     protected Node createNodeForKey(ICardSet set) {
         try {
-            return new ICardSetNode(set, new ICardChildFactory(set));
+            if (sets.containsKey(set) && sets.get(set) == null) {
+                long start = System.currentTimeMillis();
+                ICardSetNode node = new ICardSetNode(set, new ICardChildFactory(set));
+                LOG.log(Level.INFO, "Creating node for set: {1} took {0}",
+                        new Object[]{Tool.elapsedTime(start), set.getName()});
+                sets.put(set, node);
+            }
+            return sets.get(set);
         } catch (IntrospectionException ex) {
             LOG.log(Level.SEVERE, null, ex);
             return null;
@@ -52,12 +68,6 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> {
     }
 
     public void refresh() {
-        for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(getGame()).iterator(); it.hasNext();) {
-            ICardSet set = (ICardSet) it.next();
-            if (!sets.contains(set)) {
-                sets.add(set);
-            }
-        }
         refresh(true);
     }
 

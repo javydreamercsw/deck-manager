@@ -11,7 +11,7 @@ import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
  */
 public class ICardOutlineCellRenderer extends DefaultOutlineCellRenderer {
 
-    private final ICardGame game;
+    private transient final ICardGame game;
 
     public ICardOutlineCellRenderer(ICardGame game) {
         this.game = game;
