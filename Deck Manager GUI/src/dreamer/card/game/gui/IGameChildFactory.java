@@ -1,6 +1,7 @@
 package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICardGame;
+import dreamer.card.game.core.Tool;
 import java.beans.IntrospectionException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,18 +21,19 @@ public class IGameChildFactory extends ChildFactory<ICardGame> {
     private ArrayList<ICardGame> games = new ArrayList<ICardGame>();
 
     public void refresh() {
-        for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
-            if (!games.contains(game)) {
-                games.add(game);
-            }
-        }
         refresh(true);
     }
 
     @Override
     protected boolean createKeys(List<ICardGame> toPopulate) {
         if (games.isEmpty()) {
-            refresh();
+            long start = System.currentTimeMillis();
+            for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
+                if (!games.contains(game)) {
+                    games.add(game);
+                }
+            }
+            LOG.info(Tool.elapsedTime(start));
         }
         toPopulate.addAll(games);
         return true;

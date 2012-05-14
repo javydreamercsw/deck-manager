@@ -33,6 +33,7 @@ import javax.swing.Timer;
 import mtg.card.sync.ParseGathererMTGIcon;
 import mtg.card.sync.ParseGathererNewVisualSpoiler;
 import mtg.card.sync.ParseGathererSetIcons;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -106,14 +107,11 @@ public class MTGCardCache extends AbstractCardCache {
 
         @Override
         public void updateLocal() {
-            
         }
 
         @Override
         public void updateRemote() {
-            
         }
-
         private Timer timer;
         private final int period = 10000, pause = 10000;
         private ArrayList<String> mana = new ArrayList<String>();
@@ -176,6 +174,11 @@ public class MTGCardCache extends AbstractCardCache {
                                 }
                                 progress++;
                                 reportProgress(progress);
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException ex) {
+                                    Exceptions.printStackTrace(ex);
+                                }
                             }
                         }
                     } else {
@@ -225,19 +228,29 @@ public class MTGCardCache extends AbstractCardCache {
                     for (Iterator it = result.iterator(); it.hasNext();) {
                         Card card = (Card) it.next();
                         //Check if card's image has been downloaded or not
-                        for (CardSet set : card.getCardSetList()) {
-                            if (!cardImageExists(card, set)) {
-                                //Add it to the queue
-                                LOG.log(Level.FINER, "Added card: {0} to the image queue.", card.getName());
-                                Lookup.getDefault().lookup(ICacheData.class).add(card);
-                                break;
+                        try {
+                            for (CardSet set : card.getCardSetList()) {
+                                if (!cardImageExists(card, set)) {
+                                    //Add it to the queue
+                                    LOG.log(Level.FINER, "Added card: {0} to the image queue.", card.getName());
+                                    Lookup.getDefault().lookup(ICacheData.class).add(card);
+                                    break;
+                                }
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException ex) {
+                                    Exceptions.printStackTrace(ex);
+                                }
                             }
+                        } catch (Exception ex) {
+                            LOG.log(Level.SEVERE, null, ex);
+                            break;
                         }
                     }
                     LOG.log(Level.FINE, "Done adding cards to the download queue");
                     timer.restart();
                 }
-            },getGame().getName()+" download thread").start();
+            }, getGame().getName() + " download thread").start();
             timer.restart();
         }
 
@@ -252,6 +265,7 @@ public class MTGCardCache extends AbstractCardCache {
         try {
             return new URL("http://gatherer.wizards.com/Handlers/Image.ashx?size=small&name=" + manaName + "&type=symbol");
         } catch (MalformedURLException e) {
+            LOG.log(Level.WARNING, null, e);
             return null;
         }
     }

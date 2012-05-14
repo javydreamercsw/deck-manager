@@ -7,6 +7,7 @@ import java.awt.image.PixelGrabber;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;

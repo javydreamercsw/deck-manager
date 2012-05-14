@@ -2,15 +2,19 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.storage.db.DBException;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import dreamer.card.game.core.Tool;
 import java.awt.Image;
 import java.beans.IntrospectionException;
+import java.util.HashMap;
 import java.util.Iterator;
 import javax.swing.Action;
 import javax.swing.JFrame;
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
 
@@ -23,11 +27,13 @@ public class ICardNode extends BeanNode {
 
     private Action[] actions;
     private final String gameName;
+    private HashMap<String, String> attributes = new HashMap<String, String>();
 
     public ICardNode(ICard card, String gameName) throws IntrospectionException {
         super(card, null, Lookups.singleton(card));
         setDisplayName(card.getName());
         this.gameName = gameName;
+        loadAttributes(card);
     }
 
     @Override
@@ -84,5 +90,22 @@ public class ICardNode extends BeanNode {
      */
     public ICard getCard() {
         return getLookup().lookup(ICard.class);
+    }
+
+    private void loadAttributes(final ICard card) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    attributes.putAll(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getAttributesForCard(card.getName()));
+                } catch (DBException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        }, card.getName() + " attribute loader").start();
+    }
+
+    public String getAttribute(String attr) {
+        return attributes.get(attr);
     }
 }
