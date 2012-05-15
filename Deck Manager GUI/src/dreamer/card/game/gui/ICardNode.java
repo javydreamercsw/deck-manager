@@ -29,8 +29,8 @@ public class ICardNode extends BeanNode {
     private final String gameName;
     private HashMap<String, String> attributes = new HashMap<String, String>();
 
-    public ICardNode(ICard card, String gameName) throws IntrospectionException {
-        super(card, null, Lookups.singleton(card));
+    public ICardNode(ICard card, Object bean,String gameName) throws IntrospectionException {
+        super(bean, null, Lookups.singleton(card));
         setDisplayName(card.getName());
         this.gameName = gameName;
         loadAttributes(card);

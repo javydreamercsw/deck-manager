@@ -1,10 +1,7 @@
 package dreamer.card.game.gui;
 
-import com.reflexit.magiccards.core.model.ICardAttribute;
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.storage.db.DBException;
-import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.beans.IntrospectionException;
 import java.util.*;
 import javax.swing.event.TreeModelListener;
@@ -65,7 +62,7 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
         }
         setName(Bundle.CTL_GameTopComponent());
         setToolTipText(Bundle.HINT_GameTopComponent());
-        final List<String> columns = getColumns();
+        final List<String> columns = game.getColumns();
         String[] properties = new String[columns.size() * 2];
         int i = 0;
         for (Iterator<String> it = columns.iterator(); it.hasNext();) {
@@ -84,30 +81,6 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
                 true, "Set"));
         em.setRootContext(root);
         associateLookup(ExplorerUtils.createLookup(getExplorerManager(), getActionMap()));
-    }
-
-    public List<String> getColumns() {
-        ArrayList<String> columns = new ArrayList<String>();
-        try {
-            columns.add("Name");
-            columns.add("Set");
-            HashMap parameters = new HashMap();
-            parameters.put("game", game.getName());
-            List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery(
-                    "select distinct chca.cardAttribute from "
-                    + "CardHasCardAttribute chca, Card c, CardSet cs, Game g"
-                    + " where cs.game =g and g.name =:game and cs member of c.cardSetList"
-                    + " and chca.card =c order by chca.cardAttribute.name", parameters);
-            for (Object obj : result) {
-                ICardAttribute attr = (ICardAttribute) obj;
-                if (!columns.contains(attr.getName())) {
-                    columns.add(attr.getName());
-                }
-            }
-        } catch (DBException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        return columns;
     }
 
     /**
@@ -254,6 +227,7 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
                     if (result instanceof String) {
                         String string = (String) result;
                         result = formatter.format(string);
+                        break;
                     }
                 }
             }
