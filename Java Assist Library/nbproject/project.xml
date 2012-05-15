@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>main.javassist</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages>
+                <package>javassist</package>
+                <package>javassist.bytecode</package>
+                <package>javassist.bytecode.analysis</package>
+                <package>javassist.bytecode.annotation</package>
+                <package>javassist.bytecode.stackmap</package>
+                <package>javassist.compiler</package>
+                <package>javassist.compiler.ast</package>
+                <package>javassist.convert</package>
+                <package>javassist.expr</package>
+                <package>javassist.runtime</package>
+                <package>javassist.scopedpool</package>
+                <package>javassist.tools</package>
+                <package>javassist.tools.reflect</package>
+                <package>javassist.tools.rmi</package>
+                <package>javassist.tools.web</package>
+                <package>javassist.util</package>
+                <package>javassist.util.proxy</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/javassist.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javassist.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>

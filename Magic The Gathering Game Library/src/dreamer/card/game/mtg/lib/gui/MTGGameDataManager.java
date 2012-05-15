@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
-import org.jdesktop.swingx.JXTable;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
@@ -40,8 +39,6 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
 
     private ICardGame game;
     private boolean loaded = false, loading = false;
-    private JXTable cards;
-    private JTextField filterEdit = new JTextField(10);
     private Panel panel;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
@@ -65,6 +62,7 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
         }
     }
 
+    //TODO:Remove from Interface
     @Override
     public Component getComponent() {
         if (panel == null) {
@@ -91,13 +89,9 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
             }
             panel = new Panel();
             panel.setLayout(new BorderLayout());
-            JScrollPane sp = new JScrollPane(cards);
             Panel filterPane = new Panel();
-            filterPane.add(new JLabel("Filter: "), BorderLayout.WEST);
-            filterPane.add(filterEdit, BorderLayout.CENTER);
             filterPane.add(manaFilterPanel, BorderLayout.EAST);
             panel.add(filterPane, BorderLayout.NORTH);
-            panel.add(sp, BorderLayout.CENTER);
         }
         return panel;
     }
@@ -137,14 +131,6 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
             if (!loaded && !loading) {
                 loading = true;
                 OutputHandler.output("Output", "Loading data into Table...");
-                while (cards == null) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
-                }
-                cards.setEnabled(loaded);
                 List setsForGame = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(game);
                 LOG.log(Level.FINE, "Cards to load: {0}", setsForGame.size());
                 int count = 0;
@@ -168,7 +154,6 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
                 LOG.log(Level.FINEST, "Cards loaded: {0}", count);
                 loaded = true;
                 loading = false;
-                cards.setEnabled(loaded);
                 OutputHandler.output("Output", "Done!");
             }
         }

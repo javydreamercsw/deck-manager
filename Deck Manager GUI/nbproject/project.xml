@@ -7,14 +7,6 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>common.beanutils</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <specification-version>1.8.3</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
                     <code-name-base>dreamer.card.game.core</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -30,6 +22,14 @@
                     <run-dependency>
                         <release-version>0-1</release-version>
                         <specification-version>0</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>main.javassist</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>3.1.6</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
