@@ -1,12 +1,9 @@
 package dreamer.card.game.mtg.lib.gui;
 
-import com.dreamer.outputhandler.OutputHandler;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.IGameDataManager;
-import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import dreamer.card.game.core.Tool;
 import dreamer.card.game.gui.AbstractGameDataManager;
 import dreamer.card.game.mtg.lib.MTGCardCache;
@@ -22,7 +19,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.lookup.AbstractLookup;
@@ -38,7 +34,6 @@ import org.openide.util.lookup.ServiceProvider;
 public final class MTGGameDataManager extends AbstractGameDataManager {
 
     private ICardGame game;
-    private boolean loaded = false, loading = false;
     private Panel panel;
     private InstanceContent content = new InstanceContent();
     private Lookup dynamicLookup = new AbstractLookup(content);
@@ -55,14 +50,12 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
         this.game = game;
     }
 
+    //TODO:Remove from Interface?
     @Override
     public void load() {
-        if (!loaded) {
-            new Thread(new DataLoader(), game.getName() + " loader").start();
-        }
+       //Do nothing
     }
 
-    //TODO:Remove from Interface
     @Override
     public Component getComponent() {
         if (panel == null) {
@@ -124,45 +117,11 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
         }
     }
 
-    private class DataLoader implements Runnable {
-
-        @Override
-        public void run() {
-            if (!loaded && !loading) {
-                loading = true;
-                OutputHandler.output("Output", "Loading data into Table...");
-                List setsForGame = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(game);
-                LOG.log(Level.FINE, "Cards to load: {0}", setsForGame.size());
-                int count = 0;
-                for (Iterator it = setsForGame.iterator(); it.hasNext();) {
-                    if (stop) {
-                        break;
-                    }
-                    ICardSet set = (ICardSet) it.next();
-                    for (Iterator it2 = set.getCards().iterator(); it2.hasNext();) {
-                        ICard card = (ICard) it2.next();
-                        card.setSetName(set.getName());
-                        addCard(card);
-                        count++;
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ex) {
-                            Exceptions.printStackTrace(ex);
-                        }
-                    }
-                }
-                LOG.log(Level.FINEST, "Cards loaded: {0}", count);
-                loaded = true;
-                loading = false;
-                OutputHandler.output("Output", "Done!");
-            }
-        }
-    }
-
     private void addCard(ICard card) {
         content.add(card);
     }
 
+    //TODO:Remove from Interface?
     @Override
     public void stop() {
         stop = true;
