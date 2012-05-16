@@ -1,4 +1,4 @@
-package dreamer.card.game.gui;
+package dreamer.card.game.gui.node;
 
 import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
@@ -19,7 +19,7 @@ import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
 
 /**
- * Represents a MarauroaApplication element within the system
+ * Represents a ICard element within the system
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */

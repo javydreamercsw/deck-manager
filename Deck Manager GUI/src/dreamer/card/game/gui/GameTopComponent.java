@@ -2,7 +2,8 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
-import java.beans.IntrospectionException;
+import dreamer.card.game.gui.node.ICardNode;
+import dreamer.card.game.gui.node.factory.IGameChildFactory;
 import java.util.*;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
@@ -15,8 +16,9 @@ import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.OutlineView;
+import org.openide.nodes.AbstractNode;
+import org.openide.nodes.Children;
 import org.openide.nodes.Node;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
@@ -55,11 +57,12 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
             }
         }
         Node root = null;
-        try {
-            root = new IGameNode(game, new ICardSetChildFactory((ICardGame) game));
-        } catch (IntrospectionException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+//        try {
+        root = new AbstractNode(Children.create(new IGameChildFactory(), false));
+//            root = new ICardGameNode(game, new ICardSetChildFactory((ICardGame) game));
+//        } catch (IntrospectionException ex) {
+//            Exceptions.printStackTrace(ex);
+//        }
         setName(Bundle.CTL_GameTopComponent());
         setToolTipText(Bundle.HINT_GameTopComponent());
         final List<String> columns = game.getColumns();
@@ -90,25 +93,22 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
 
         gamePane = new OutlineView();
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(gamePane, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(gamePane, javax.swing.GroupLayout.DEFAULT_SIZE, 278, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+        setLayout(new java.awt.GridBagLayout());
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.ipadx = 357;
+        gridBagConstraints.ipady = 255;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(11, 10, 11, 10);
+        add(gamePane, gridBagConstraints);
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane gamePane;
