@@ -106,7 +106,7 @@ public class Installer extends ModuleInstall implements ActionListener,
                         //Make sure to load the driver
                         start = System.currentTimeMillis();
                         Lookup.getDefault().lookup(ClassLoader.class).loadClass(dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
-                        LOG.log(Level.INFO, "Succesfully loaded driver: {0}", dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
+                        LOG.log(Level.FINE, "Succesfully loaded driver: {0}", dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
                         Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
                         while (waitDBInit) {
                             Thread.currentThread().sleep(100);
@@ -138,10 +138,6 @@ public class Installer extends ModuleInstall implements ActionListener,
             for (Iterator<Thread> it = runnables.iterator(); it.hasNext();) {
                 Thread runnable = it.next();
                 runnable.interrupt();
-            }
-            for (Iterator<? extends IGameDataManager> it = Lookup.getDefault().lookupAll(IGameDataManager.class).iterator(); it.hasNext();) {
-                IGameDataManager gdm = it.next();
-                gdm.stop();
             }
             OutputHandler.output("Output", "Done!");
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).close();
@@ -203,7 +199,7 @@ public class Installer extends ModuleInstall implements ActionListener,
 
     @Override
     public void initialized() {
-        LOG.info("DB ready!");
+        LOG.fine("DB ready!");
         waitDBInit = false;
         //Code to be done after the db is ready
         LOG.log(Level.FINE, "Database initialized");

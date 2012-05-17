@@ -129,13 +129,13 @@ public class MTGCardCache extends AbstractCardCache {
             for (int i = 1; i <= 12; i++) {
                 mana.add("{" + i + "}");
             }
+            timer = new Timer(period, this);
+            timer.setInitialDelay(pause);
         }
 
         @Override
         public void run() {
             //Timer for inactivity background work
-            timer = new Timer(period, this);
-            timer.setInitialDelay(pause);
             timer.start();
             while (true) {
                 try {

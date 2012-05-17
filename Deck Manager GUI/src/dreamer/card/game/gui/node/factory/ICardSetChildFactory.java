@@ -55,7 +55,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Look
                             sets.add(set);
                         }
                     }
-                    LOG.log(Level.INFO, "DB query for Game: {1} took: {0} hits: {2}",
+                    LOG.log(Level.FINE, "DB query for Game: {1} took: {0} hits: {2}",
                             new Object[]{Tool.elapsedTime(start), game.getName(), sets.size()});
                 }
             }
@@ -78,7 +78,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Look
             }
         }
         list.addAll(sets);
-        LOG.log(Level.INFO, "Creating keys for Game: {1} took: {0}",
+        LOG.log(Level.FINE, "Creating keys for Game: {1} took: {0}",
                 new Object[]{Tool.elapsedTime(start), game.getName()});
         return size == sets.size();
     }

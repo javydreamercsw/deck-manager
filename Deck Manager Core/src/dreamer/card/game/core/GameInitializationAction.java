@@ -33,10 +33,10 @@ final class GameInitializationAction implements ActionListener {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                LOG.log(Level.INFO, "Initializing game: {0}", game.getName());
+                LOG.log(Level.FINE, "Initializing game: {0}", game.getName());
                 OutputHandler.output("Output", "Initializing game: " + game.getName());
                 game.init();
-                LOG.log(Level.INFO, "Done!");
+                LOG.log(Level.FINE, "Done!");
             }
         };
         theTask = RP.create(runnable);

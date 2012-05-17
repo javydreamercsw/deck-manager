@@ -69,16 +69,6 @@ public final class CollectionWindowTopComponent extends TopComponent
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-    @Override
-    public void componentOpened() {
-        // TODO add custom code on component opening
-    }
-
-    @Override
-    public void componentClosed() {
-        // TODO add custom code on component closing
-    }
-
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
@@ -100,7 +90,7 @@ public final class CollectionWindowTopComponent extends TopComponent
             Iterator it = instances.iterator();
             while (it.hasNext()) {
                 Object next = it.next();
-                if(next instanceof ICardGame){
+                if (next instanceof ICardGame) {
                     //TODO: Do something
                 }
             }

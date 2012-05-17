@@ -94,16 +94,6 @@ public final class CardViewerTopComponent extends TopComponent
     private javax.swing.JLabel cardLabel;
     // End of variables declaration//GEN-END:variables
 
-    @Override
-    public void componentOpened() {
-        // TODO add custom code on component opening
-    }
-
-    @Override
-    public void componentClosed() {
-        // TODO add custom code on component closing
-    }
-
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
