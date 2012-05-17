@@ -89,7 +89,7 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
         dbDir.mkdirs();
         File db = InstalledFileLocator.getDefault().locate("card_manager.h2.db",
                 "dreamer.card.game.mtg.lib", false);
-        LOG.info("Updating database...");
+        LOG.fine("Updating database...");
         EntityManagerFactory emf = null;
         try {
             if (db != null && db.exists()) {
@@ -187,7 +187,6 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
 
     @Override
     public void updateRemote() {
-        getGame().getGameDataManagerImplementation().load();
         if (!dbError) {
             //Now update from the internet
             try {
@@ -369,20 +368,46 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
     }
 
     private boolean loadUrl(URL url) throws IOException, NonexistentEntityException {
-        InputStream openStream = url.openStream();
-        LOG.log(Level.FINE, "Loading from: {0}", url.toString());
-        BufferedReader st = new BufferedReader(new InputStreamReader(openStream, UTF_8));
-        boolean res = processFile(st);
-        st.close();
+        InputStream openStream;
+        InputStreamReader is = null;
+        BufferedReader st = null;
+        boolean res = false;
+        try {
+            openStream = url.openStream();
+            LOG.log(Level.FINE, "Loading from: {0}", url.toString());
+            is = new InputStreamReader(openStream, UTF_8);
+            st = new BufferedReader(is);
+            res = processFile(st);
+        } finally {
+            if (st != null) {
+                st.close();
+            }
+            if (is != null) {
+                is.close();
+            }
+        }
         return res;
     }
 
     private int checkAmountOfPagesForSet(String from) throws IOException {
-        URL url = new URL(from);
-        InputStream openStream = url.openStream();
-        BufferedReader st = new BufferedReader(new InputStreamReader(openStream, UTF_8));
-        int amount = getAmountOfPagesForSet(st);
-        st.close();
+        InputStream openStream;
+        InputStreamReader is = null;
+        BufferedReader st = null;
+        int amount = 0;
+        try {
+            URL url = new URL(from);
+            openStream = url.openStream();
+            is = new InputStreamReader(openStream, UTF_8);
+            st = new BufferedReader(is);
+            amount = getAmountOfPagesForSet(st);
+        } finally {
+            if (st != null) {
+                st.close();
+            }
+            if (is != null) {
+                is.close();
+            }
+        }
         return amount;
     }
 
@@ -410,15 +435,15 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
             }
             if (line.matches(".*class=\"cardItem .*")) {
                 try {
-                    String tr = "";
+                    StringBuilder tr = new StringBuilder();
                     do {
                         if (line.matches(".*</tr>.*")) {
                             state = 1;
                             break;
                         }
-                        tr += line + " ";
+                        tr.append(line).append(" ");
                     } while ((line = st.readLine()) != null);
-                    parseRecord(tr);
+                    parseRecord(tr.toString());
                     cards = true;
                     continue;
                 } catch (DBException ex) {
@@ -521,7 +546,8 @@ public class MTGUpdater extends UpdateRunnable implements DataBaseStateListener 
                 c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
             } else {
                 try {
-                    c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct, card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
+                    c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct, 
+                            card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes());
                     LOG.log(Level.FINE, "Created card: {0}", c.getName());
                 } catch (DBException ex) {
                     LOG.log(Level.SEVERE, null, ex);

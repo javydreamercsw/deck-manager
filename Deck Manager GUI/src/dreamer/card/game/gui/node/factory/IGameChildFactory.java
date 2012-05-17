@@ -1,7 +1,6 @@
 package dreamer.card.game.gui.node.factory;
 
 import com.reflexit.magiccards.core.model.ICardGame;
-import dreamer.card.game.core.Tool;
 import dreamer.card.game.gui.node.ICardGameNode;
 import dreamer.card.game.gui.node.actions.Reloadable;
 import java.beans.IntrospectionException;

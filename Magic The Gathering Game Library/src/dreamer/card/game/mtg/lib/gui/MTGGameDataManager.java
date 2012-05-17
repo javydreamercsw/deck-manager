@@ -39,7 +39,6 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
     private Lookup dynamicLookup = new AbstractLookup(content);
     private ProxyLookup proxy = new ProxyLookup(dynamicLookup, Lookup.getDefault());
     private static final Logger LOG = Logger.getLogger(MTGGameDataManager.class.getName());
-    private boolean stop;
 
     public MTGGameDataManager() {
         setGame(new MTGRCPGame());
@@ -48,12 +47,6 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
     @Override
     public void setGame(ICardGame game) {
         this.game = game;
-    }
-
-    //TODO:Remove from Interface?
-    @Override
-    public void load() {
-       //Do nothing
     }
 
     @Override
@@ -119,11 +112,5 @@ public final class MTGGameDataManager extends AbstractGameDataManager {
 
     private void addCard(ICard card) {
         content.add(card);
-    }
-
-    //TODO:Remove from Interface?
-    @Override
-    public void stop() {
-        stop = true;
     }
 }

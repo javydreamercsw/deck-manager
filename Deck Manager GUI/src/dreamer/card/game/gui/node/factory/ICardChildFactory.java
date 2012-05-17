@@ -85,7 +85,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
                         cards.add(card);
                     }
                 }
-                LOG.log(Level.INFO, "DB query for set: {1} took: {0} hits: {2}",
+                LOG.log(Level.FINE, "DB query for set: {1} took: {0} hits: {2}",
                         new Object[]{Tool.elapsedTime(start), set.getName(), cards.size()});
             }
         });
