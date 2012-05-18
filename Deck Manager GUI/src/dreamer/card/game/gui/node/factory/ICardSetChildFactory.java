@@ -12,7 +12,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
+import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
@@ -93,7 +95,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Look
             return node;
         } catch (IntrospectionException ex) {
             LOG.log(Level.SEVERE, null, ex);
-            return null;
+            return new AbstractNode(Children.LEAF);
         }
     }
 
