@@ -7,6 +7,30 @@
     <import file="nbproject/build-impl.xml"/>
     <import file="preparation.xml"/>
     
+    <scriptdef name="substring" language="javascript">
+        <attribute name="text"/>
+        <attribute name="start"/>
+        <attribute name="end"/>
+        <attribute name="property"/>
+     <![CDATA[
+       var text = attributes.get("text");
+       var start = attributes.get("start");
+       var end = attributes.get("end") || text.length;
+       project.setProperty(attributes.get("property"), text.substring(start, end));
+     ]]>
+    </scriptdef>
+    
+    <scriptdef name="lastIndexOf" language="javascript">
+        <attribute name="text"/>
+        <attribute name="searchstring"/>
+        <attribute name="property"/>
+     <![CDATA[
+       var text = attributes.get("text");
+       var searchString = attributes.get("searchstring");
+       project.setProperty(attributes.get("property"), text.lastIndexOf(searchString));
+     ]]>
+    </scriptdef>
+    
     <target name="branding" depends="-init-netbeans, -init-hudson"><!--, -update-lookup-lib">-->
         <if>
             <isset property="app.icon"/>
@@ -182,11 +206,6 @@
     <panel classname="ShortcutPanel"/>
     <panel classname="SimpleFinishPanel"/>
 </panels>
-<conditions>
-        <condition type="packselection" id="jWrestling_Selected">
-            <packid>jWrestling</packid>
-        </condition>
-    </conditions>
     <packs>
         <pack name="Core" installGroups="]]>${app.name}<![CDATA[" required="yes">
             <description>Core Files</description>]]>
