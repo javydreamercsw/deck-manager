@@ -8,6 +8,8 @@ import dreamer.card.game.gui.node.ICardSetNode;
 import dreamer.card.game.gui.node.actions.Reloadable;
 import java.beans.IntrospectionException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -57,6 +59,13 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Look
                             sets.add(set);
                         }
                     }
+                    Collections.sort(sets, new Comparator<ICardSet>() {
+
+                        @Override
+                        public int compare(ICardSet o1, ICardSet o2) {
+                            return o1.getName().compareTo(o2.getName());
+                        }
+                    });
                     LOG.log(Level.FINE, "DB query for Game: {1} took: {0} hits: {2}",
                             new Object[]{Tool.elapsedTime(start), game.getName(), sets.size()});
                 }
