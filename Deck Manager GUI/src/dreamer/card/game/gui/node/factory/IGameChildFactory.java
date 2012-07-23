@@ -1,10 +1,13 @@
 package dreamer.card.game.gui.node.factory;
 
 import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.ICardSet;
 import dreamer.card.game.gui.node.ICardGameNode;
 import dreamer.card.game.gui.node.actions.Reloadable;
 import java.beans.IntrospectionException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,6 +49,12 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
                         games.add(game);
                     }
                 }
+                Collections.sort(games, new Comparator<ICardGame>() {
+                    @Override
+                    public int compare(ICardGame o1, ICardGame o2) {
+                        return o1.getName().compareTo(o2.getName());
+                    }
+                });
             }
         });
     }
