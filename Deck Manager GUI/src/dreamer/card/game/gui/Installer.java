@@ -1,19 +1,26 @@
 package dreamer.card.game.gui;
 
-import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import org.openide.modules.ModuleInstall;
-import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.openide.windows.WindowSystemEvent;
 import org.openide.windows.WindowSystemListener;
 
-@ServiceProvider(service = DataBaseStateListener.class)
-public class Installer extends ModuleInstall implements WindowSystemListener, DataBaseStateListener {
+public class Installer extends ModuleInstall implements WindowSystemListener {
 
     @Override
     public void restored() {
         WindowManager.getDefault().addWindowSystemListener(this);
+        WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
+            @Override
+            public void run() {
+                TopComponent gameTC = WindowManager.getDefault().findTopComponent("GameTopComponent");
+                if (gameTC != null) {
+                    gameTC.open();
+                    gameTC.requestActive();
+                }
+            }
+        });
     }
 
     @Override
@@ -33,14 +40,5 @@ public class Installer extends ModuleInstall implements WindowSystemListener, Da
 
     @Override
     public void afterSave(WindowSystemEvent event) {
-    }
-
-    @Override
-    public void initialized() {
-        TopComponent gameTC = WindowManager.getDefault().findTopComponent("GameTopComponent");
-        if (gameTC != null) {
-            gameTC.open();
-            gameTC.requestActive();
-        }
     }
 }
