@@ -4,7 +4,6 @@ import com.dreamer.outputhandler.OutputHandler;
 import com.reflexit.magiccards.core.cache.AbstractCardCache;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.IGameDataManager;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.awt.event.ActionEvent;
@@ -54,33 +53,6 @@ public class Installer extends ModuleInstall implements ActionListener,
         dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, "org.h2.Driver");
         dbProperties.put(PersistenceUnitProperties.JDBC_USER, "deck_manager");
         OutputHandler.select("Output");
-//        DatabaseConnection conn;
-//        if (ConnectionManager.getDefault().getConnections().length == 0) {
-//            try {
-//                conn = DatabaseConnection.create(findSqlServerDriver("org.h2.Driver", "H2"),
-//                        dbProperties.get(PersistenceUnitProperties.JDBC_URL),
-//                        dbProperties.get(PersistenceUnitProperties.JDBC_USER),
-//                        "card_manager",
-//                        dbProperties.get(PersistenceUnitProperties.JDBC_PASSWORD),
-//                        true,
-//                        "Deck Manager Database");
-//                //Create the default connection to embedded database
-//                ConnectionManager.getDefault().addConnection(conn);
-//                LOG.log(Level.FINE, "Created default connection!");
-//            } catch (DatabaseException ex) {
-//                LOG.log(Level.SEVERE, null, ex);
-//            }
-//        } else {
-//            //Copy the settings from the defined database
-//            conn = ConnectionManager.getDefault().getConnections()[0];
-//            dbProperties.put(PersistenceUnitProperties.JDBC_URL, conn.getDatabaseURL());
-//            dbProperties.put(PersistenceUnitProperties.TARGET_DATABASE, conn.getDatabaseURL().startsWith("jdbc:h2")
-//                    ? "org.eclipse.persistence.platform.database.H2Platform" : "Auto");
-//            dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD, conn.getPassword());
-//            dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, conn.getDriverClass());
-//            dbProperties.put(PersistenceUnitProperties.JDBC_USER, conn.getUser());
-//            LOG.log(Level.FINE, "Updating from found connection!");
-//        }
         File cardCacheDir = new File(Places.getCacheSubdirectory(".Deck Manager").getAbsolutePath()
                 + System.getProperty("file.separator") + "cache");
         //Create game cache dir
@@ -148,18 +120,6 @@ public class Installer extends ModuleInstall implements ActionListener,
         }
     }
 
-//    private JDBCDriver findSqlServerDriver(String driverClass, String driverName) {
-//        JDBCDriver sqlSrvDrv = null;
-//        JDBCDriver[] drivers = JDBCDriverManager.getDefault().getDrivers(driverClass);
-//        // We know that there should be at least one as this module registers it  
-//        for (JDBCDriver drv : drivers) {
-//            if (driverName == null || (driverName != null && driverName.equals(drv.getName()))) {
-//                sqlSrvDrv = drv;
-//                break;
-//            }
-//        }
-//        return sqlSrvDrv;
-//    }
     @Override
     public void actionPerformed(ActionEvent e) {
         if (afterUpdates()) {
@@ -188,8 +148,6 @@ public class Installer extends ModuleInstall implements ActionListener,
                     break;
                 }
             }
-        }
-        if (ready) {
             OutputHandler.output("Output", "Executing after update code...");
             //TODO: Code to be executed after all updates are complete
             OutputHandler.output("Output", "Done!");
@@ -219,7 +177,7 @@ public class Installer extends ModuleInstall implements ActionListener,
                     updaters.add(new GameUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task, game.getName()+" game updater"));
+                    runnables.add(new Thread(task, game.getName() + " game updater"));
                 }
             }
         }
@@ -235,7 +193,7 @@ public class Installer extends ModuleInstall implements ActionListener,
                     updaters.add(new CacheUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task, cache.getGameName()+" cache updater"));
+                    runnables.add(new Thread(task, cache.getGameName() + " cache updater"));
                 }
             }
         }
@@ -259,13 +217,16 @@ public class Installer extends ModuleInstall implements ActionListener,
 
     @Override
     public void afterLoad(WindowSystemEvent wse) {
+        //Do nothing
     }
 
     @Override
     public void beforeSave(WindowSystemEvent wse) {
+        //Do nothing
     }
 
     @Override
     public void afterSave(WindowSystemEvent wse) {
+        //Do nothing
     }
 }

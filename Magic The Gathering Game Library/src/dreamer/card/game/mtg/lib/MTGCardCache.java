@@ -112,29 +112,6 @@ public class MTGCardCache extends AbstractCardCache {
 
         @Override
         public void updateRemote() {
-        }
-        private Timer timer;
-        private final int period = 10000, pause = 10000;
-        private ArrayList<String> mana = new ArrayList<String>();
-
-        public CardImageLoader() {
-            super(new MTGRCPGame());
-            mana.add("{B}");
-            mana.add("{U}");
-            mana.add("{W}");
-            mana.add("{R}");
-            mana.add("{G}");
-            mana.add("{P}");
-            mana.add("{X}");
-            for (int i = 1; i <= 12; i++) {
-                mana.add("{" + i + "}");
-            }
-            timer = new Timer(period, this);
-            timer.setInitialDelay(pause);
-        }
-
-        @Override
-        public void run() {
             //Timer for inactivity background work
             timer.start();
             while (true) {
@@ -155,7 +132,7 @@ public class MTGCardCache extends AbstractCardCache {
                             } else {
                                 for (Iterator<CardSet> it2 = card.getCardSetList().iterator(); it2.hasNext();) {
                                     CardSet cs = it2.next();
-                                    String message = "Processing set: " + cs.getName() + " for card: " + card.getName() + "";
+                                    String message = "Processing card: " + card.getName() + " for set: " + cs.getName();
                                     LOG.log(Level.FINE, message);
                                     updateProgressMessage(message);
                                     try {
@@ -196,6 +173,25 @@ public class MTGCardCache extends AbstractCardCache {
                     return;
                 }
             }
+        }
+        private Timer timer;
+        private final int period = 10000, pause = 10000;
+        private ArrayList<String> mana = new ArrayList<String>();
+
+        public CardImageLoader() {
+            super(new MTGRCPGame());
+            mana.add("{B}");
+            mana.add("{U}");
+            mana.add("{W}");
+            mana.add("{R}");
+            mana.add("{G}");
+            mana.add("{P}");
+            mana.add("{X}");
+            for (int i = 1; i <= 12; i++) {
+                mana.add("{" + i + "}");
+            }
+            timer = new Timer(period, this);
+            timer.setInitialDelay(pause);
         }
 
         @Override

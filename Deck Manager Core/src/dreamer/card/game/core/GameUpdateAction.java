@@ -55,6 +55,7 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
 
     @Override
     public void reportProgress(int amount) {
+        //TODO: Fix IllegalArgumentException. Something wrong with progress calculation
         currentProgress = amount;
         if (ph != null) {
             ph.progress(currentProgress);

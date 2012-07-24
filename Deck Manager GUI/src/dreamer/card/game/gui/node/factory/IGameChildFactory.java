@@ -1,13 +1,13 @@
 package dreamer.card.game.gui.node.factory;
 
 import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.ICardSet;
 import dreamer.card.game.gui.node.ICardGameNode;
 import dreamer.card.game.gui.node.actions.Reloadable;
 import java.beans.IntrospectionException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,11 +44,13 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
         instanceContent.add(new Reloadable() {
             @Override
             public void reload() throws Exception {
-                for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
+                for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
+                    ICardGame game = it.next();
                     if (!games.contains(game)) {
                         games.add(game);
                     }
                 }
+                LOG.log(Level.INFO, "Games found: {0}", games.size());
                 Collections.sort(games, new Comparator<ICardGame>() {
                     @Override
                     public int compare(ICardGame o1, ICardGame o2) {
@@ -60,7 +62,7 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
     }
 
     public void refresh() {
-        refresh(true);
+        refresh(false);
     }
 
     @Override
@@ -69,7 +71,6 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
         // get this ability from the lookup ...
         Reloadable r = getLookup().lookup(Reloadable.class);
         // ... and  use the ability
-        int size = games.size();
         if (r != null) {
             try {
                 r.reload();
@@ -78,7 +79,7 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
             }
         }
         toPopulate.addAll(games);
-        return size < games.size();
+        return true;
     }
 
     @Override

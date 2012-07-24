@@ -59,15 +59,16 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Look
                             sets.add(set);
                         }
                     }
+                    LOG.log(Level.INFO, "DB query for Game: {1} took: {0} hits: {2}",
+                            new Object[]{Tool.elapsedTime(start), game.getName(), sets.size()});
+                    start = System.currentTimeMillis();
                     Collections.sort(sets, new Comparator<ICardSet>() {
-
                         @Override
                         public int compare(ICardSet o1, ICardSet o2) {
                             return o1.getName().compareTo(o2.getName());
                         }
                     });
-                    LOG.log(Level.FINE, "DB query for Game: {1} took: {0} hits: {2}",
-                            new Object[]{Tool.elapsedTime(start), game.getName(), sets.size()});
+                    LOG.log(Level.INFO, "Sorting sets: {0}", Tool.elapsedTime(start));
                 }
             }
         });
@@ -80,7 +81,6 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Look
         // get this ability from the lookup ...
         Reloadable r = getLookup().lookup(Reloadable.class);
         // ... and  use the ability
-        int size = sets.size();
         if (r != null) {
             try {
                 r.reload();
@@ -91,7 +91,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Look
         list.addAll(sets);
         LOG.log(Level.FINE, "Creating keys for Game: {1} took: {0}",
                 new Object[]{Tool.elapsedTime(start), game.getName()});
-        return size == sets.size();
+        return true;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Look
     }
 
     public void refresh() {
-        refresh(true);
+        refresh(false);
     }
 
     /**

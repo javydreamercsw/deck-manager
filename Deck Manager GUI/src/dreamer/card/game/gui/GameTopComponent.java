@@ -2,15 +2,22 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
+import dreamer.card.game.core.Tool;
 import dreamer.card.game.gui.node.ICardNode;
 import dreamer.card.game.gui.node.factory.IGameChildFactory;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.RowModel;
+import org.openide.DialogDescriptor;
+import org.openide.DialogDisplayer;
+import org.openide.LifecycleManager;
+import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
@@ -20,6 +27,7 @@ import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.openide.util.Lookup;
+import org.openide.util.NbBundle;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 
@@ -47,43 +55,65 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
 
     private ExplorerManager em = new ExplorerManager();
     private ICardGame game = null;
+    private long start;
+    //Kept for update purposes
+    private IGameChildFactory gameFactory;
+    private final static Logger LOG = Logger.getLogger(GameTopComponent.class.getSimpleName());
 
     public GameTopComponent() {
         initComponents();
-        for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
-            ICardGame g = it.next();
-            if (g.getName().equals("Magic the Gathering")) {
-                game = g;
+        start = System.currentTimeMillis();
+        LOG.info("Looking for available games...");
+        Collection<? extends ICardGame> games = Lookup.getDefault().lookupAll(ICardGame.class);
+        if (games.isEmpty()) {
+            DialogDisplayer.getDefault().notify(
+                    new NotifyDescriptor.Message(
+                    NbBundle.getMessage(
+                    GameTopComponent.class,
+                    "error.no_games"),
+                    NotifyDescriptor.ERROR_MESSAGE));
+        } else if (games.size() > 1) {
+            String[] choices = new String[games.size()];
+            int i = 0;
+            for (Iterator<? extends ICardGame> it = games.iterator(); it.hasNext();) {
+                ICardGame g = it.next();
+                choices[i] = g.getName();
+                i++;
             }
+            DialogPanel dialogPanel = new DialogPanel();
+            dialogPanel.setInstruction(NbBundle.getMessage(
+                    GameTopComponent.class,
+                    "select.game"));
+            dialogPanel.setMessage("");
+            dialogPanel.setChoices(choices);
+
+            DialogDescriptor dd = new DialogDescriptor(dialogPanel,
+                    NbBundle.getMessage(
+                    GameTopComponent.class,
+                    "select.game"));
+
+            Object reply = DialogDisplayer.getDefault().notify(dd);
+
+            if (reply == NotifyDescriptor.OK_OPTION) {
+                game = games.toArray(new ICardGame[games.size()])[dialogPanel.getSelectedIndex()];
+            } else if (reply == NotifyDescriptor.CANCEL_OPTION) {
+                DialogDisplayer.getDefault().notify(
+                        new NotifyDescriptor.Message(
+                        NbBundle.getMessage(
+                        GameTopComponent.class,
+                        "error.no_game_selected"),
+                        NotifyDescriptor.ERROR_MESSAGE));
+                LifecycleManager.getDefault().saveAll();
+                LifecycleManager.getDefault().exit();
+            }
+        } else {
+            game = games.toArray(new ICardGame[games.size()])[0];
         }
-        Node root = null;
-//        try {
-        root = new AbstractNode(Children.create(new IGameChildFactory(), false));
-//            root = new ICardGameNode(game, new ICardSetChildFactory((ICardGame) game));
-//        } catch (IntrospectionException ex) {
-//            Exceptions.printStackTrace(ex);
-//        }
-        setName(Bundle.CTL_GameTopComponent());
-        setToolTipText(Bundle.HINT_GameTopComponent());
-        final List<String> columns = game.getColumns();
-        String[] properties = new String[columns.size() * 2];
-        int i = 0;
-        for (Iterator<String> it = columns.iterator(); it.hasNext();) {
-            String prop = it.next();
-            properties[i] = prop.toLowerCase(Locale.getDefault());
-            i++;
-            properties[i] = prop;
-            i++;
-        }
-        ((OutlineView) gamePane).setPropertyColumns(properties);
-        ((OutlineView) gamePane).getOutline().setDefaultRenderer(String.class, new ICardOutlineCellRenderer(game));
-        ((OutlineView) gamePane).getOutline().setModel(DefaultOutlineModel.createOutlineModel(
-                new GameTreeModel(root),
-                new GameRowModel(columns),
-                //TODO: use resource bundle
-                true, "Set"));
-        em.setRootContext(root);
-        associateLookup(ExplorerUtils.createLookup(getExplorerManager(), getActionMap()));
+        LOG.log(Level.INFO, "Time getting available games: {0}", Tool.elapsedTime(start));
+        LOG.info("Loading game...");
+        start = System.currentTimeMillis();
+        loadGame();
+        LOG.log(Level.INFO, "Time loading game: {0}", Tool.elapsedTime(start));
     }
 
     /**
@@ -129,6 +159,42 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
     @Override
     public ExplorerManager getExplorerManager() {
         return em;
+    }
+
+    /**
+     * Load the current game into the application
+     */
+    private void loadGame() {
+        if (gameFactory == null) {
+            gameFactory = new IGameChildFactory();
+        }
+        Node root = new AbstractNode(Children.create(gameFactory, true));
+        setName(Bundle.CTL_GameTopComponent());
+        setToolTipText(Bundle.HINT_GameTopComponent());
+        start = System.currentTimeMillis();
+        final List<String> columns = game.getColumns();
+        LOG.log(Level.INFO, "Getting game columns: {0}", Tool.elapsedTime(start));
+        String[] properties = new String[columns.size() * 2];
+        int i = 0;
+        start = System.currentTimeMillis();
+        for (Iterator<String> it = columns.iterator(); it.hasNext();) {
+            String prop = it.next();
+            properties[i] = prop.toLowerCase(Locale.getDefault());
+            i++;
+            properties[i] = prop;
+            i++;
+        }
+        ((OutlineView) gamePane).setPropertyColumns(properties);
+        ((OutlineView) gamePane).getOutline().setDefaultRenderer(String.class, new ICardOutlineCellRenderer(game));
+        ((OutlineView) gamePane).getOutline().setModel(DefaultOutlineModel.createOutlineModel(
+                new GameTreeModel(root),
+                new GameRowModel(columns),
+                true, NbBundle.getMessage(
+                GameTopComponent.class,
+                "general.set")));
+        LOG.log(Level.INFO, "Preparing outline: {0}", Tool.elapsedTime(start));
+        em.setRootContext(root);
+        associateLookup(ExplorerUtils.createLookup(getExplorerManager(), getActionMap()));
     }
 
     private static class GameTreeModel implements TreeModel {
