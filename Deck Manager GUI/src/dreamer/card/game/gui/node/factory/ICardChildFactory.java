@@ -12,6 +12,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -79,14 +81,23 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
             @Override
             public void reload() throws Exception {
                 long start = System.currentTimeMillis();
-                for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardsForSet(set).iterator(); it.hasNext();) {
+                for (Iterator it = Lookup.getDefault().lookup(
+                        IDataBaseCardStorage.class).getCardsForSet(set).iterator(); it.hasNext();) {
                     ICard card = (ICard) it.next();
                     if (!cards.contains(card)) {
                         cards.add(card);
                     }
                 }
-                LOG.log(Level.FINE, "DB query for set: {1} took: {0} hits: {2}",
+                LOG.log(Level.INFO, "DB query for set: {1} took: {0} hits: {2}",
                         new Object[]{Tool.elapsedTime(start), set.getName(), cards.size()});
+                start = System.currentTimeMillis();
+                Collections.sort(cards, new Comparator<ICard>() {
+                    @Override
+                    public int compare(ICard o1, ICard o2) {
+                        return o1.getName().compareTo(o2.getName());
+                    }
+                });
+                LOG.log(Level.INFO, "Sorting cards: {0}", Tool.elapsedTime(start));
             }
         });
     }
@@ -97,7 +108,6 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
         // get this ability from the lookup ...
         Reloadable r = getLookup().lookup(Reloadable.class);
         // ... and  use the ability
-        int size = cards.size();
         if (r != null) {
             try {
                 r.reload();
@@ -106,7 +116,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
             }
         }
         toPopulate.addAll(cards);
-        return size == cards.size();
+        return true;
     }
 
     @Override
@@ -166,7 +176,8 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
         return bean;
     }
 
-    private void addGetterAndSetter(CtClass cc, String name) throws CannotCompileException, NotFoundException {
+    private void addGetterAndSetter(CtClass cc, String name) 
+            throws CannotCompileException, NotFoundException {
         CtField field = new CtField(pool.get(String.class.getName()), name, cc);
         field.setModifiers(Modifier.PUBLIC);
         cc.addField(field);
@@ -185,14 +196,20 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
     @Override
     protected Node[] createNodesForKey(ICard key) {
         long start = System.currentTimeMillis();
-        Node[] nodes = new Node[]{createNodeForKey(key)};
+        Node node = createNodeForKey(key);
+        Node[] nodes;
+        if (node == null) {
+            nodes = new Node[]{};
+        } else {
+            nodes = new Node[]{node};
+        }
         LOG.log(Level.FINE, "Creating nodes for card: {1} took {0}",
                 new Object[]{Tool.elapsedTime(start), key.getName()});
         return nodes;
     }
 
     public void refresh() {
-        refresh(true);
+        refresh(false);
     }
 
     @Override
