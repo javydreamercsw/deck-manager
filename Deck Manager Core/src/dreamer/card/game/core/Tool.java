@@ -7,7 +7,6 @@ import java.awt.image.PixelGrabber;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
@@ -17,6 +16,7 @@ import javax.swing.JDialog;
 import org.joda.time.Interval;
 import org.joda.time.Period;
 import org.openide.modules.InstalledFileLocator;
+import org.openide.util.Utilities;
 
 /**
  * Various commonly used operations.
@@ -166,7 +166,7 @@ public final class Tool {
             throws MalformedURLException, Exception {
         File icon = InstalledFileLocator.getDefault().locate(path,
                 module_id, false);
-        URL imageURL = icon.toURI().toURL();
+        URL imageURL = Utilities.toURI(icon).toURL();
         return (new ImageIcon(imageURL, description)).getImage();
     }
 
