@@ -378,7 +378,8 @@
         <mkdir dir="${keystore.location}"/>
         <genkey alias="${keystore.alias}" storepass="${keystore.password}"
                 dname="${keystore.dname}"
-                keystore="${keystore.location}${keystore.name}"/> 
+                keystore="${keystore.location}${keystore.name}"
+                validity="1825"/> 
         <!--Generate nbms and javadoc for applicable projects-->
         <antcall target="suite.nbms"/>
     </target>
