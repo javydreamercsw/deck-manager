@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-AutoUpdate-Show-In-Client: true
-OpenIDE-Module: main.javassist
-OpenIDE-Module-Localizing-Bundle: main/javassist/Bundle.properties
-OpenIDE-Module-Specification-Version: 3.1.6
-
