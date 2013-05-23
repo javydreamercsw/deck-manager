@@ -64,7 +64,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>Joda-Time-Wrapper</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.javydreamercsw.card.game</groupId>
@@ -72,9 +72,9 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>net.sourceforge.javydreamercsw</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>Eclipselink-Wrapper</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

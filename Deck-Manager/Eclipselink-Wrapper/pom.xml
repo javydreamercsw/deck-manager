@@ -45,7 +45,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <moduleType>autoload</moduleType>
-                    <codeNameBase>eclipselink.wrapper/1</codeNameBase>
                     <publicPackages>
                         <!--Persistence API-->
                         <publicPackage>javax.persistence.*</publicPackage>
