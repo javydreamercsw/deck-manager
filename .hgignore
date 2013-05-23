@@ -5,10 +5,4 @@
 \.conflict\~$
 syntax: glob
 build/*
-dist/*
-private/*
-netbeans_platform/*
-data/*
-pom.xml
-*/keystore
-netbeans_platform*/*
+target/*
