@@ -7,7 +7,7 @@
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>net.sourceforge.javydreamercsw</groupId>
+    <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
     <artifactId>Eclipselink-Wrapper</artifactId>
     <packaging>nbm</packaging>
 
@@ -53,6 +53,25 @@
                         <publicPackage>commonj.sdo.*</publicPackage>
                         <publicPackage>org.eclipse.persistence.*</publicPackage>
                     </publicPackages>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <!-- NetBeans 6.9+ requires JDK 6 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <!-- to have the jar plugin pickup the nbm generated manifest -->
+                    <useDefaultManifestFile>true</useDefaultManifestFile>
                 </configuration>
             </plugin>
         </plugins>
