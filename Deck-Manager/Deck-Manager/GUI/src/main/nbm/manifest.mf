@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Install: dreamer/card/game/gui/Installer.class
+OpenIDE-Module-Localizing-Bundle: net/sourceforge/javydreamercsw/deck/manager/gui/Bundle.properties
