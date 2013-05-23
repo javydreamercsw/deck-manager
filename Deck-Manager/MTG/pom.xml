@@ -38,13 +38,13 @@
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-modules</artifactId>
-            <version>RELEASE73</version>
+            <version>${netbeans.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-util</artifactId>
-            <version>RELEASE73</version>
+            <version>${netbeans.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -53,10 +53,9 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
             <artifactId>Eclipselink-Wrapper</artifactId>
-            <groupId>net.sourceforge.javydreamercsw</groupId>
-            <type>jar</type>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

@@ -26,5 +26,4 @@ public class ApplicationTest extends NbTestCase {
         new NbDialogOperator("About").closeByButton();
          */
     }
-
 }
