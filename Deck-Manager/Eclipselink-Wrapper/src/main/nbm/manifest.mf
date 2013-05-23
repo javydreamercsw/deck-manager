@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-OpenIDE-Module-Localizing-Bundle: net/sourceforge/javydreamercsw/Bundle.properties
+OpenIDE-Module-Localizing-Bundle: net/sourceforge/javydreamercsw/deck/manager/eclipselink/wrapper/Bundle.properties
