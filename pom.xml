@@ -20,5 +20,9 @@
             <id>EclipseLink</id>
             <url>http://download.eclipse.org/rt/eclipselink/maven.repo</url>
         </repository>
+        <repository>
+            <id>Sonatype Snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
     </repositories>
 </project>
