@@ -19,8 +19,10 @@ public class ICardGameNode extends BeanNode {
 
     private final ICardGame game;
 
-    public ICardGameNode(ICardGame game, ICardSetChildFactory childFactory) throws IntrospectionException {
-        super(game, Children.create(childFactory, false), Lookups.singleton(game));
+    public ICardGameNode(ICardGame game, ICardSetChildFactory childFactory)
+            throws IntrospectionException {
+        super(game, Children.create(childFactory, false), 
+                Lookups.singleton(game));
         setDisplayName(game.getName());
         this.game = game;
     }
@@ -35,7 +37,8 @@ public class ICardGameNode extends BeanNode {
     @Override
     public Image getIcon(int type) {
         Image gameIcon = getGame().getGameIcon();
-        return gameIcon == null ? null : Tool.loadImage(new JFrame(), gameIcon).getImage();
+        return gameIcon == null ? null : Tool.loadImage(new JFrame(), 
+                gameIcon).getImage();
     }
 
     @Override
