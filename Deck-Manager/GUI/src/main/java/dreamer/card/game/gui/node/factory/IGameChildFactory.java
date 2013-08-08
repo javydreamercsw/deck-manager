@@ -29,11 +29,11 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
     /**
      * The lookup for Lookup.Provider
      */
-    private Lookup lookup;
+    private final Lookup lookup;
     /**
      * The InstanceContent that keeps this entity's abilities
      */
-    private InstanceContent instanceContent;
+    private final InstanceContent instanceContent;
 
     public IGameChildFactory() {
         // Create an InstanceContent to hold abilities...
@@ -84,12 +84,13 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
 
     @Override
     protected Node createNodeForKey(ICardGame game) {
+        Node result = null;
         try {
-            return new ICardGameNode(game, new ICardSetChildFactory(game));
+            result = new ICardGameNode(game, new ICardSetChildFactory(game));
         } catch (IntrospectionException ex) {
             LOG.log(Level.SEVERE, null, ex);
-            return null;
         }
+        return result;
     }
 
     @Override
