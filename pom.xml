@@ -14,7 +14,12 @@
     <modules>
         <module>Deck-Manager</module>
     </modules>
-    
+
+    <properties>
+        <netbeans.version>RELEASE74</netbeans.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <repositories>
         <repository>
             <id>EclipseLink</id>
