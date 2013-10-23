@@ -14,8 +14,10 @@ package mtg.card.sync;
 
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,7 +26,10 @@ import java.util.regex.Pattern;
  */
 public class ParseGathererSets extends ParseGathererPage {
 
-    private static final String SET_QUERY_URL_BASE = GATHERER_URL_BASE + "Pages/Default.aspx";
+    private static final Logger LOG
+            = Logger.getLogger(ParseGathererSets.class.getSimpleName());
+    private static final String SET_QUERY_URL_BASE
+            = MessageFormat.format("{0}Pages/Default.aspx", GATHERER_URL_BASE);
     /*-
      <b>
      Filter Card Set:
@@ -38,9 +43,9 @@ public class ParseGathererSets extends ParseGathererPage {
      ...
      </select>
      */
-    private static Pattern setStartPattern = Pattern.compile("<b>\\s*Filter Card Set:.*?<option value=\"\"></option>(.*?)</select>");
-    private static Pattern oneSetPattern = Pattern.compile("<option.*?>(.*?)</option>");
-    private Collection<Edition> newSets = new ArrayList<Editions.Edition>();
+    private static final Pattern setStartPattern = Pattern.compile("<b>\\s*Filter Card Set:.*?<option value=\"\"></option>(.*?)</select>");
+    private static final Pattern oneSetPattern = Pattern.compile("<option.*?>(.*?)</option>");
+    private final Collection<Edition> newSets = new ArrayList<Editions.Edition>();
 
     public ParseGathererSets() {
         setTitle("Updating sets...");
