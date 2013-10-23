@@ -7,7 +7,7 @@
         <artifactId>Deck-Manager</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
-    
+
     <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
     <artifactId>Deck-Manager-Client</artifactId>
     <packaging>pom</packaging>
@@ -33,7 +33,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
-                    <version>3.10</version>
+                    <version>3.11.1</version>
                     <extensions>true</extensions>
                     <configuration>
                         <brandingToken>${brandingToken}</brandingToken>
@@ -79,11 +79,10 @@
         <module>GUI</module>
         <module>Card-Game-Library</module>
         <module>Eclipselink-Wrapper</module>
-    </modules>
+    <module>SynamicD</module>
+  </modules>
 
     <properties>
-        <netbeans.version>RELEASE731</netbeans.version>
         <brandingToken>deck_manager</brandingToken>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 </project>
