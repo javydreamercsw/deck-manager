@@ -1,6 +1,7 @@
 package mtg.card;
 
 import com.reflexit.magiccards.core.model.*;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -11,7 +12,7 @@ public class MagicCardFilter implements ICardFilter {
 
     private CardFilterExpr root;
     private int limit = Integer.MAX_VALUE;
-    private MagicSortOrder sortOrder = new MagicSortOrder();
+    private final MagicSortOrder sortOrder = new MagicSortOrder();
     private ICardField groupField = null;
     private boolean onlyLastSet = false;
     public static CardFilterExpr TRUE = new CardFilterExpr() {
@@ -60,7 +61,7 @@ public class MagicCardFilter implements ICardFilter {
 
         @Override
         public String toString() {
-            return "f" + this.field;
+            return MessageFormat.format("f{0}", this.field);
         }
 
         @Override
@@ -77,7 +78,7 @@ public class MagicCardFilter implements ICardFilter {
 
         @Override
         public String toString() {
-            return "'" + this.name + "'";
+            return MessageFormat.format("'{0}'", this.name);
         }
     }
 
@@ -107,7 +108,7 @@ public class MagicCardFilter implements ICardFilter {
                 flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
             }
             if (wordBoundary) {
-                return Pattern.compile("\\b\\Q" + name + "\\E\\b", flags);
+                return Pattern.compile(MessageFormat.format("\bQ{0}E\b", name), flags);
             }
             flags |= Pattern.LITERAL;
             return Pattern.compile(name, flags);
@@ -133,9 +134,9 @@ public class MagicCardFilter implements ICardFilter {
         @Override
         public String toString() {
             if (this.op == Operation.NOT) {
-                return this.op + " (" + this.left + ")";
+                return MessageFormat.format("{0} ({1})", this.op, this.left);
             }
-            return this.left + " " + this.op + " " + this.right;
+            return MessageFormat.format("{0} {1} {2}", this.left, this.op, this.right);
         }
 
         public CardFilterExpr getLeft() {
@@ -297,8 +298,8 @@ public class MagicCardFilter implements ICardFilter {
         public String getValue() {
             return value;
         }
-        private TokenType type;
-        private String value;
+        private final TokenType type;
+        private final String value;
 
         ;
 
@@ -405,12 +406,12 @@ public class MagicCardFilter implements ICardFilter {
             } else if (Character.isLowerCase(c)) {
                 altValue = Character.toUpperCase(c) + value.substring(1);
             }
-            BinaryExpr b1 = BinaryExpr.fieldLike(field, "%" + value + "%");
-            BinaryExpr b2 = BinaryExpr.fieldLike(field, "%" + altValue + "%");
+            BinaryExpr b1 = BinaryExpr.fieldLike(field, MessageFormat.format("%{0}%", value));
+            BinaryExpr b2 = BinaryExpr.fieldLike(field, MessageFormat.format("%{0}%", altValue));
             BinaryExpr res = new BinaryExpr(b1, Operation.OR, b2);
             return res;
         } else {
-            return BinaryExpr.fieldLike(field, "%" + value + "%");
+            return BinaryExpr.fieldLike(field, MessageFormat.format("%{0}%", value));
         }
     }
 
@@ -458,7 +459,7 @@ public class MagicCardFilter implements ICardFilter {
         if (Colors.getInstance().getIdPrefix().equals(requestedId)) {
             String en = Colors.getInstance().getEncodeByName(value);
             if (en != null) {
-                res = BinaryExpr.fieldMatches(MagicCardField.COST, ".*" + en + ".*");
+                res = BinaryExpr.fieldMatches(MagicCardField.COST, MessageFormat.format(".*{0}.*", en));
             } else if (value.equals("Multi-Color")) {
                 res = BinaryExpr.fieldEquals(MagicCardField.CTYPE, "multi");
             } else if (value.equals("Mono-Color")) {
@@ -477,8 +478,10 @@ public class MagicCardFilter implements ICardFilter {
         } else if (Editions.getInstance().getIdPrefix().equals(requestedId)) {
             res = BinaryExpr.fieldEquals(MagicCardField.SET, value);
         } else if (SuperTypes.getInstance().getIdPrefix().equals(requestedId)) {
-            BinaryExpr b1 = BinaryExpr.fieldMatches(MagicCardField.TYPE, ".*" + value + " .*");
-            BinaryExpr b2 = BinaryExpr.fieldMatches(MagicCardField.TYPE, ".*" + value + " -.*");
+            BinaryExpr b1 = BinaryExpr.fieldMatches(MagicCardField.TYPE,
+                    MessageFormat.format(".*{0} .*", value));
+            BinaryExpr b2 = BinaryExpr.fieldMatches(MagicCardField.TYPE,
+                    MessageFormat.format(".*{0} -.*", value));
             res = new BinaryExpr(b1, Operation.AND, new BinaryExpr(b2, Operation.NOT, null));
         } else if (FilterHelper.TYPE_LINE.equals(requestedId)) {
             res = textSearch(MagicCardField.TYPE, value);
@@ -659,8 +662,7 @@ public class MagicCardFilter implements ICardFilter {
 
     private CardFilterExpr createGroup(HashMap map, ISearchableProperty sp, boolean orOp, boolean notOp) {
         CardFilterExpr res = null;
-        for (Iterator iterator = sp.getIds().iterator(); iterator.hasNext();) {
-            String id = (String) iterator.next();
+        for (String id : sp.getIds()) {
             String value = (String) map.get(id);
             BinaryExpr or = null;
             if (value != null && value.equals("true")) {
