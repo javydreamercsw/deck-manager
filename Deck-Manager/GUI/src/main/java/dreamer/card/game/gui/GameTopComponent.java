@@ -193,8 +193,11 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
                 i++;
             }
             ((OutlineView) gamePane).setPropertyColumns(properties);
-            ((OutlineView) gamePane).getOutline().setDefaultRenderer(String.class, new ICardOutlineCellRenderer(game));
-            ((OutlineView) gamePane).getOutline().setModel(DefaultOutlineModel.createOutlineModel(
+            ((OutlineView) gamePane).getOutline().setDefaultRenderer(
+                    String.class,
+                    new ICardOutlineCellRenderer(game));
+            ((OutlineView) gamePane).getOutline().setModel(
+                    DefaultOutlineModel.createOutlineModel(
                     new GameTreeModel(root),
                     new GameRowModel(columns),
                     true, NbBundle.getMessage(

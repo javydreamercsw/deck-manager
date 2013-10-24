@@ -11,7 +11,7 @@
     <artifactId>Deck-Manager-Core</artifactId>
     <packaging>nbm</packaging>
 
-    <name>Deck-Manager-Core</name>
+    <name>Deck Manager Core</name>
 
     <dependencies>
         <dependency>
