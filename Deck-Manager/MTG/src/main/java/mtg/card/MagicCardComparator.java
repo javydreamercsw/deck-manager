@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 
 class MagicCardComparator implements ICardComparator {
 
-    private ICardField field;
-    private boolean accending;
+    private final ICardField field;
+    private final boolean accending;
 
     public MagicCardComparator(ICardField sortField, boolean accending) {
         this.field = sortField;

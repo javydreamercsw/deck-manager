@@ -22,6 +22,7 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
     private static final Logger LOG = Logger.getLogger(GameUpdateAction.class.getName());
     protected int currentProgress = 0;
     protected boolean finished = false;
+    private boolean determinate = false;
 
     public GameUpdateAction(IProgressAction runnable) {
         RP = new RequestProcessor("Updater", 1, false);
@@ -55,9 +56,8 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
 
     @Override
     public void reportProgress(int amount) {
-        //TODO: Fix IllegalArgumentException. Something wrong with progress calculation
         currentProgress = amount;
-        if (ph != null) {
+        if (ph != null && determinate) {
             ph.progress(currentProgress);
         }
     }
@@ -74,6 +74,7 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
     public void reportSize(int size) {
         if (ph != null) {
             ph.switchToDeterminate(size);
+            determinate = true;
         }
     }
 

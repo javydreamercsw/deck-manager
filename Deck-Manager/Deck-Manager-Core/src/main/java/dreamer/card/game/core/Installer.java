@@ -4,14 +4,15 @@ import com.dreamer.outputhandler.OutputHandler;
 import com.reflexit.magiccards.core.cache.AbstractCardCache;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Timer;
@@ -45,16 +46,13 @@ public class Installer extends ModuleInstall implements ActionListener,
     public void restored() {
         //Create game cache dir
         File cacheDir = Places.getCacheSubdirectory(".Deck Manager");
-        dbProperties.put(PersistenceUnitProperties.JDBC_URL, "jdbc:h2:file:"
-                + cacheDir.getAbsolutePath()
-                + "/data/card_manager");
+        dbProperties.put(PersistenceUnitProperties.JDBC_URL, MessageFormat.format("jdbc:h2:file:{0}/data/card_manager", cacheDir.getAbsolutePath()));
         dbProperties.put(PersistenceUnitProperties.TARGET_DATABASE, "org.eclipse.persistence.platform.database.H2Platform");
         dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD, "test");
         dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, "org.h2.Driver");
         dbProperties.put(PersistenceUnitProperties.JDBC_USER, "deck_manager");
         OutputHandler.select("Output");
-        File cardCacheDir = new File(Places.getCacheSubdirectory(".Deck Manager").getAbsolutePath()
-                + System.getProperty("file.separator") + "cache");
+        File cardCacheDir = new File(MessageFormat.format("{0}{1}cache", Places.getCacheSubdirectory(".Deck Manager").getAbsolutePath(), System.getProperty("file.separator")));
         //Create game cache dir
         if (!cardCacheDir.exists()) {
             cardCacheDir.mkdirs();
@@ -83,7 +81,15 @@ public class Installer extends ModuleInstall implements ActionListener,
                         while (waitDBInit) {
                             Thread.currentThread().sleep(100);
                         }
-                    } catch (Exception ex) {
+                    } catch (ClassNotFoundException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                        DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
+                                "Unable to connect to database. Please restart application", NotifyDescriptor.ERROR_MESSAGE));
+                    } catch (DBException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                        DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
+                                "Unable to connect to database. Please restart application", NotifyDescriptor.ERROR_MESSAGE));
+                    } catch (InterruptedException ex) {
                         LOG.log(Level.SEVERE, null, ex);
                         DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
                                 "Unable to connect to database. Please restart application", NotifyDescriptor.ERROR_MESSAGE));
@@ -102,13 +108,10 @@ public class Installer extends ModuleInstall implements ActionListener,
         super.closing();
         try {
             OutputHandler.output("Output", "Shutting background tasks...");
-            for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
-                GameUpdateAction updater = it.next();
+            for (GameUpdateAction updater : updaters) {
                 updater.shutdown();
             }
-
-            for (Iterator<Thread> it = runnables.iterator(); it.hasNext();) {
-                Thread runnable = it.next();
+            for (Thread runnable : runnables) {
                 runnable.interrupt();
             }
             OutputHandler.output("Output", "Done!");
@@ -133,16 +136,14 @@ public class Installer extends ModuleInstall implements ActionListener,
 
     private boolean afterUpdates() {
         boolean ready = true;
-        for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
-            GameUpdateAction gua = it.next();
+        for (GameUpdateAction gua : updaters) {
             if (!gua.finished) {
                 ready = false;
                 break;
             }
         }
         if (ready) {
-            for (Iterator<Thread> it = runnables.iterator(); it.hasNext();) {
-                Thread t = it.next();
+            for (Thread t : runnables) {
                 if (!t.isAlive()) {
                     ready = false;
                     break;
@@ -166,9 +167,7 @@ public class Installer extends ModuleInstall implements ActionListener,
         LOG.log(Level.FINE, "Initializing games...");
         Runnable task;
         OutputHandler.output("Output", "Starting game updaters...");
-        for (Iterator<? extends ICardGame> it =
-                Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
-            ICardGame game = it.next();
+        for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
             new GameInitializationAction(game).actionPerformed(null);
             task = game.getUpdateRunnable();
             if (task != null) {
@@ -177,15 +176,13 @@ public class Installer extends ModuleInstall implements ActionListener,
                     updaters.add(new GameUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task, game.getName() + " game updater"));
+                    runnables.add(new Thread(task, MessageFormat.format("{0} game updater", game.getName())));
                 }
             }
         }
         OutputHandler.output("Output", "Done!");
         OutputHandler.output("Output", "Starting cache updaters...");
-        for (Iterator<? extends ICardCache> it =
-                Lookup.getDefault().lookupAll(ICardCache.class).iterator(); it.hasNext();) {
-            ICardCache cache = it.next();
+        for (ICardCache cache : Lookup.getDefault().lookupAll(ICardCache.class)) {
             task = cache.getCacheTask();
             if (task != null) {
                 if (task instanceof IProgressAction) {
@@ -193,16 +190,14 @@ public class Installer extends ModuleInstall implements ActionListener,
                     updaters.add(new CacheUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task, cache.getGameName() + " cache updater"));
+                    runnables.add(new Thread(task, MessageFormat.format("{0} cache updater", cache.getGameName())));
                 }
             }
         }
-        for (Iterator<GameUpdateAction> it = updaters.iterator(); it.hasNext();) {
-            GameUpdateAction updater = it.next();
+        for (GameUpdateAction updater : updaters) {
             updater.actionPerformed(null);
         }
-        for (Iterator<Thread> it = runnables.iterator(); it.hasNext();) {
-            Thread runnable = it.next();
+        for (Thread runnable : runnables) {
             runnable.start();
         }
         OutputHandler.output("Output", "Done!");

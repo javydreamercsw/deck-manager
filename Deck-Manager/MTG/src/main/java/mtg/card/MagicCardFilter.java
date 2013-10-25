@@ -3,7 +3,6 @@ package mtg.card;
 import com.reflexit.magiccards.core.model.*;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import mtg.card.MagicCardFilter.SearchToken.TokenType;

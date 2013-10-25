@@ -3,6 +3,7 @@ package mtg.card;
 import com.reflexit.magiccards.core.model.CardImpl;
 import com.reflexit.magiccards.core.model.ICardField;
 import com.reflexit.magiccards.core.model.ICardModifiable;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -10,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.ImageIcon;
 import mtg.card.MagicCardFilter.TextValue;
+import org.openide.util.Exceptions;
 
 public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
@@ -36,7 +38,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getCost()
      */
     @Override
@@ -50,7 +52,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getCardId()
      */
     @Override
@@ -73,7 +75,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getName()
      */
     @Override
@@ -87,7 +89,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getOracleText()
      */
     @Override
@@ -101,7 +103,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getRarity()
      */
     @Override
@@ -115,7 +117,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getEdition()
      */
     @Override
@@ -130,7 +132,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getType()
      */
     @Override
@@ -149,7 +151,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getPower()
      */
     @Override
@@ -163,7 +165,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getToughness()
      */
     @Override
@@ -202,7 +204,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getColorType()
      */
     @Override
@@ -219,7 +221,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.IMagicCard#getCmc()
      */
     @Override
@@ -266,7 +268,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     @Override
     public String toString() {
-        return this.id + ": " + this.name;
+        return MessageFormat.format("{0}: {1}", this.id, this.name);
     }
     private final static Pattern mpartnamePattern = Pattern.compile("(.*)//(.*)\\s*\\((.*)\\)");
 
@@ -521,7 +523,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
     }
 
     @Override
-    public Object clone() {
+    public Object clone() throws CloneNotSupportedException {
         try {
             MagicCard obj = (MagicCard) super.clone();
             if (this.properties != null) {
@@ -535,13 +537,17 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
 
     @Override
     public MagicCard cloneCard() {
-        return (MagicCard) clone();
+        try {
+            return (MagicCard) clone();
+        } catch (CloneNotSupportedException ex) {
+            Exceptions.printStackTrace(ex);
+            return null;
+        }
     }
 
     public void copyFrom(IMagicCard card) {
         ICardField[] fields = MagicCardField.allNonTransientFields();
-        for (int i = 0; i < fields.length; i++) {
-            ICardField field = fields[i];
+        for (ICardField field : fields) {
             Object value = card.getObjectByField(field);
             if (value != null) {
                 String string = value.toString();
@@ -603,8 +609,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
             }
             list = list.substring(1, list.length() - 1);
             String[] split = list.split(",");
-            for (int i = 0; i < split.length; i++) {
-                String pair = split[i];
+            for (String pair : split) {
                 String[] split2 = pair.split("=");
                 setProperty(split2[0], split2[1]);
             }

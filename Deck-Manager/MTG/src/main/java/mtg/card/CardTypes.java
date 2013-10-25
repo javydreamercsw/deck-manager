@@ -1,6 +1,7 @@
 package mtg.card;
 
 import com.reflexit.magiccards.core.model.ISearchableProperty;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -20,7 +21,7 @@ public class CardTypes implements ISearchableProperty {
         add(TYPES.getString("Type_Planeswalker"));
     }
     static CardTypes instance = new CardTypes();
-    private LinkedHashMap names;
+    private final LinkedHashMap names;
 
     private void add(String string) {
         String id = getPrefConstant(string);
@@ -42,19 +43,19 @@ public class CardTypes implements ISearchableProperty {
         if (type == null ? TYPES.getString("Type_Creature") == null : type.equals(TYPES.getString("Type_Creature"))) {
             return hasType(card, TYPES.getString("Type_Summon"));
         }
-        if (type == null ? TYPES.getString("Type_Instant") == null : type.equals(TYPES.getString("Type_Instant"))) {
+        if (type.equals(TYPES.getString("Type_Instant"))) {
             return hasType(card, TYPES.getString("Type_Instant"));
         }
         return false;
     }
 
     private boolean containsType(String text, String type) {
-        return Pattern.compile("\\b\\Q" + type + "\\E\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(text).find();
+        return Pattern.compile(MessageFormat.format("\bQ{0}E\b", type), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(text).find();
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.ISearchableProperty#getIdPrefix()
      */
     @Override

@@ -20,8 +20,8 @@ public class Languages implements ISearchableProperty {
         PORTUGESE(new Locale("pt")),
         JAPANESE(Locale.JAPANESE),
         CHINESE("Chinese Standard", Locale.CHINESE);
-        private String lang;
-        private Locale locale;
+        private final String lang;
+        private final Locale locale;
 
         Language(Locale locale) {
             this.lang = name().substring(0, 1).toUpperCase() + name().substring(1).toLowerCase();
@@ -53,8 +53,7 @@ public class Languages implements ISearchableProperty {
     private Languages() {
         this.names = new LinkedHashMap();
         Language[] langs = Language.values();
-        for (int i = 0; i < langs.length; i++) {
-            Language lang = langs[i];
+        for (Language lang : langs) {
             add(lang.getLang());
         }
     }
@@ -94,8 +93,7 @@ public class Languages implements ISearchableProperty {
 
     public static Locale getLocale(String language) {
         Language[] array = Language.values();
-        for (int i = 0; i < array.length; i++) {
-            Language l = array[i];
+        for (Language l : array) {
             if (l.getLang().equals(language)) {
                 return l.locale;
             }

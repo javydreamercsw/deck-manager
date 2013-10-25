@@ -1,4 +1,4 @@
-package dreamer.card.game;
+package net.sourceforge.javydreamercsw.synamicd.game;
 
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.DefaultCardGame;
@@ -40,13 +40,13 @@ import org.openide.util.lookup.ServiceProvider;
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
 @ServiceProvider(service = ICardGame.class)
-public class MTGGame extends DefaultCardGame {
+public class SDGame extends DefaultCardGame {
 
-    private static final Logger LOG = Logger.getLogger(MTGGame.class.getName());
+    private static final Logger LOG = Logger.getLogger(SDGame.class.getName());
 
     @Override
     public String getName() {
-        return "Magic the Gathering";
+        return "SynamicD";
     }
 
     @Override
@@ -64,7 +64,7 @@ public class MTGGame extends DefaultCardGame {
 
     @Override
     public Runnable getUpdateRunnable() {
-        return new MTGUpdater();
+        return new SDUpdater();
     }
 
     //Obtain the image URL
@@ -173,7 +173,7 @@ public class MTGGame extends DefaultCardGame {
                         for (Iterator<String> it = values.iterator(); it.hasNext();) {
                             try {
                                 String v = it.next();
-                                JLabel iconLabel = new JLabel(new ImageIcon((toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(v)))));
+                                JLabel iconLabel = new JLabel(new ImageIcon((toBufferedImage(((SDCardCache) impls.get(0)).getMomentumIcon(v)))));
                                 container.add(iconLabel);
                                 if (it.hasNext()) {
                                     container.add(Box.createRigidArea(new Dimension(5, 0)));

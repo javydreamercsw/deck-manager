@@ -20,7 +20,7 @@ import org.openide.util.Lookup;
 public abstract class UpdateRunnable implements IProgressAction, DataBaseStateListener {
 
     private int size, progress = 0;
-    private ArrayList<UpdateProgressListener> listeners = new ArrayList<UpdateProgressListener>();
+    private final ArrayList<UpdateProgressListener> listeners = new ArrayList<UpdateProgressListener>();
     private final ICardGame game;
     private static final Logger LOG = Logger.getLogger(UpdateRunnable.class.getName());
 
@@ -68,24 +68,21 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
 
     @Override
     public void reportSize(int size) {
-        for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
-            UpdateProgressListener listener = it.next();
+        for (UpdateProgressListener listener : listeners) {
             listener.reportSize(size);
         }
     }
 
     @Override
     public void reportProgress(int amount) {
-        for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
-            UpdateProgressListener listener = it.next();
+        for (UpdateProgressListener listener : listeners) {
             listener.reportProgress(amount);
         }
     }
 
     @Override
     public void reportDone() {
-        for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
-            UpdateProgressListener listener = it.next();
+        for (UpdateProgressListener listener : listeners) {
             listener.reportDone();
         }
     }
@@ -108,24 +105,21 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
 
     @Override
     public void updateProgressMessage(String message) {
-        for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
-            UpdateProgressListener listener = it.next();
+        for (UpdateProgressListener listener : listeners) {
             listener.changeMessage(message);
         }
     }
 
     @Override
     public void reportSuspendProgress() {
-        for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
-            UpdateProgressListener listener = it.next();
+        for (UpdateProgressListener listener : listeners) {
             listener.suspend();
         }
     }
 
     @Override
     public void reportResumeProgress() {
-        for (Iterator<UpdateProgressListener> it = listeners.iterator(); it.hasNext();) {
-            UpdateProgressListener listener = it.next();
+        for (UpdateProgressListener listener : listeners) {
             listener.resume();
         }
     }
@@ -165,7 +159,7 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
             if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).isEmpty()) {
                 Lookup.getDefault().lookup(IDataBaseCardStorage.class).createGame(game.getName());
             }
-        } catch (Exception ex) {
+        } catch (DBException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
     }

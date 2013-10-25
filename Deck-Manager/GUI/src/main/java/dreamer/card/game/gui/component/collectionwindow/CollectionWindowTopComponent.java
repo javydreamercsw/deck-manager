@@ -1,4 +1,4 @@
-package dreamer.card.game.gui;
+package dreamer.card.game.gui.component.collectionwindow;
 
 import com.reflexit.magiccards.core.model.ICardGame;
 import java.util.Collection;
@@ -17,15 +17,15 @@ import org.openide.windows.TopComponent;
  * Top component which displays something.
  */
 @ConvertAsProperties(dtd = "-//dreamer.card.game.gui//CollectionWindow//EN",
-autostore = false)
+        autostore = false)
 @TopComponent.Description(preferredID = "CollectionWindowTopComponent",
-//iconBase="SET/PATH/TO/ICON/HERE", 
-persistenceType = TopComponent.PERSISTENCE_ALWAYS)
+        //iconBase="SET/PATH/TO/ICON/HERE",
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.CollectionWindowTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(displayName = "#CTL_CollectionWindowAction",
-preferredID = "CollectionWindowTopComponent")
+        preferredID = "CollectionWindowTopComponent")
 @Messages({
     "CTL_CollectionWindowAction=Collection Window",
     "CTL_CollectionWindowTopComponent=Collection Window",

@@ -79,8 +79,7 @@
         <module>GUI</module>
         <module>Card-Game-Library</module>
         <module>Eclipselink-Wrapper</module>
-    <module>SynamicD</module>
-  </modules>
+    </modules>
 
     <properties>
         <brandingToken>deck_manager</brandingToken>
