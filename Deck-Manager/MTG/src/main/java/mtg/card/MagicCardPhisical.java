@@ -1,12 +1,14 @@
 package mtg.card;
 
 import com.reflexit.magiccards.core.model.*;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import mtg.card.MagicCardFilter.TextValue;
+import org.openide.util.Exceptions;
 
 public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCountable, ICardModifiable {
 
@@ -40,7 +42,7 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
     }
 
     @Override
-    public Object clone() {
+    public Object clone() throws CloneNotSupportedException {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
@@ -50,7 +52,12 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
 
     @Override
     public ICard cloneCard() {
-        return (IMagicCard) clone();
+        try {
+            return (IMagicCard) clone();
+        } catch (CloneNotSupportedException ex) {
+            Exceptions.printStackTrace(ex);
+            return null;
+        }
     }
 
     @Override
@@ -155,7 +162,7 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
     public String getSetName() {
         return this.card.getSetName();
     }
-    
+
     @Override
     public void setSetName(String set) {
         this.card.setSetName(set);
@@ -214,10 +221,7 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
             if (this.getCount() != phi.getCount()) {
                 return false;
             }
-            if (!this.matching(phi)) {
-                return false;
-            }
-            return true;
+            return this.matching(phi);
         }
         if (obj instanceof ICard) {
             return this.card.equals(obj);
@@ -245,10 +249,7 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
         if (!eqNull(phi1.getCustom(), phi2.getCustom())) {
             return false;
         }
-        if (!eqNull(phi1.getComment(), phi2.getComment())) {
-            return false;
-        }
-        return true;
+        return eqNull(phi1.getComment(), phi2.getComment());
     }
 
     public static boolean eqNull(Object a, Object b) {
@@ -263,7 +264,7 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
 
     @Override
     public String toString() {
-        return this.card.toString() + " x " + this.count;
+        return MessageFormat.format("{0} x {1}", this.card.toString(), this.count);
     }
 
     @Override
@@ -384,7 +385,7 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
                     if (add) {
                         addTag(value, tag);
                     } else {
-                        value = tag + ",";
+                        value = MessageFormat.format("{0},", tag);
                     }
                 }
             }
@@ -394,7 +395,7 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
 
     protected String addTag(String value, String tag) {
         if (!containsTag(value, tag)) {
-            value += tag + ",";
+            value += MessageFormat.format("{0},", tag);
         }
         return value;
     }
@@ -404,7 +405,7 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
         String tags[] = value.split(",");
         for (String tag : tags) {
             if (!tag.equals(a)) {
-                res = res + tag + ",";
+                res = MessageFormat.format("{0}{1},", res, tag);
             }
         }
         return res;

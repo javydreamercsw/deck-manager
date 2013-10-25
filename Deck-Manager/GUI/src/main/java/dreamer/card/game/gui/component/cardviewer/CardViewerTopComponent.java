@@ -1,4 +1,4 @@
-package dreamer.card.game.gui;
+package dreamer.card.game.gui.component.cardviewer;
 
 import com.reflexit.magiccards.core.CannotDetermineSetAbbriviation;
 import com.reflexit.magiccards.core.cache.ICardCache;
@@ -31,10 +31,10 @@ import org.openide.windows.TopComponent;
  * Top component which displays something.
  */
 @ConvertAsProperties(dtd = "-//dreamer.card.game.gui//CardViewer//EN",
-autostore = false)
+        autostore = false)
 @TopComponent.Description(preferredID = "CardViewerTopComponent",
-//iconBase="SET/PATH/TO/ICON/HERE", 
-persistenceType = TopComponent.PERSISTENCE_ALWAYS)
+        //iconBase="SET/PATH/TO/ICON/HERE",
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @TopComponent.Registration(mode = "navigator", openAtStartup = true, roles = "game_view")
 @TopComponent.OpenActionRegistration(displayName = "#CTL_CardViewerAction")
 @Messages({
@@ -46,7 +46,7 @@ public final class CardViewerTopComponent extends TopComponent
         implements LookupListener {
 
     private static final Logger LOG = Logger.getLogger(CardViewerTopComponent.class.getName());
-    private Lookup.Result<ICard> result = Utilities.actionsGlobalContext().lookupResult(ICard.class);
+    private final Lookup.Result<ICard> result = Utilities.actionsGlobalContext().lookupResult(ICard.class);
 
     public CardViewerTopComponent() {
         initComponents();
@@ -127,8 +127,7 @@ public final class CardViewerTopComponent extends TopComponent
                         } else {
                             ICardSet cs = (ICardSet) temp.get(0);
                             ICardCache cache = null;
-                            for (Iterator<? extends ICardGame> it2 = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it2.hasNext();) {
-                                ICardGame game = it2.next();
+                            for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
                                 if (game.getName().equals(cs.getGameName())) {
                                     List<ICardCache> impl = game.getCardCacheImplementations();
                                     if (!impl.isEmpty()) {

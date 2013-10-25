@@ -1,6 +1,7 @@
 package mtg.card;
 
 import com.reflexit.magiccards.core.model.Editions;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -26,11 +27,11 @@ public class FilterHelper {
     public static final String COMMENT = MagicCardFieldPhysical.COMMENT.name();
     public static final String OWNERSHIP = MagicCardFieldPhysical.OWNERSHIP.name();
     public static final String LANG = MagicCardField.LANG.name();
-    public static final String TEXT_LINE_2 = TEXT_LINE + "_2";
-    public static final String TEXT_LINE_3 = TEXT_LINE + "_3";
-    public static final String TEXT_NOT_1 = TEXT_LINE + "_exclude_1";
-    public static final String TEXT_NOT_2 = TEXT_LINE + "_exclude_2";
-    public static final String TEXT_NOT_3 = TEXT_LINE + "_exclude_3";
+    public static final String TEXT_LINE_2 = MessageFormat.format("{0}_2", TEXT_LINE);
+    public static final String TEXT_LINE_3 = MessageFormat.format("{0}_3", TEXT_LINE);
+    public static final String TEXT_NOT_1 = MessageFormat.format("{0}_exclude_1", TEXT_LINE);
+    public static final String TEXT_NOT_2 = MessageFormat.format("{0}_exclude_2", TEXT_LINE);
+    public static final String TEXT_NOT_3 = MessageFormat.format("{0}_exclude_3", TEXT_LINE);
     public static final String COLLNUM = MagicCardField.COLLNUM.name();
 
     public static String escapeProperty(String string) {
@@ -40,7 +41,7 @@ public class FilterHelper {
     }
 
     public static String getPrefConstant(String sub, String name) {
-        return PREFIX + ".filter." + sub + "." + escapeProperty(name);
+        return MessageFormat.format("{0}.filter.{1}.{2}", PREFIX, sub, escapeProperty(name));
     }
 
     public static Collection getAllIds() {

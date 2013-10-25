@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 public class Colors implements ISearchableProperty {
 
     static Colors instance = new Colors();
-    private LinkedHashMap names;
-    private HashMap codes;
+    private final LinkedHashMap names;
+    private final HashMap codes;
 
     private Colors() {
         this.names = new LinkedHashMap();
@@ -91,15 +91,12 @@ public class Colors implements ISearchableProperty {
     }
 
     private static boolean hasColor(String abbr, String cost) {
-        if (cost.indexOf(abbr) >= 0) {
-            return true;
-        }
-        return false;
+        return cost.indexOf(abbr) >= 0;
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.ISearchableProperty#getIdPrefix()
      */
     @Override

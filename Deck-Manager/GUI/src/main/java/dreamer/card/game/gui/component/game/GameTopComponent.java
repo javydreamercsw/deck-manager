@@ -1,10 +1,12 @@
-package dreamer.card.game.gui;
+package dreamer.card.game.gui.component.game;
 
 import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 import dreamer.card.game.core.Tool;
+import dreamer.card.game.gui.DialogPanel;
+import dreamer.card.game.gui.ICardOutlineCellRenderer;
 import dreamer.card.game.gui.node.ICardNode;
 import dreamer.card.game.gui.node.factory.IGameChildFactory;
 import java.util.*;
@@ -39,87 +41,41 @@ import org.openide.windows.TopComponent;
 @ConvertAsProperties(dtd = "-//dreamer.card.game.gui//Game//EN",
         autostore = false)
 @TopComponent.Description(preferredID = "GameTopComponent",
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        //iconBase="SET/PATH/TO/ICON/HERE",
         persistenceType = TopComponent.PERSISTENCE_NEVER)
 @TopComponent.Registration(mode = "editor", openAtStartup = false, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.GameTopComponent")
 @ActionReference(path = "Menu/Window" /*
-         * , position = 333
-         */)
+ * , position = 333
+ */)
 @TopComponent.OpenActionRegistration(displayName = "#CTL_GameAction",
         preferredID = "GameTopComponent")
 @Messages({
+    "QuickSearch/Card/dreamer-card-game-gui-CardSearchProvider.instance=Card",
     "CTL_GameAction=Game",
     "CTL_GameTopComponent=Game Window",
-    "HINT_GameTopComponent=This is a Game window"
+    "HINT_GameTopComponent=This is a Game window",
+    "select.game=Select Game:",
+    //Error
+    "error.no_games=No games installed! Please install a game to proceed.",
+    "error.no_game_selected=Please select a game below to continue",
+    //General
+    "general.set=Set"
 })
 public final class GameTopComponent extends TopComponent implements ExplorerManager.Provider {
 
-    private ExplorerManager em = new ExplorerManager();
+    private final ExplorerManager em = new ExplorerManager();
     private ICardGame game = null;
     private long start;
     //Kept for update purposes
     private IGameChildFactory gameFactory;
-    private final static Logger LOG = Logger.getLogger(GameTopComponent.class.getSimpleName());
+    private final static Logger LOG
+            = Logger.getLogger(GameTopComponent.class.getSimpleName());
+    private boolean initialized = false;
 
     public GameTopComponent() {
         initComponents();
-        start = System.currentTimeMillis();
-        LOG.info("Looking for available games...");
-        Collection<? extends ICardGame> games = Lookup.getDefault().lookupAll(ICardGame.class);
-        if (games.isEmpty()) {
-            DialogDisplayer.getDefault().notify(
-                    new NotifyDescriptor.Message(
-                    NbBundle.getMessage(
-                    GameTopComponent.class,
-                    "error.no_games"),
-                    NotifyDescriptor.ERROR_MESSAGE));
-        } else if (games.size() > 1) {
-            String[] choices = new String[games.size()];
-            int i = 0;
-            for (Iterator<? extends ICardGame> it = games.iterator(); it.hasNext();) {
-                ICardGame g = it.next();
-                choices[i] = g.getName();
-                i++;
-            }
-            DialogPanel dialogPanel = new DialogPanel();
-            dialogPanel.setInstruction(NbBundle.getMessage(
-                    GameTopComponent.class,
-                    "select.game"));
-            dialogPanel.setMessage("");
-            dialogPanel.setChoices(choices);
-
-            DialogDescriptor dd = new DialogDescriptor(dialogPanel,
-                    NbBundle.getMessage(
-                    GameTopComponent.class,
-                    "select.game"));
-
-            Object reply = DialogDisplayer.getDefault().notify(dd);
-
-            if (reply == NotifyDescriptor.OK_OPTION) {
-                game = games.toArray(new ICardGame[games.size()])[dialogPanel.getSelectedIndex()];
-            } else if (reply == NotifyDescriptor.CANCEL_OPTION) {
-                DialogDisplayer.getDefault().notify(
-                        new NotifyDescriptor.Message(
-                        NbBundle.getMessage(
-                        GameTopComponent.class,
-                        "error.no_game_selected"),
-                        NotifyDescriptor.ERROR_MESSAGE));
-                LifecycleManager.getDefault().saveAll();
-                LifecycleManager.getDefault().exit();
-            }
-        } else {
-            game = games.toArray(new ICardGame[games.size()])[0];
-        }
-        LOG.log(Level.INFO, "Time getting available games: {0}", Tool.elapsedTime(start));
-        LOG.info("Loading game...");
-        start = System.currentTimeMillis();
-        try {
-            loadGame();
-        } catch (DBException ex) {
-            LOG.log(Level.SEVERE, "Error loading game!", ex);
-        }
-        LOG.log(Level.INFO, "Time loading game: {0}", Tool.elapsedTime(start));
+        init();
     }
 
     /**
@@ -185,8 +141,7 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
             String[] properties = new String[columns.size() * 2];
             int i = 0;
             start = System.currentTimeMillis();
-            for (Iterator<String> it = columns.iterator(); it.hasNext();) {
-                String prop = it.next();
+            for (String prop : columns) {
                 properties[i] = prop.toLowerCase(Locale.getDefault());
                 i++;
                 properties[i] = prop;
@@ -198,14 +153,74 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
                     new ICardOutlineCellRenderer(game));
             ((OutlineView) gamePane).getOutline().setModel(
                     DefaultOutlineModel.createOutlineModel(
-                    new GameTreeModel(root),
-                    new GameRowModel(columns),
-                    true, NbBundle.getMessage(
-                    GameTopComponent.class,
-                    "general.set")));
+                            new GameTreeModel(root),
+                            new GameRowModel(columns),
+                            true, NbBundle.getMessage(
+                                    GameTopComponent.class,
+                                    "general.set")));
             LOG.log(Level.INFO, "Preparing outline: {0}", Tool.elapsedTime(start));
             em.setRootContext(root);
             associateLookup(ExplorerUtils.createLookup(getExplorerManager(), getActionMap()));
+        }
+    }
+
+    private void init() {
+        if (!initialized) {
+            start = System.currentTimeMillis();
+            LOG.info("Looking for available games...");
+            Collection<? extends ICardGame> games = Lookup.getDefault().lookupAll(ICardGame.class);
+            if (games.isEmpty()) {
+                DialogDisplayer.getDefault().notify(
+                        new NotifyDescriptor.Message(
+                                NbBundle.getMessage(
+                                        GameTopComponent.class,
+                                        "error.no_games"),
+                                NotifyDescriptor.ERROR_MESSAGE));
+            } else if (games.size() > 1) {
+                String[] choices = new String[games.size()];
+                int i = 0;
+                for (ICardGame g : games) {
+                    choices[i] = g.getName();
+                    i++;
+                }
+                DialogPanel dialogPanel = new DialogPanel();
+                dialogPanel.setInstruction(NbBundle.getMessage(
+                        GameTopComponent.class,
+                        "select.game"));
+                dialogPanel.setMessage("");
+                dialogPanel.setChoices(choices);
+
+                DialogDescriptor dd = new DialogDescriptor(dialogPanel,
+                        NbBundle.getMessage(
+                                GameTopComponent.class,
+                                "select.game"));
+
+                Object reply = DialogDisplayer.getDefault().notify(dd);
+
+                if (reply == NotifyDescriptor.OK_OPTION) {
+                    game = games.toArray(new ICardGame[games.size()])[dialogPanel.getSelectedIndex()];
+                } else if (reply == NotifyDescriptor.CANCEL_OPTION) {
+                    DialogDisplayer.getDefault().notify(
+                            new NotifyDescriptor.Message(
+                                    NbBundle.getMessage(
+                                            GameTopComponent.class,
+                                            "error.no_game_selected"),
+                                    NotifyDescriptor.ERROR_MESSAGE));
+                    LifecycleManager.getDefault().saveAll();
+                }
+            } else {
+                game = games.toArray(new ICardGame[games.size()])[0];
+            }
+            LOG.log(Level.INFO, "Time getting available games: {0}", Tool.elapsedTime(start));
+            LOG.info("Loading game...");
+            start = System.currentTimeMillis();
+            try {
+                loadGame();
+            } catch (DBException ex) {
+                LOG.log(Level.SEVERE, "Error loading game!", ex);
+            }
+            LOG.log(Level.INFO, "Time loading game: {0}", Tool.elapsedTime(start));
+            initialized = true;
         }
     }
 

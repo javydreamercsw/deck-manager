@@ -38,7 +38,9 @@ public enum MagicCardField implements ICardField {
         if (javaField != null) {
             try {
                 field = MagicCard.class.getDeclaredField(javaField);
-            } catch (Exception e) {
+            } catch (NoSuchFieldException e) {
+                throw new IllegalArgumentException(e);
+            } catch (SecurityException e) {
                 throw new IllegalArgumentException(e);
             }
         } else {
@@ -50,7 +52,9 @@ public enum MagicCardField implements ICardField {
         String javaField = name().toLowerCase();
         try {
             field = MagicCard.class.getDeclaredField(javaField);
-        } catch (Exception e) {
+        } catch (NoSuchFieldException e) {
+            throw new IllegalArgumentException(e);
+        } catch (SecurityException e) {
             throw new IllegalArgumentException(e);
         }
     }

@@ -6,13 +6,14 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors: Alena Laskavaia - initial API and implementation
- ******************************************************************************
+ * *****************************************************************************
  */
 package mtg.card;
 
 import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.ICardCountable;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -29,7 +30,7 @@ public final class CardStoreUtils {
         return instance;
     }
     public static CardStoreUtils instance;
-    private static CardTypes MTYPES = CardTypes.getInstance();
+    private static final CardTypes MTYPES = CardTypes.getInstance();
 
     /**
      * mana curve is array 0 .. 8 of card counts, where non-land is counted,
@@ -59,7 +60,7 @@ public final class CardStoreUtils {
                 bars[cost] += count;
             } else if (cost >= 7) {
                 bars[7] += count;
-            } 
+            }
         }
         return bars;
     }
@@ -186,7 +187,7 @@ public final class CardStoreUtils {
             String c = (String) iterator.next();
             if (colors.contains(c)) {
                 String encodeByName = Colors.getInstance().getEncodeByName(c);
-                res += "{" + encodeByName + "}";
+                res += MessageFormat.format("{{0}}", encodeByName);
             }
         }
         return res;

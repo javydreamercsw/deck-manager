@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 public class ColorTypes implements ISearchableProperty {
 
     static ColorTypes instance = new ColorTypes();
-    private LinkedHashMap names;
+    private final LinkedHashMap names;
     static public String AND_ID = getInstance().getPrefConstant("And");
     static public String ONLY_ID = getInstance().getPrefConstant("Only");
 
@@ -29,7 +29,7 @@ public class ColorTypes implements ISearchableProperty {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.ISearchableProperty#getIdPrefix()
      */
     @Override

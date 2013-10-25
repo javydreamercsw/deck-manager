@@ -1,5 +1,6 @@
 package dreamer.card.game.gui;
 
+import dreamer.card.game.gui.component.game.GameTopComponent;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import org.openide.modules.ModuleInstall;
 import org.openide.util.lookup.ServiceProvider;

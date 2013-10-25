@@ -1,11 +1,16 @@
 package dreamer.card.game.gui;
 
 import javax.swing.DefaultComboBoxModel;
+import org.openide.util.NbBundle;
 
 /**
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
+@NbBundle.Messages({
+    "DialogPanel.instructionLabel.text=jLabel1",
+    "DialogPanel.messageLabel.text=jLabel1"
+})
 public class DialogPanel extends javax.swing.JPanel {
 
     /**
@@ -34,8 +39,8 @@ public class DialogPanel extends javax.swing.JPanel {
         }
         return selectedItem.toString();
     }
-    
-    public int getSelectedIndex(){
+
+    public int getSelectedIndex() {
         return selection.getSelectedIndex();
     }
 

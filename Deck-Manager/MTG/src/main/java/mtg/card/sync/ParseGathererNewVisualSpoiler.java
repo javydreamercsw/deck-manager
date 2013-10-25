@@ -7,11 +7,13 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import mtg.card.IMagicCard;
 import mtg.card.MagicCard;
+import org.openide.util.Exceptions;
 
 public class ParseGathererNewVisualSpoiler {
 
@@ -68,9 +70,9 @@ public class ParseGathererNewVisualSpoiler {
 
     public static class OutputHandler implements ILoadCardHander {
 
-        private PrintStream out;
-        private boolean loadLandPrintings;
-        private boolean loadOtherPrintings;
+        private final PrintStream out;
+        private final boolean loadLandPrintings;
+        private final boolean loadOtherPrintings;
 
         public OutputHandler(PrintStream st, boolean loadLandPrintings, boolean loadOtherPrintings) {
             this.out = st;
@@ -101,12 +103,11 @@ public class ParseGathererNewVisualSpoiler {
         }
     }
     private final static String base = "http://gatherer.wizards.com/Pages/Search/Default.aspx?output=standard&special=true";
-    private static String[] updateAll = { //
-        base + "&format=[%22Legacy%22]", //
-        base + "&set=[%22Unhinged%22]", //
-        base + "&set=[%22Unglued%22]", //
-    };
-    private static String[] updateLatest = {base + "&format=[%22Standard%22]"};
+    private static final String[] updateAll = { //
+        MessageFormat.format("{0}&format=[%22Legacy%22]", base),
+        MessageFormat.format("{0}&set=[%22Unhinged%22]", base),
+        MessageFormat.format("{0}&set=[%22Unglued%22]", base)};
+    private static final String[] updateLatest = {MessageFormat.format("{0}&format=[%22Standard%22]", base)};
 
     private static OutputHandler createOutputHandler(PrintStream out, Properties options) {
         String land = (String) options.get(UPDATE_BASIC_LAND_PRINTINGS);
@@ -144,10 +145,9 @@ public class ParseGathererNewVisualSpoiler {
                 int i = 0;
                 boolean lastPage = false;
                 while (lastPage == false && i < 2000) {
-                    URL url = new URL(from + "&page=" + i);
+                    URL url = new URL(MessageFormat.format("{0}&page={1}", from, i));
                     lastPage = loadUrl(url, handler);
                     i++;
-                    int pages = countCards / 25 + 1;
                 }
             } else {
                 File input = new File(from);
@@ -157,8 +157,8 @@ public class ParseGathererNewVisualSpoiler {
             out.close();
         }
     }
-    private static Pattern countPattern = Pattern.compile("Search:<span id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_searchTermDisplay\"><i>.*</i>  \\((\\d+)\\)</span>");
-    private static Pattern lastPagePattern = Pattern.compile("\\Q<span style=\"visibility:hidden;\">&nbsp;&gt;</span></div>");
+    private static final Pattern countPattern = Pattern.compile("Search:<span id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_searchTermDisplay\"><i>.*</i>  \\((\\d+)\\)</span>");
+    private static final Pattern lastPagePattern = Pattern.compile("\\Q<span style=\"visibility:hidden;\">&nbsp;&gt;</span></div>");
     private static int countCards;
 
     private static boolean processFile(BufferedReader st, ILoadCardHander handler) throws IOException {
@@ -181,7 +181,7 @@ public class ParseGathererNewVisualSpoiler {
                         state = 1;
                         break;
                     }
-                    tr += line + " ";
+                    tr += MessageFormat.format("{0} ", line);
                 } while ((line = st.readLine()) != null);
                 parseRecord(tr, handler);
                 cards = true;
@@ -237,14 +237,18 @@ public class ParseGathererNewVisualSpoiler {
                 card.setRarity(rarity.trim());
                 handler.edition(ed);
             } else {
-                // other printings
-                MagicCard card2 = (MagicCard) card.clone();
-                if (card2 != null) {
-                    card2.setId(setId);
-                    card2.setSetName(edition);
-                    card2.setRarity(rarity.trim());
-                    handler.edition(ed);
-                    handler.handleSecondary(card, card2);
+                try {
+                    // other printings
+                    MagicCard card2 = (MagicCard) card.clone();
+                    if (card2 != null) {
+                        card2.setId(setId);
+                        card2.setSetName(edition);
+                        card2.setRarity(rarity.trim());
+                        handler.edition(ed);
+                        handler.handleSecondary(card, card2);
+                    }
+                } catch (CloneNotSupportedException ex) {
+                    Exceptions.printStackTrace(ex);
                 }
             }
         }
@@ -325,7 +329,7 @@ public class ParseGathererNewVisualSpoiler {
     }
 
     public static String htmlToString(String str) {
-        str = str.replaceAll("\\Q " + LONG_MINUS, "-");
+        str = str.replaceAll(MessageFormat.format("Q {0}", LONG_MINUS), "-");
         str = str.replaceAll("&nbsp;", " ");
         str = str.replaceAll("&amp;", "&");
         str = str.replaceAll("&apos;", "'");
@@ -343,14 +347,13 @@ public class ParseGathererNewVisualSpoiler {
 
     @NotNull
     public static URL createImageURL(int cardId, String editionAbbr) throws MalformedURLException {
-        return new URL("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + cardId + "&type=card");
+        return new URL(MessageFormat.format("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={0}&type=card", cardId));
     }
 
     public static URL createSetImageURL(String editionAbbr, String rarity) {
         try {
             String rarLetter = rarity == null ? "C" : rarity.substring(0, 1).toUpperCase();
-            return new URL("http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set=" + editionAbbr + "&size=small&rarity="
-                    + rarLetter);
+            return new URL(MessageFormat.format("http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set={0}&size=small&rarity={1}", editionAbbr, rarLetter));
         } catch (MalformedURLException e) {
             return null;
         }
@@ -359,7 +362,7 @@ public class ParseGathererNewVisualSpoiler {
     public static URL createManaImageURL(String symbol) {
         String manaName = symbol.replaceAll("[{}/]", "");
         try {
-            return new URL("http://gatherer.wizards.com/Handlers/Image.ashx?size=small&name=" + manaName + "&type=symbol");
+            return new URL(MessageFormat.format("http://gatherer.wizards.com/Handlers/Image.ashx?size=small&name={0}&type=symbol", manaName));
         } catch (MalformedURLException e) {
             return null;
         }
@@ -372,9 +375,9 @@ public class ParseGathererNewVisualSpoiler {
             url = updateLatest[0];
         } else {
             if (set.equalsIgnoreCase("All")) {
-                url = base + "&set=[%22%22]";
+                url = MessageFormat.format("{0}&set=[%22%22]", base);
             } else {
-                url = base + "&set=[%22" + set.replaceAll(" ", "%20") + "%22]&sort=cn+";
+                url = MessageFormat.format("{0}&set=[%22{1}%22]&sort=cn+", base, set.replaceAll(" ", "%20"));
             }
         }
         parseFileOrUrl(url, file, options);

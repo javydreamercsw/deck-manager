@@ -18,7 +18,7 @@ public class SuperTypes implements ISearchableProperty {
         add("Land");
     }
     static SuperTypes instance = new SuperTypes();
-    private LinkedHashMap names;
+    private final LinkedHashMap names;
 
     private void add(String string) {
         String id = getPrefConstant(string);
@@ -27,7 +27,7 @@ public class SuperTypes implements ISearchableProperty {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.ISearchableProperty#getIdPrefix()
      */
     @Override

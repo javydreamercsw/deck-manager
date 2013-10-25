@@ -24,7 +24,7 @@ public class Rarity implements ISearchableProperty {
         add("Other");
     }
     static Rarity instance = new Rarity();
-    private LinkedHashMap names;
+    private final LinkedHashMap names;
 
     private void add(String string) {
         String id = getPrefConstant(string);
@@ -33,7 +33,7 @@ public class Rarity implements ISearchableProperty {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.reflexit.magiccards.core.model.ISearchableProperty#getIdPrefix()
      */
     @Override
