@@ -72,30 +72,21 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
     }
 
     @Override
-    public void updateLocal() {
-        if (!localUpdated) {
-            ParseGathererSets parser = new ParseGathererSets();
-            try {
-                parser.load();
-            } catch (IOException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            }
-        }
-        super.updateLocal();
-    }
-
-    @Override
     public void updateRemote() {
         synchronized (this) {
+            super.updateRemote();
             if (!remoteUpdated) {
                 if (!dbError) {
+                    updating = true;
                     //Now update from the internet
                     try {
                         ParseGathererSets parser = new ParseGathererSets();
                         parser.load();
-                        Collection<Editions.Edition> editions = Editions.getInstance().getEditions();
-                        ArrayList<SetUpdateData> data = new ArrayList<SetUpdateData>();
-                //This section updates from the internet
+                        Collection<Editions.Edition> editions
+                                = Editions.getInstance().getEditions();
+                        ArrayList<SetUpdateData> data
+                                = new ArrayList<SetUpdateData>();
+                        //This section updates from the internet
                         //Get the sets
                         updateProgressMessage("Gathering stats before start processing...");
                         HashMap parameters = new HashMap();
@@ -113,18 +104,25 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                         if (LOG.isLoggable(Level.FINE)) {
                             for (Iterator it = temp.iterator(); it.hasNext();) {
                                 CardSet cs = (CardSet) it.next();
-                                LOG.log(Level.FINE, (MessageFormat.format("{0} {1}", ++i, cs.getName())));
+                                LOG.log(Level.FINE,
+                                        (MessageFormat.format("{0} {1}", ++i,
+                                                cs.getName())));
                             }
                         }
                         //Chek to see if there's something new to update.
-                        ArrayList<Editions.Edition> setsToLoad = new ArrayList<Editions.Edition>();
+                        ArrayList<Editions.Edition> setsToLoad
+                                = new ArrayList<Editions.Edition>();
                         for (Editions.Edition edition : editions) {
                             parameters.clear();
                             parameters.put("name", edition.getName());
                             temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
                             if (temp.isEmpty()) {
-                                LOG.log(Level.WARNING, "Unable to find set: {0}", edition.getName());
-                                setsToLoad.add(edition);
+                                if (!setsToLoad.contains(edition)) {
+                                    LOG.log(Level.WARNING,
+                                            "Unable to find set: {0}",
+                                            edition.getName());
+                                    setsToLoad.add(edition);
+                                }
                             }
                             try {
                                 Thread.sleep(100);
@@ -142,13 +140,15 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                         int urlAmount = checkAmountOfPagesForSet(from);
                                         parameters.clear();
                                         parameters.put("name", edition.getName());
-                                        List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
+                                        List result
+                                                = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
                                         long amount = 0;
                                         CardSet set;
                                         if (!result.isEmpty()) {
                                             set = (CardSet) result.get(0);
                                             parameters.clear();
-                                            parameters.put("gameId", set.getCardSetPK().getGameId());
+                                            parameters.put("gameId",
+                                                    set.getCardSetPK().getGameId());
                                             amount = (Long) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createdQuery("SELECT count(c) FROM CardSet c WHERE c.cardSetPK.gameId = :gameId", parameters).get(0);
                                         }
                                         if (result.isEmpty() || amount < urlAmount) {
@@ -157,7 +157,9 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                                         ? "it was not in the database" : "is missing pages in the database"});
                                             data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
                                         } else {
-                                            LOG.log(Level.FINE, "Skipping processing of set: {0}", edition.getName());
+                                            LOG.log(Level.FINE,
+                                                    "Skipping processing of set: {0}",
+                                                    edition.getName());
                                         }
                                     } else {
                                         break;
@@ -238,6 +240,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                 remoteUpdated = true;
             }
         }
+        updating = false;
     }
 
     @Override
@@ -566,5 +569,24 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
      */
     public void setCurrentSet(String currentSet) {
         this.currentSet = currentSet;
+    }
+
+    public static void main(String[] args) {
+        MTGUpdater updater = new MTGUpdater();
+        try {
+            Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
+        } catch (DBException ex) {
+            Exceptions.printStackTrace(ex);
+            return;
+        }
+        if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).gameExists(new MTGGame().getName())) {
+            try {
+                Lookup.getDefault().lookup(IDataBaseCardStorage.class).createGame(new MTGGame().getName());
+            } catch (DBException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        updater.updateLocal();
+        updater.updateRemote();
     }
 }
