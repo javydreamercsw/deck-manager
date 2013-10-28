@@ -103,10 +103,6 @@ public class ParseGathererNewVisualSpoiler {
         }
     }
     private final static String base = "http://gatherer.wizards.com/Pages/Search/Default.aspx?output=standard&special=true";
-    private static final String[] updateAll = { //
-        MessageFormat.format("{0}&format=[%22Legacy%22]", base),
-        MessageFormat.format("{0}&set=[%22Unhinged%22]", base),
-        MessageFormat.format("{0}&set=[%22Unglued%22]", base)};
     private static final String[] updateLatest = {MessageFormat.format("{0}&format=[%22Standard%22]", base)};
 
     private static OutputHandler createOutputHandler(PrintStream out, Properties options) {
