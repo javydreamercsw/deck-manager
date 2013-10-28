@@ -53,7 +53,6 @@ public class ParseGathererSets extends ParseGathererPage {
 
     @Override
     protected void loadHtml(String html) {
-        Editions editions = Editions.getInstance();
         html = html.replaceAll("\r?\n", " ");
         Matcher matcher = setStartPattern.matcher(html);
         if (matcher.find()) {
@@ -65,11 +64,11 @@ public class ParseGathererSets extends ParseGathererPage {
                     continue;
                 }
                 name = name.replaceAll("&quot;", "\"");
-                if (!editions.containsName(name)) {
-                    Edition ed = editions.addEdition(name, null);
+                if (!Editions.getInstance().containsName(name)) {
+                    Edition ed = Editions.getInstance().addEdition(name, null);
                     newSets.add(ed);
                 } else {
-                    editions.addEdition(name, null);
+                    Editions.getInstance().addEdition(name, null);
                 }
             }
         }
