@@ -25,6 +25,7 @@ import javax.persistence.Persistence;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.Places;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 /**
@@ -38,6 +39,7 @@ public abstract class GameUpdater extends UpdateRunnable {
     protected boolean dbError = false;
     protected boolean localUpdated = false;
     protected boolean remoteUpdated = false;
+    protected boolean updating = false;
 
     public GameUpdater(ICardGame game) {
         super(game);
@@ -45,7 +47,18 @@ public abstract class GameUpdater extends UpdateRunnable {
 
     @Override
     public void updateLocal() {
+        synchronized (this) {
+            while (updating) {
+                //Wait for update to end
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        }
         if (!localUpdated) {
+            updating = true;
             //This section updates from the deployed database
             //Create game cache dir
             File cacheDir = Places.getCacheSubdirectory(".Deck Manager");
@@ -144,6 +157,21 @@ public abstract class GameUpdater extends UpdateRunnable {
                 }
             }
             localUpdated = true;
+        }
+        updating = false;
+    }
+
+    @Override
+    public void updateRemote() {
+        synchronized (this) {
+            while (updating) {
+                //Wait for update to end
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
         }
     }
 }
