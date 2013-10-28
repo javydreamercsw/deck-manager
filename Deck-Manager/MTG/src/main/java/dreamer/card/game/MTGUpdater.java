@@ -48,7 +48,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
     private static String LONG_MINUS;
     private final static Charset UTF_8 = Charset.forName("utf-8");
     private final static Map manaMap = new LinkedHashMap();
-    private static final Logger LOG = Logger.getLogger(MTGUpdater.class.getName());
+    private static final Logger LOG = Logger.getLogger(MTGUpdater.class.getSimpleName());
     protected final String source = "http://gatherer.wizards.com/Pages/Search/Default.aspx?set=%5b%22";
 
     static {
