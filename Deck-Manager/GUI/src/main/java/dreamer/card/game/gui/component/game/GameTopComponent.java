@@ -136,8 +136,9 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
             setToolTipText(Bundle.HINT_GameTopComponent());
             start = System.currentTimeMillis();
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
+            LOG.log(Level.INFO, "Getting game columns: {0}",
+                    Tool.elapsedTime(start));
             final List<String> columns = game.getColumns();
-            LOG.log(Level.INFO, "Getting game columns: {0}", Tool.elapsedTime(start));
             String[] properties = new String[columns.size() * 2];
             int i = 0;
             start = System.currentTimeMillis();
@@ -212,7 +213,7 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
                 game = games.toArray(new ICardGame[games.size()])[0];
             }
             LOG.log(Level.INFO, "Time getting available games: {0}", Tool.elapsedTime(start));
-            LOG.info("Loading game...");
+            LOG.log(Level.INFO, "Loading game: {0}", game.getName());
             start = System.currentTimeMillis();
             try {
                 loadGame();
