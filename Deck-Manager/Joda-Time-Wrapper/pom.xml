@@ -4,7 +4,7 @@
     <parent>
     <artifactId>Deck-Manager-Client</artifactId>
     <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
   </parent>
 
     <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
-            <version>2.2</version>
+            <version>2.3</version>
         </dependency>
     </dependencies>
 

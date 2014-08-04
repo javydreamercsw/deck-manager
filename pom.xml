@@ -8,7 +8,7 @@
     </parent>
     <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
     <artifactId>Deck-Manager</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Deck-Manager</name>
     <modules>
@@ -16,7 +16,7 @@
     </modules>
 
     <properties>
-        <netbeans.version>RELEASE74</netbeans.version>
+        <netbeans.version>RELEASE80</netbeans.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
