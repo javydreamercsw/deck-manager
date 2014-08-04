@@ -11,7 +11,7 @@
   <artifactId>Deck-Manager-branding</artifactId>
   <packaging>nbm</packaging>
 
-  <name>Deck-Manager-branding</name>
+  <name>Branding</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -16,7 +16,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,17 +55,18 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
     }
 
     @Override
-    public void updateStore(ICardStore<ISellableCard> store, Iterable<ISellableCard> iterable, int size)
+    public void updateStore(ICardStore<ISellableCard> store,
+            Iterable<ISellableCard> iterable, int size)
             throws IOException {
         if (iterable == null) {
-            iterable = store;
             size = store.size();
         }
         HashSet<String> sets = new HashSet();
-        for (Iterator<ISellableCard> it = iterable.iterator(); it.hasNext();) {
-            ISellableCard card = it.next();
-            String set = card.getSetName();
-            sets.add(set);
+        if (iterable != null) {
+            for (ISellableCard card : iterable) {
+                String set = card.getSetName();
+                sets.add(set);
+            }
         }
 
         IStorage storage = store.getStorage();
@@ -88,7 +88,7 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
                             float price = -1;
                             if (prices != null && prices.containsKey(card.getName())) {
                                 Float price1 = prices.get(card.getName());
-                                price = (price1.floatValue());
+                                price = (price1);
                             } else {
                                 // load individual card
                                 try {
@@ -157,7 +157,7 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
 
     public HashMap<String, Float> parse(String setId) throws IOException {
         HashMap<String, Float> res = new HashMap<String, Float>();
-        URL url = new URL(baseURL.toString().replace("${SetAbbr}", setId));
+        URL url = new URL(baseURL.replace("${SetAbbr}", setId));
         InputStream openStream = url.openStream();
         BufferedReader st = new BufferedReader(new InputStreamReader(openStream));
         processFile(st, res);
@@ -167,7 +167,7 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
 
     private float parseSingleCard(String setAbbr, ICard card) throws IOException {
         String name = card.getName().replaceAll("\\W", "_");
-        URL url = new URL(cardURL.toString().replace("${SetAbbr}", setAbbr).replace("${CardName}", name));
+        URL url = new URL(cardURL.replace("${SetAbbr}", setAbbr).replace("${CardName}", name));
         InputStream openStream = url.openStream();
         BufferedReader st = new BufferedReader(new InputStreamReader(openStream));
         try {
@@ -181,7 +181,7 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
             "<TD><a href='[^']*'>(.*)</a>.nbsp;</TD>" // name
             + ".*" //
             + "<TD>([0-9.]+).nbsp;</TD>$" // price
-            );
+    );
 
     /*-
      * no NL
@@ -242,7 +242,7 @@ public class FindMagicCardsPrices implements IStoreUpdater, IPriceProvider {
     private static final Pattern set2Pattern = Pattern.compile( //
             "<TD>([A-Z]+).nbsp;</TD>" + // abbr
             "<TD><a href='[^']*'>(.*)</a>.nbsp;</TD>" // name
-            );
+    );
 
     /*- no NL
      * <TR class=defRowEven>

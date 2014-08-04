@@ -97,7 +97,7 @@ public abstract class GameUpdater extends UpdateRunnable {
                                 for (Iterator it2 = set.getCards().iterator(); it2.hasNext();) {
                                     ICard card = (ICard) it2.next();
                                     ICardType cardType = ((Card) card).getCardType();
-                                    if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardTypeExists(cardType.getName())) {
+                                    if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardTypeExists(cardType.getName(), getGame())) {
                                         cardType = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardType(cardType.getName());
                                         LOG.log(Level.FINE, "Added card type: {0}", cardType.getName());
                                     } else {
@@ -119,7 +119,7 @@ public abstract class GameUpdater extends UpdateRunnable {
                                     }
                                     if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardExists(card.getName(), target)) {
                                         List<CardHasCardAttribute> attributes = ((Card) card).getCardHasCardAttributeList();
-                                        card = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(cardType, card.getName(), ((Card) card).getText(), set.getName());
+                                        card = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(cardType, card.getName(), ((Card) card).getText(), set);
                                         LOG.log(Level.FINE, "Added card: {0}", card.getName());
                                         for (CardHasCardAttribute attr : attributes) {
                                             if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(card, attr.getCardAttribute().getName()) == null) {
