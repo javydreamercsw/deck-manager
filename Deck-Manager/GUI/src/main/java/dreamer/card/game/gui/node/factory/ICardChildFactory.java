@@ -58,9 +58,8 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
 
     ICardChildFactory(final ICardSet set) {
         this.set = set;
-        for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
-            ICardGame g = it.next();
-            if (g.getName().equals(set.getGameName())) {
+        for (ICardGame g : Lookup.getDefault().lookupAll(ICardGame.class)) {
+            if (g.getName().equals(set.getGame().getName())) {
                 game = g;
                 break;
             }
@@ -123,7 +122,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
     protected Node createNodeForKey(ICard card) {
         ICardNode node = null;
         try {
-            node = new ICardNode(card, createBean(card), set.getGameName());
+            node = new ICardNode(card, createBean(card), set.getGame().getName());
         } catch (IllegalArgumentException ex) {
             Exceptions.printStackTrace(ex);
         } catch (InvocationTargetException ex) {
@@ -142,8 +141,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
                 + game.getName().replaceAll(" ", "") + "Bean";
         if (pool.getOrNull(className) == null) {
             CtClass cc = pool.makeClass(className);
-            for (Iterator<String> it = game.getColumns().iterator(); it.hasNext();) {
-                String c = it.next();
+            for (String c : game.getColumns()) {
                 try {
                     addGetterAndSetter(cc, getColumnName(c));
                 } catch (CannotCompileException ex) {
@@ -157,12 +155,11 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
         try {
             Class c = cl.loadClass(className);
             bean = c.newInstance();
-            for (Iterator<String> it = game.getColumns().iterator(); it.hasNext();) {
-                String col = it.next();
+            for (String col : game.getColumns()) {
                 bean.getClass().getMethod("set" + getColumnName(col),
                         String.class).invoke(bean,
-                        Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(card,
-                        getColumnName(col)));
+                                Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(card,
+                                        getColumnName(col)));
             }
         } catch (ClassNotFoundException ex) {
             Exceptions.printStackTrace(ex);
@@ -176,7 +173,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
         return bean;
     }
 
-    private void addGetterAndSetter(CtClass cc, String name) 
+    private void addGetterAndSetter(CtClass cc, String name)
             throws CannotCompileException, NotFoundException {
         CtField field = new CtField(pool.get(String.class.getName()), name, cc);
         field.setModifiers(Modifier.PUBLIC);

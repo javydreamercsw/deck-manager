@@ -187,7 +187,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                     if (!dbError) {
                                         SetUpdateData setData = it.next();
                                         Edition edition = setData.getEdition();
-                                        if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName(), mtg)) {
+                                        if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName(),new MTGGame())) {
                                             Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(mtg,
                                                     edition.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
                                             LOG.log(Level.FINE, "Created set: {0}", edition.getName());
@@ -421,7 +421,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                     LOG.log(Level.SEVERE, null, ex);
                     dbError = true;
                 }
-                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, mtg)) {
+                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, new MTGGame())) {
                     LOG.log(Level.WARNING, "Is this a printing for card: {0} ID: {1} Set: {2}?",
                             new Object[]{card.getName(), id, edition});
                 }
@@ -472,7 +472,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
             } else {
                 try {
                     c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct,
-                            card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes(), edition);
+                            card.getName(), card.getOracleText() == null ? "".getBytes() : card.getOracleText().getBytes(), temp);
                     LOG.log(Level.FINE, "Created card: {0}", c.getName());
                 } catch (DBException ex) {
                     LOG.log(Level.SEVERE, null, ex);

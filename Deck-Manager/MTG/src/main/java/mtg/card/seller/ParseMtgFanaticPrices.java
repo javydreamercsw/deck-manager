@@ -14,7 +14,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,7 +28,7 @@ public class ParseMtgFanaticPrices implements IStoreUpdater, IPriceProvider {
         baseURL = "http://www.mtgfanatic.com/store/magic/viewcards.aspx?CatID=SET&ForumReferrerID=44349&PageSize=500";
         setURL = "http://www.mtgfanatic.com/Store/Magic/BasicSearch.aspx?CatID=3";
     }
-    
+
     @Override
     public void updateStore(IFilteredCardStore<ISellableCard> fstore) throws IOException {
         updateStore(fstore.getCardStore(), fstore, fstore.getSize());
@@ -39,14 +38,14 @@ public class ParseMtgFanaticPrices implements IStoreUpdater, IPriceProvider {
     public void updateStore(ICardStore<ISellableCard> store, Iterable<ISellableCard> iterable, int size)
             throws IOException {
         if (iterable == null) {
-            iterable = store;
             size = store.size();
         }
         HashSet<String> sets = new HashSet();
-        for (Iterator<ISellableCard> it = iterable.iterator(); it.hasNext();) {
-            ISellableCard magicCard = it.next();
-            String set = magicCard.getSetName();
-            sets.add(set);
+        if (iterable != null) {
+            for (ISellableCard magicCard : iterable) {
+                String set = magicCard.getSetName();
+                sets.add(set);
+            }
         }
         HashMap<String, String> parseSets = parseSets();
         for (String set : sets) {
@@ -57,8 +56,7 @@ public class ParseMtgFanaticPrices implements IStoreUpdater, IPriceProvider {
                     IStorage storage = store.getStorage();
                     storage.setAutoCommit(false);
                     try {
-                        for (Iterator<ISellableCard> it = iterable.iterator(); it.hasNext();) {
-                            ISellableCard magicCard = it.next();
+                        for (ISellableCard magicCard : iterable) {
                             String set2 = magicCard.getSetName();
                             if (set2.equals(set)) {
                                 if (prices.containsKey(magicCard.getName())) {
@@ -138,7 +136,7 @@ public class ParseMtgFanaticPrices implements IStoreUpdater, IPriceProvider {
 
     public HashMap<String, Float> parse(String setId) throws IOException {
         HashMap<String, Float> res = new HashMap<String, Float>();
-        URL url = new URL(baseURL.toString().replace("SET", setId));
+        URL url = new URL(baseURL.replace("SET", setId));
         InputStream openStream = url.openStream();
         BufferedReader st = new BufferedReader(new InputStreamReader(openStream));
         processFile(st, res);
