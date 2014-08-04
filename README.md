@@ -5,7 +5,7 @@ This is a port and generalization of Magic Assistant (http://sourceforge.net/pro
 ### What is this repository for? ###
 
 * Deck Manager and game specific support
-* 0.1
+* Version 0.2
 
 ### How do I get set up? ###
 
