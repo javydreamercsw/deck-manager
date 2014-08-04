@@ -5,7 +5,7 @@
     <parent>
         <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
         <artifactId>Deck-Manager-Client</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>Deck-Manager-app</artifactId>
@@ -70,7 +70,7 @@
         <dependency>
             <groupId>net.sourceforge.javydreamercsw.card.game</groupId>
             <artifactId>Card-Game-Library</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
@@ -140,7 +140,7 @@
         <dependency>
             <groupId>net.sourceforge.javydreamercsw</groupId>
             <artifactId>SynamicD</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
