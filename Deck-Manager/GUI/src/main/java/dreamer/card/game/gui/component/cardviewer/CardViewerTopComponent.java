@@ -128,7 +128,7 @@ public final class CardViewerTopComponent extends TopComponent
                             ICardSet cs = (ICardSet) temp.get(0);
                             ICardCache cache = null;
                             for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
-                                if (game.getName().equals(cs.getGame().getName())) {
+                                if (game.getName().equals(cs.getCardGame().getName())) {
                                     List<ICardCache> impl = game.getCardCacheImplementations();
                                     if (!impl.isEmpty()) {
                                         cache = impl.get(0);
