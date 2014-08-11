@@ -142,11 +142,6 @@
             <artifactId>SynamicD</artifactId>
             <version>0.2-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>net.sourceforge.javydreamercsw</groupId>
-            <artifactId>Data-Base-Implementation-Library</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
     <build>
