@@ -63,9 +63,11 @@ public abstract class GameUpdater extends UpdateRunnable {
             //Create game cache dir
             File cacheDir = Places.getCacheSubdirectory(".Deck Manager");
             //Check if database is present, if not copy the default database (to avoid long initial update that was 45 minutes long on my test)
-            File dbDir = new File(MessageFormat.format("{0}{1}data", cacheDir.getAbsolutePath(), System.getProperty("file.separator")));
+            File dbDir = new File(MessageFormat.format("{0}{1}data",
+                    cacheDir.getAbsolutePath(), System.getProperty("file.separator")));
             dbDir.mkdirs();
-            File db = InstalledFileLocator.getDefault().locate("card_manager.h2.db", "dreamer.card.game.mtg.lib", false);
+            File db = InstalledFileLocator.getDefault().locate("card_manager.h2.db",
+                    "dreamer.card.game.mtg.lib", false);
             LOG.fine("Updating database...");
             EntityManagerFactory emf = null;
             try {
@@ -75,13 +77,25 @@ public abstract class GameUpdater extends UpdateRunnable {
                     if (dbName.indexOf(".") > 0) {
                         dbName = dbName.substring(0, dbName.indexOf("."));
                     }
-                    final Map<String, String> dbProperties = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getConnectionSettings();
-                    dbProperties.put(PersistenceUnitProperties.JDBC_URL, MessageFormat.format("jdbc:h2:file:{0}{1}{2};AUTO_SERVER=TRUE", db.getParentFile().getAbsolutePath(), System.getProperty("file.separator"), dbName));
-                    dbProperties.put(PersistenceUnitProperties.TARGET_DATABASE, "org.eclipse.persistence.platform.database.H2Platform");
-                    dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD, "test");
-                    dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, "org.h2.Driver");
-                    dbProperties.put(PersistenceUnitProperties.JDBC_USER, "deck_manager");
-                    emf = Persistence.createEntityManagerFactory("Card_Game_InterfacePU", dbProperties);
+                    LOG.log(Level.INFO, "Database located at: {0}",
+                            db.getParentFile().getAbsolutePath());
+                    final Map<String, String> dbProperties
+                            = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                            .getConnectionSettings();
+                    dbProperties.put(PersistenceUnitProperties.JDBC_URL,
+                            MessageFormat.format("jdbc:h2:file:{0}{1}{2};AUTO_SERVER=TRUE",
+                                    db.getParentFile().getAbsolutePath(),
+                                    System.getProperty("file.separator"), dbName));
+                    dbProperties.put(PersistenceUnitProperties.TARGET_DATABASE,
+                            "org.eclipse.persistence.platform.database.H2Platform");
+                    dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD,
+                            "test");
+                    dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER,
+                            "org.h2.Driver");
+                    dbProperties.put(PersistenceUnitProperties.JDBC_USER,
+                            "deck_manager");
+                    emf = Persistence.createEntityManagerFactory("Card_Game_InterfacePU",
+                            dbProperties);
                     HashMap parameters = new HashMap();
                     parameters.put("name", getGame().getName());
                     Game game = (Game) namedQuery("Game.findByName", parameters, emf).get(0);
