@@ -59,7 +59,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
     ICardChildFactory(final ICardSet set) {
         this.set = set;
         for (ICardGame g : Lookup.getDefault().lookupAll(ICardGame.class)) {
-            if (g.getName().equals(set.getGame().getName())) {
+            if (g.getName().equals(set.getCardGame().getName())) {
                 game = g;
                 break;
             }
@@ -81,14 +81,16 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
             public void reload() throws Exception {
                 long start = System.currentTimeMillis();
                 for (Iterator it = Lookup.getDefault().lookup(
-                        IDataBaseCardStorage.class).getCardsForSet(set).iterator(); it.hasNext();) {
+                        IDataBaseCardStorage.class).getCardsForSet(set)
+                        .iterator(); it.hasNext();) {
                     ICard card = (ICard) it.next();
                     if (!cards.contains(card)) {
                         cards.add(card);
                     }
                 }
                 LOG.log(Level.INFO, "DB query for set: {1} took: {0} hits: {2}",
-                        new Object[]{Tool.elapsedTime(start), set.getName(), cards.size()});
+                        new Object[]{Tool.elapsedTime(start), 
+                            set.getName(), cards.size()});
                 start = System.currentTimeMillis();
                 Collections.sort(cards, new Comparator<ICard>() {
                     @Override
@@ -96,7 +98,8 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
                         return o1.getName().compareTo(o2.getName());
                     }
                 });
-                LOG.log(Level.INFO, "Sorting cards: {0}", Tool.elapsedTime(start));
+                LOG.log(Level.INFO, "Sorting cards: {0}", 
+                        Tool.elapsedTime(start));
             }
         });
     }
@@ -122,7 +125,8 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
     protected Node createNodeForKey(ICard card) {
         ICardNode node = null;
         try {
-            node = new ICardNode(card, createBean(card), set.getGame().getName());
+            node = new ICardNode(card, createBean(card), 
+                    set.getCardGame().getName());
         } catch (IllegalArgumentException ex) {
             Exceptions.printStackTrace(ex);
         } catch (InvocationTargetException ex) {
@@ -158,7 +162,9 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
             for (String col : game.getColumns()) {
                 bean.getClass().getMethod("set" + getColumnName(col),
                         String.class).invoke(bean,
-                                Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(card,
+                                Lookup.getDefault()
+                                        .lookup(IDataBaseCardStorage.class)
+                                        .getCardAttribute(card,
                                         getColumnName(col)));
             }
         } catch (ClassNotFoundException ex) {
