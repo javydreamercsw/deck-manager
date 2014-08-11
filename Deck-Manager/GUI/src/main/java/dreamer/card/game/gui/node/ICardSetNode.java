@@ -25,8 +25,10 @@ public class ICardSetNode extends BeanNode {
     private final ICardSet set;
     private static final Logger LOG = Logger.getLogger(ICardSetNode.class.getName());
 
-    public ICardSetNode(ICardSet set, ICardChildFactory childFactory) throws IntrospectionException {
-        super(set, Children.create(childFactory, false), Lookups.singleton(set));
+    public ICardSetNode(ICardSet set, ICardChildFactory childFactory)
+            throws IntrospectionException {
+        super(set, Children.create(childFactory, false),
+                Lookups.singleton(set));
         setDisplayName(set.getName());
         this.set = set;
     }
@@ -41,7 +43,15 @@ public class ICardSetNode extends BeanNode {
     @Override
     public Image getIcon(int type) {
         try {
-            return Tool.loadImage(new JFrame(), Lookup.getDefault().lookup(ICardCache.class).getSetIcon(set)).getImage();
+            ICardCache cache = null;
+            for (ICardCache c : Lookup.getDefault().lookupAll(ICardCache.class)) {
+                if (c.getGameName().equals(set.getCardGame().getName())) {
+                    cache = c;
+                    break;
+                }
+            }
+            return cache == null ? null : Tool.loadImage(new JFrame(),
+                    cache.getSetIcon(set)).getImage();
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             return null;
