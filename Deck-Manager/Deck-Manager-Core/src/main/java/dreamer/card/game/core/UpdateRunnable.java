@@ -17,16 +17,20 @@ import org.openide.util.Lookup;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public abstract class UpdateRunnable implements IProgressAction, DataBaseStateListener {
+public abstract class UpdateRunnable implements IProgressAction, 
+        DataBaseStateListener {
 
     private int size, progress = 0;
-    private final ArrayList<UpdateProgressListener> listeners = new ArrayList<UpdateProgressListener>();
+    private final ArrayList<UpdateProgressListener> listeners = 
+            new ArrayList<UpdateProgressListener>();
     private final ICardGame game;
-    private static final Logger LOG = Logger.getLogger(UpdateRunnable.class.getName());
+    private static final Logger LOG = 
+            Logger.getLogger(UpdateRunnable.class.getName());
 
     public UpdateRunnable(ICardGame game) {
         this.game = game;
-        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addDataBaseStateListener(UpdateRunnable.this);
+        Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                .addDataBaseStateListener(UpdateRunnable.this);
     }
 
     /**
@@ -132,7 +136,8 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
     }
 
     public List<Object> namedQuery(String query,
-            HashMap<String, Object> parameters, EntityManagerFactory emf) throws DBException {
+            HashMap<String, Object> parameters, EntityManagerFactory emf) 
+            throws DBException {
         Query q;
         EntityManager localEM = emf.createEntityManager();
         EntityTransaction transaction = localEM.getTransaction();
@@ -142,7 +147,7 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
             Iterator<Map.Entry<String, Object>> entries = parameters.entrySet().iterator();
             while (entries.hasNext()) {
                 Map.Entry<String, Object> e = entries.next();
-                q.setParameter(e.getKey().toString(), e.getValue());
+                q.setParameter(e.getKey(), e.getValue());
             }
         }
         List result = q.getResultList();
@@ -156,8 +161,10 @@ public abstract class UpdateRunnable implements IProgressAction, DataBaseStateLi
         HashMap parameters = new HashMap();
         try {
             parameters.put("name", game.getName());
-            if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).isEmpty()) {
-                Lookup.getDefault().lookup(IDataBaseCardStorage.class).createGame(game.getName());
+            if (Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                    .namedQuery("Game.findByName", parameters).isEmpty()) {
+                Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                        .createGame(game.getName());
             }
         } catch (DBException ex) {
             LOG.log(Level.SEVERE, null, ex);
