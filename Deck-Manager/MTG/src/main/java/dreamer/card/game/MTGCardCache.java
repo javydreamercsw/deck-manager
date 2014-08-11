@@ -264,7 +264,10 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     public String getManaIconPath(String mana) {
-        return MessageFormat.format("{0}{1}Mana{2}{3}.jpg", getGamePath(), System.getProperty("file.separator"), System.getProperty("file.separator"), mana.replaceAll("[{}/]", ""));
+        return MessageFormat.format("{0}{1}Mana{2}{3}.jpg", getGamePath(), 
+                System.getProperty("file.separator"), 
+                System.getProperty("file.separator"), 
+                mana.replaceAll("[{}/]", ""));
     }
 
     @Override
