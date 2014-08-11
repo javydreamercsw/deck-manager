@@ -20,7 +20,7 @@ public class ParseGathererMTGIcon extends ParseGathererPage {
         if (matcher.find()) {
             String match = matcher.group(1);
             LOG.fine(match);
-            iconURL = GATHERER_URL_BASE+match;
+            iconURL = GATHERER_URL_BASE + match;
         }
     }
 

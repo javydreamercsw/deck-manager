@@ -323,7 +323,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
         MagicCardField mf = (MagicCardField) field;
         switch (mf) {
             case ID:
-                return Integer.valueOf(getCardId());
+                return getCardId();
             case NAME:
                 return (this.name);
             case COST:
@@ -343,7 +343,7 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
             case CTYPE:
                 return (getColorType());
             case CMC:
-                return (Integer.valueOf(getCmc()));
+                return (getCmc());
             case DBPRICE:
                 return (this.dbprice);
             case RATING:
