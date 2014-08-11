@@ -14,7 +14,8 @@ public class ParseGathererSetIcons extends ParseGathererPage {
 
     private final ICardSet set;
     private String iconURL = null;
-    private static final Logger LOG = Logger.getLogger(ParseGathererSetIcons.class.getName());
+    private static final Logger LOG = 
+            Logger.getLogger(ParseGathererSetIcons.class.getName());
 
     public ParseGathererSetIcons(ICardSet set) {
         this.set = set;
