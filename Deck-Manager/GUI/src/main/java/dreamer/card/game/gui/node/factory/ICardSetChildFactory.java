@@ -27,10 +27,12 @@ import org.openide.util.lookup.InstanceContent;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public class ICardSetChildFactory extends ChildFactory<ICardSet> implements Lookup.Provider {
+public class ICardSetChildFactory extends ChildFactory<ICardSet>
+        implements Lookup.Provider {
 
     private final ICardGame game;
-    private static final Logger LOG = Logger.getLogger(ICardSetChildFactory.class.getName());
+    private static final Logger LOG
+            = Logger.getLogger(ICardSetChildFactory.class.getName());
     private final List<ICardSet> sets = new ArrayList<ICardSet>();
     /**
      * The lookup for Lookup.Provider
