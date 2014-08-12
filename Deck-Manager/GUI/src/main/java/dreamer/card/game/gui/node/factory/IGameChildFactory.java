@@ -7,7 +7,6 @@ import java.beans.IntrospectionException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +34,7 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
      */
     private final InstanceContent instanceContent;
 
-    public IGameChildFactory() {
+    public IGameChildFactory(final ICardGame game) {
         // Create an InstanceContent to hold abilities...
         instanceContent = new InstanceContent();
         // Create an AbstractLookup to expose InstanceContent contents...
@@ -44,13 +43,16 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
         instanceContent.add(new Reloadable() {
             @Override
             public void reload() throws Exception {
-                for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
-                    ICardGame game = it.next();
-                    if (!games.contains(game)) {
-                        games.add(game);
+                if (game == null) {
+                    LOG.log(Level.INFO, "Games found: {0}", games.size());
+                    for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
+                        if (!games.contains(game)) {
+                            games.add(game);
+                        }
                     }
+                } else {
+                    games.add(game);
                 }
-                LOG.log(Level.INFO, "Games found: {0}", games.size());
                 Collections.sort(games, new Comparator<ICardGame>() {
                     @Override
                     public int compare(ICardGame o1, ICardGame o2) {
