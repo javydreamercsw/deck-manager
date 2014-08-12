@@ -127,10 +127,10 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
      * Load the current game into the application
      */
     private void loadGame() throws DBException {
-        if (gameFactory == null) {
-            gameFactory = new IGameChildFactory();
-        }
         if (game != null) {
+            if (gameFactory == null) {
+                gameFactory = new IGameChildFactory(game);
+            }
             Node root = new AbstractNode(Children.create(gameFactory, true));
             setName(Bundle.CTL_GameTopComponent());
             setToolTipText(Bundle.HINT_GameTopComponent());
