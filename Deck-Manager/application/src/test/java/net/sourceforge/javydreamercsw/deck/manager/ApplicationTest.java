@@ -1,7 +1,5 @@
 package net.sourceforge.javydreamercsw.deck.manager;
 
-import org.netbeans.jellytools.NbDialogOperator;
-import org.netbeans.jellytools.actions.ActionNoBlock;
 import org.netbeans.junit.NbTestCase;
 
 public class ApplicationTest extends NbTestCase {
@@ -21,7 +19,7 @@ public class ApplicationTest extends NbTestCase {
     public void testApplication() {
         // pass if there are merely no warnings/exceptions
         // Example of using Jelly Tools with gui(true):
-        new ActionNoBlock("Help|About", null).performMenu();
-        new NbDialogOperator("About").closeByButton();
+//        new ActionNoBlock("Help|About", null).performMenu();
+//        new NbDialogOperator("About").closeByButton();
     }
 }
