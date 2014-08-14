@@ -91,7 +91,7 @@ public class Installer extends ModuleInstall implements ActionListener,
                                 dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
                         Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
                         while (waitDBInit) {
-                            Thread.currentThread().sleep(100);
+                            Thread.sleep(100);
                         }
                     } catch (ClassNotFoundException ex) {
                         LOG.log(Level.SEVERE, null, ex);
@@ -175,7 +175,8 @@ public class Installer extends ModuleInstall implements ActionListener,
         //Code to be done after the db is ready
         LOG.log(Level.FINE, "Database initialized");
         OutputHandler.output("Output", "Database initialized");
-        LOG.log(Level.FINE, "Initializing database took: {0}", Tool.elapsedTime(start));
+        LOG.log(Level.FINE, "Initializing database took: {0}", 
+                Tool.elapsedTime(start));
         LOG.log(Level.FINE, "Initializing games...");
         Runnable task;
         OutputHandler.output("Output", "Starting game updaters...");
@@ -188,7 +189,9 @@ public class Installer extends ModuleInstall implements ActionListener,
                     updaters.add(new GameUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task, MessageFormat.format("{0} game updater", game.getName())));
+                    runnables.add(new Thread(task, 
+                            MessageFormat.format("{0} game updater", 
+                                    game.getName())));
                 }
             }
         }
@@ -202,7 +205,9 @@ public class Installer extends ModuleInstall implements ActionListener,
                     updaters.add(new CacheUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task, MessageFormat.format("{0} cache updater", cache.getGameName())));
+                    runnables.add(new Thread(task, 
+                            MessageFormat.format("{0} cache updater", 
+                                    cache.getGameName())));
                 }
             }
         }
