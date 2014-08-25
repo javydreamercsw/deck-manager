@@ -10,7 +10,8 @@ import org.openide.windows.WindowSystemEvent;
 import org.openide.windows.WindowSystemListener;
 
 @ServiceProvider(service = DataBaseStateListener.class)
-public class Installer extends ModuleInstall implements WindowSystemListener, DataBaseStateListener {
+public class Installer extends ModuleInstall implements 
+        WindowSystemListener, DataBaseStateListener {
 
     @Override
     public void restored() {
