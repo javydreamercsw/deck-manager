@@ -48,7 +48,7 @@ public class Installer extends ModuleInstall implements ActionListener,
     @Override
     public void restored() {
         //Create game cache dir
-        File cacheDir = Places.getCacheSubdirectory(".Deck Manager");
+        File cacheDir = Places.getCacheSubdirectory("Deck Manager");
         dbProperties.put(PersistenceUnitProperties.JDBC_URL, 
                 MessageFormat.format("jdbc:h2:file:{0}/data/card_manager", 
                         cacheDir.getAbsolutePath()));
@@ -59,7 +59,7 @@ public class Installer extends ModuleInstall implements ActionListener,
         dbProperties.put(PersistenceUnitProperties.JDBC_USER, "deck_manager");
         OutputHandler.select("Output");
         File cardCacheDir = new File(MessageFormat.format("{0}{1}cache", 
-                Places.getCacheSubdirectory(".Deck Manager").getAbsolutePath(), 
+                Places.getCacheSubdirectory("Deck Manager").getAbsolutePath(), 
                 System.getProperty("file.separator")));
         //Create game cache dir
         if (!cardCacheDir.exists()) {
