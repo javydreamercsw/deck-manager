@@ -61,7 +61,7 @@ public abstract class GameUpdater extends UpdateRunnable {
             updating = true;
             //This section updates from the deployed database
             //Create game cache dir
-            File cacheDir = Places.getCacheSubdirectory(".Deck Manager");
+            File cacheDir = Places.getCacheSubdirectory("Deck Manager");
             //Check if database is present, if not copy the default database (to avoid long initial update that was 45 minutes long on my test)
             File dbDir = new File(MessageFormat.format("{0}{1}data",
                     cacheDir.getAbsolutePath(), System.getProperty("file.separator")));
