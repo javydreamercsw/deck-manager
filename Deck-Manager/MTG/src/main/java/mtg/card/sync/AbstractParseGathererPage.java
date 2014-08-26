@@ -10,9 +10,10 @@ import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class ParseGathererPage {
+public abstract class AbstractParseGathererPage {
 
-    public static final String GATHERER_URL_BASE = "http://gatherer.wizards.com/";
+    public static final String GATHERER_URL_BASE
+            = "http://gatherer.wizards.com/";
     public static Charset UTF_8 = Charset.forName("utf-8");
     private String title = "Loading gatherer info...";
     private String html;
@@ -20,11 +21,12 @@ public abstract class ParseGathererPage {
     public void load() throws IOException {
         URL url = new URL(getUrl());
         InputStream openStream = url.openStream();
-        BufferedReader st = new BufferedReader(new InputStreamReader(openStream, UTF_8));
+        BufferedReader st
+                = new BufferedReader(new InputStreamReader(openStream, UTF_8));
         String tempHtml = CardFileUtils.readFileAsString(st);
         st.close();
         setHtml(tempHtml);
-        loadHtml(tempHtml);
+        loadHtml();
     }
 
     protected abstract void loadHtml(String html);
@@ -36,14 +38,16 @@ public abstract class ParseGathererPage {
         loadHtml(this.html);
     }
 
-    protected String extractPatternValue(String html, Pattern pattern, boolean multiple) {
+    protected String extractPatternValue(String html, Pattern pattern,
+            boolean multiple) {
         Matcher matcher = pattern.matcher(html);
         String value = "";
         while (matcher.find()) {
             String v = matcher.group(1).trim();
             if (value.length() > 0) {
                 if (multiple == false) {
-                    throw new IllegalStateException("Multiple pattern found where signle expected");
+                    throw new IllegalStateException("Multiple pattern "
+                            + "found where signle expected");
                 }
                 value += "\n";
             }
@@ -54,7 +58,7 @@ public abstract class ParseGathererPage {
 
     protected abstract String getUrl();
 
-    public ParseGathererPage() {
+    public AbstractParseGathererPage() {
         super();
     }
 

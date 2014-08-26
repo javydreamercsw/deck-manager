@@ -8,10 +8,11 @@ import java.util.regex.Pattern;
  *
  * @author Javier A. Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
-public class ParseGathererMTGIcon extends ParseGathererPage {
+public class ParseGathererMTGIcon extends AbstractParseGathererPage {
 
     private String iconURL = null;
-    private static final Logger LOG = Logger.getLogger(ParseGathererMTGIcon.class.getName());
+    private static final Logger LOG = 
+            Logger.getLogger(ParseGathererMTGIcon.class.getName());
 
     @Override
     protected void loadHtml(String html) {

@@ -1,21 +1,24 @@
 package mtg.card.sync;
 
 import com.reflexit.magiccards.core.model.ICardSet;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import mtg.card.MagicException;
 
 /**
  *
  * @author Javier A. Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
-public class ParseGathererSetIcons extends ParseGathererPage {
+public class ParseGathererSetIcons extends AbstractParseGathererPage {
 
     private final ICardSet set;
     private String iconURL = null;
-    private static final Logger LOG = 
-            Logger.getLogger(ParseGathererSetIcons.class.getName());
+    private static final Logger LOG
+            = Logger.getLogger(ParseGathererSetIcons.class.getName());
 
     public ParseGathererSetIcons(ICardSet set) {
         this.set = set;
@@ -23,28 +26,25 @@ public class ParseGathererSetIcons extends ParseGathererPage {
 
     @Override
     protected void loadHtml(String html) {
-        Pattern iconPattern = Pattern.compile("<\\s*img\\s*title\\s*=\\\""
-                + set.getName().replaceAll("\"", "&quot;")
-                + "\\s*\\(\\s*[^\\>]*src\\s*=\\s*([\"\\'])(.*?)\\1");
+        Pattern iconPattern = Pattern.compile(".*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?((?:[a-z][a-z]+))");
         html = html.replaceAll("\r?\n", " ");
         Matcher matcher = iconPattern.matcher(html);
         if (matcher.find()) {
             String match = matcher.group();
-            /**
-             * Should have something like: <img title="Portal (Rare)"
-             * src="../../Handlers/Image.ashx?type=symbol&amp;set=PO&amp;size=small&amp;rarity=R"
-             */
-            Pattern urlPattern = Pattern.compile("src\\s*=\\s*([\"\\'])(.*?)\\1");
-            Matcher urlmatcher = urlPattern.matcher(match);
-            if (urlmatcher.find()) {
-                match = urlmatcher.group();
-                iconURL = GATHERER_URL_BASE + match.subSequence(11,
-                        match.length() - 2).toString().replaceAll("&amp;", "&") + "C";
-            } else {
-                LOG.log(Level.SEVERE, "Unable to match pattern to: {0}", match);
-            }
+            iconURL = createSetImageURL(match, "C").toString();
         } else {
             LOG.log(Level.SEVERE, "Unable to match pattern {1} to: {0}", new Object[]{html, iconPattern});
+        }
+    }
+
+    public static URL createSetImageURL(String editionAbbr, String rarity) {
+        try {
+            String rarLetter = rarity == null ? "C" : rarity.substring(0, 1).toUpperCase();
+            return new URL("http://gatherer.wizards.com/Handlers/Image.ashx?type=symbol&set="
+                    + editionAbbr.replaceAll(" ", "%20") + "&size=small&rarity="
+                    + rarLetter);
+        } catch (MalformedURLException e) {
+            throw new MagicException(e);
         }
     }
 
