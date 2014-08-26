@@ -13,6 +13,8 @@
 
     <name>Deck Manager</name>
     
+    <description>This is a port and generalization of Magic Assistant (http://sourceforge.net/projects/mtgbrowser) to the NetBeans platform intended to be extensible and used with any card-based game.</description>
+    
     <licenses>
         <license>
             <name>GNU GPL 3</name>
