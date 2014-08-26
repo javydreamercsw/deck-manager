@@ -1,5 +1,6 @@
 package dreamer.card.game;
 
+import com.reflexit.magiccards.core.cache.AbstractCardCache;
 import com.reflexit.magiccards.core.cache.ICacheData;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
@@ -37,19 +38,29 @@ import org.openide.util.lookup.ServiceProvider;
 public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
 
     private String currentSet = "";
-    private static final Pattern countPattern = Pattern.compile("Search:<span id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_searchTermDisplay\".*><i>.*</i>  \\((\\d+)\\)</span>");
-    private static final Pattern lastPagePattern = Pattern.compile("\\Q<span style=\"visibility:hidden;\">&nbsp;&gt;</span></div>");
-    private static final Pattern spanPattern = Pattern.compile("class=[^>]*>(.*)</span>");
-    private static final Pattern divPattern = Pattern.compile("class=[^>]*>(.*?)</div>");
-    private static final Pattern idPattern = Pattern.compile("href=.*/Card/Details.aspx\\?multiverseid=(\\d+)");
-    private static final Pattern setPattern = Pattern.compile("title=\"(.*) \\((.*)\\)\" src=.*set=(\\w+)");
-    private static final Pattern namePattern = Pattern.compile(".*>(.*)</a></span>");
-    private static final Pattern powPattern = Pattern.compile("\\((\\d+/)?(\\d+)\\)");
+    private static final Pattern countPattern
+            = Pattern.compile("SEARCH:<p class=\"termdisplay\">  <span id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_searchTermDisplay\".*><i>.*</i>  \\((\\d+)\\)</span>");
+    private static final Pattern lastPagePattern
+            = Pattern.compile("\\Q<span style=\"visibility:hidden;\">&nbsp;&gt;</span></div>");
+    private static final Pattern spanPattern
+            = Pattern.compile("class=[^>]*>(.*)</span>");
+    private static final Pattern divPattern
+            = Pattern.compile("class=[^>]*>(.*?)</div>");
+    private static final Pattern idPattern
+            = Pattern.compile("href=.*/Card/Details.aspx\\?multiverseid=(\\d+)");
+    private static final Pattern setPattern
+            = Pattern.compile("title=\"(.*) \\((.*)\\)\" src=.*set=(\\w+)");
+    private static final Pattern namePattern
+            = Pattern.compile(".*>(.*)</a></span>");
+    private static final Pattern powPattern
+            = Pattern.compile("\\((\\d+/)?(\\d+)\\)");
     private static String LONG_MINUS;
     private final static Charset UTF_8 = Charset.forName("utf-8");
     private final static Map manaMap = new LinkedHashMap();
-    private static final Logger LOG = Logger.getLogger(MTGUpdater.class.getSimpleName());
-    protected final String source = "http://gatherer.wizards.com/Pages/Search/Default.aspx?set=%5b%22";
+    private static final Logger LOG
+            = Logger.getLogger(MTGUpdater.class.getSimpleName());
+    protected final String source
+            = "http://gatherer.wizards.com/Pages/Search/Default.aspx?set=%5b%22";
 
     static {
         manaMap.put("\\Q{500}", "{0.5}");
@@ -187,7 +198,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                     if (!dbError) {
                                         SetUpdateData setData = it.next();
                                         Edition edition = setData.getEdition();
-                                        if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName(),new MTGGame())) {
+                                        if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName(), new MTGGame())) {
                                             Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(mtg,
                                                     edition.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
                                             LOG.log(Level.FINE, "Created set: {0}", edition.getName());
@@ -219,8 +230,9 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                             }
                             try {
                                 if (!dbError) {
-                                    for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll").iterator(); it.hasNext();) {
-                                        CardSet cs = (CardSet) it.next();
+                                    for (Object o : Lookup.getDefault()
+                                            .lookup(IDataBaseCardStorage.class).getSetsForGame(mtg)) {
+                                        CardSet cs = (CardSet) o;
                                         for (ICardCache cache : getGame().getCardCacheImplementations()) {
                                             cache.getSetIcon((ICardSet) cs);
                                         }
@@ -329,7 +341,8 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
         return amount;
     }
 
-    private boolean processFile(BufferedReader st) throws IOException, NonexistentEntityException {
+    private boolean processFile(BufferedReader st) throws IOException,
+            NonexistentEntityException {
         String line = "";
         int state = 0;
         boolean lastPage = false;
@@ -352,7 +365,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                     cards = true;
                     continue;
                 } catch (DBException ex) {
-                    Logger.getLogger(MTGGame.class.getName()).log(Level.SEVERE, null, ex);
+                    LOG.log(Level.SEVERE, null, ex);
                     throw new IOException(ex);
                 }
             }
@@ -478,34 +491,45 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                     LOG.log(Level.SEVERE, null, ex);
                 }
             }
-            //Add the card attributes
-            try {
-                HashMap<String, String> attributes = new HashMap<String, String>();
-                attributes.put("Rarity", card.getRarity());
-                attributes.put("Cost", card.getCost());
-                attributes.put("Color Type", card.getColorType());
-                attributes.put("Language", card.getLanguage());
-                attributes.put("Part", card.getPart());
-                attributes.put("Power", card.getPower());
-                attributes.put("Rulings", card.getRulings());
-                attributes.put("Toughness", card.getToughness());
-                attributes.put("Type", card.getType());
-                attributes.put("CardId", "" + card.getCardId());
-                //This only adds it if it doesn't exist
-                Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributesToCard(c, attributes);
-                //Add the card to the set
-                Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(c, set);
-            } catch (DBException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-                dbError = true;
-                return null;
+            boolean updateCache = false;
+            if (c != null) {
+                //Add the card attributes
+                try {
+                    HashMap<String, String> attributes = new HashMap<String, String>();
+                    attributes.put("Rarity", card.getRarity());
+                    attributes.put("Cost", card.getCost());
+                    attributes.put("Color Type", card.getColorType());
+                    attributes.put("Language", card.getLanguage());
+                    attributes.put("Part", card.getPart());
+                    attributes.put("Power", card.getPower());
+                    attributes.put("Rulings", card.getRulings());
+                    attributes.put("Toughness", card.getToughness());
+                    attributes.put("Type", card.getType());
+                    attributes.put("CardId", "" + card.getCardId());
+                    IDataBaseCardStorage storage = Lookup.getDefault().lookup(IDataBaseCardStorage.class);
+                    //This only adds it if it doesn't exist
+                    storage.addAttributesToCard(c, attributes);
+                    //Add the card to the set
+                    if (storage.cardExists(c.getName(), set)) {
+                        storage.updateCard(ct, c.getName(), c.getText(), set);
+                    } else {
+                        storage.addCardToSet(c, set);
+                        updateCache = true;
+                    }
+                } catch (DBException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                    dbError = true;
+                    return null;
+                }
             }
-            parameters.clear();
-            parameters.put("name", card.getName());
-            c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
-            //Add to caching list
-            c.setSetName(edition);
-            Lookup.getDefault().lookup(ICacheData.class).add(c);
+            if (updateCache) {
+                parameters.clear();
+                parameters.put("name", card.getName());
+                c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
+                //Add to caching list
+                c.setSetName(edition);
+                Lookup.getDefault().lookup(ICacheData.class).add(c);
+            }
             increaseProgress();
         }
         return c;
@@ -572,6 +596,9 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
     }
 
     public static void main(String[] args) {
+        File cacheDir = new File(System.getProperty("user.dir") + "/target/cache");
+        System.out.println(cacheDir);
+        AbstractCardCache.setCacheDir(cacheDir);
         MTGUpdater updater = new MTGUpdater();
         try {
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
@@ -588,5 +615,22 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
         }
         updater.updateLocal();
         updater.updateRemote();
+        while (Lookup.getDefault().lookup(ICacheData.class).toCacheAmount() > 0) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        for (ICardCache cache : new MTGGame().getCardCacheImplementations()) {
+            MTGCardCache c = (MTGCardCache) cache;
+            while (c.isLoading()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        }
     }
 }

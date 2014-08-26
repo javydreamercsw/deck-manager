@@ -17,6 +17,7 @@ import com.reflexit.magiccards.core.model.Editions.Edition;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * Retrieve legality info
  */
-public class ParseGathererSets extends ParseGathererPage {
+public class ParseGathererSets extends AbstractParseGathererPage {
 
     private static final Logger LOG
             = Logger.getLogger(ParseGathererSets.class.getSimpleName());
@@ -68,6 +69,7 @@ public class ParseGathererSets extends ParseGathererPage {
                     continue;
                 }
                 name = name.replaceAll("&quot;", "\"");
+                LOG.log(Level.INFO, "Parsed set: {0}", name);
                 allParsed.add(name);
                 if (!Editions.getInstance().containsName(name)) {
                     Edition ed = Editions.getInstance().addEdition(name, null);

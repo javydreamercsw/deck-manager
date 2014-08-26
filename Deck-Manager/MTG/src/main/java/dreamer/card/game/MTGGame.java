@@ -115,7 +115,8 @@ public class MTGGame extends DefaultCardGame {
 
         // Create a buffered image with a format that's compatible with the screen
         BufferedImage bimage = null;
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsEnvironment ge = 
+                GraphicsEnvironment.getLocalGraphicsEnvironment();
         try {
             // Determine the type of transparency of the new buffered image
             int transparency = Transparency.OPAQUE;
@@ -141,7 +142,8 @@ public class MTGGame extends DefaultCardGame {
             if (hasAlpha) {
                 type = BufferedImage.TYPE_INT_ARGB;
             }
-            bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), type);
+            bimage = new BufferedImage(image.getWidth(null), 
+                    image.getHeight(null), type);
         }
 
         // Copy image to buffered image
@@ -161,11 +163,14 @@ public class MTGGame extends DefaultCardGame {
             public JLabel getRendering(String string, Object value) {
                 if (value != null) {
                     List<ICardCache> impls = getCardCacheImplementations();
-                    if (impls.size() > 0 && ((String) value).contains("{") && ((String) value).contains("}")) {
+                    if (impls.size() > 0 && ((String) value).contains("{") 
+                            && ((String) value).contains("}")) {
                         JLabel container = new JLabel();
-                        container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
+                        container.setLayout(new BoxLayout(container, 
+                                BoxLayout.X_AXIS));
                         ArrayList<String> values = new ArrayList<String>();
-                        StringTokenizer st = new StringTokenizer((String) value, "}");
+                        StringTokenizer st = 
+                                new StringTokenizer((String) value, "}");
                         while (st.hasMoreTokens()) {
                             String token = st.nextToken();
                             values.add(token.substring(1));
@@ -173,7 +178,8 @@ public class MTGGame extends DefaultCardGame {
                         for (Iterator<String> it = values.iterator(); it.hasNext();) {
                             try {
                                 String v = it.next();
-                                JLabel iconLabel = new JLabel(new ImageIcon((toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(v)))));
+                                JLabel iconLabel = 
+                                        new JLabel(new ImageIcon((toBufferedImage(((MTGCardCache) impls.get(0)).getManaIcon(v)))));
                                 container.add(iconLabel);
                                 if (it.hasNext()) {
                                     container.add(Box.createRigidArea(new Dimension(5, 0)));

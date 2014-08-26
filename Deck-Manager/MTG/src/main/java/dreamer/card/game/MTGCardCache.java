@@ -45,7 +45,8 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = ICardCache.class)
 public class MTGCardCache extends AbstractCardCache {
 
-    private static final Logger LOG = Logger.getLogger(MTGCardCache.class.getName());
+    private static final Logger LOG = 
+            Logger.getLogger(MTGCardCache.class.getName());
     private CardImageLoader loader = null;
     private boolean loading = false;
 
@@ -54,11 +55,13 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     @Override
-    public URL createSetImageRemoteURL(String editionAbbr, String rarity) throws MalformedURLException {
+    public URL createSetImageRemoteURL(String editionAbbr, String rarity) 
+            throws MalformedURLException {
         if (!MTGCardCache.isLoadingEnabled()) {
             return null;
         }
-        return ParseGathererNewVisualSpoiler.createSetImageURL(editionAbbr, rarity);
+        return ParseGathererNewVisualSpoiler.createSetImageURL(editionAbbr, 
+                rarity);
     }
 
     @Override
@@ -70,24 +73,30 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     @Override
-    public URL createRemoteImageURL(ICard icard, Edition edtn) throws MalformedURLException, CannotDetermineSetAbbriviation {
+    public URL createRemoteImageURL(ICard icard, Edition edtn) 
+            throws MalformedURLException, CannotDetermineSetAbbriviation {
         String edition = edtn.getName();
         String editionAbbr = Editions.getInstance().getAbbrByName(edition);
         if (editionAbbr == null) {
             throw new CannotDetermineSetAbbriviation(edtn);
         }
-        Integer cardId = Integer.valueOf(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(icard, "CardId"));
+        Integer cardId = 
+                Integer.valueOf(Lookup.getDefault()
+                        .lookup(IDataBaseCardStorage.class)
+                        .getCardAttribute(icard, "CardId"));
         LOG.log(Level.FINE, "Retrieving Card id: {0}", cardId);
         return ParseGathererNewVisualSpoiler.createImageURL(
                 cardId, editionAbbr);
     }
 
     @Override
-    public boolean loadCardImageOffline(ICard icard, Edition edtn, boolean bln) throws IOException, CannotDetermineSetAbbriviation {
+    public boolean loadCardImageOffline(ICard icard, Edition edtn, boolean bln) 
+            throws IOException, CannotDetermineSetAbbriviation {
         try {
             HashMap parameters = new HashMap();
             parameters.put("name", edtn.getName());
-            List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
+            List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                    .namedQuery("CardSet.findByName", parameters);
             if (result.isEmpty()) {
                 return false;
             } else {
@@ -102,10 +111,19 @@ public class MTGCardCache extends AbstractCardCache {
 
     @Override
     public String getGamePath() {
-        return getCacheLocationFile().getAbsolutePath() + System.getProperty("file.separator") + getGameName();
+        return getCacheLocationFile().getAbsolutePath() 
+                + System.getProperty("file.separator") + getGameName();
     }
 
-    private class CardImageLoader extends UpdateRunnable implements ActionListener {
+    /**
+     * @return the loading
+     */
+    protected boolean isLoading() {
+        return loading;
+    }
+
+    private class CardImageLoader extends UpdateRunnable 
+    implements ActionListener {
 
         @Override
         public void updateLocal() {
@@ -117,29 +135,44 @@ public class MTGCardCache extends AbstractCardCache {
             timer.start();
             while (true) {
                 try {
-                    Card card = (Card) Lookup.getDefault().lookup(ICacheData.class).next();
+                    Card card = (Card) Lookup.getDefault()
+                            .lookup(ICacheData.class).next();
                     if (card != null) {
                         timer.restart();
                         synchronized (this) {
                             reportResumeProgress();
-                            int size = Lookup.getDefault().lookup(ICacheData.class).toCacheAmount();
+                            int size
+                                    = Lookup.getDefault()
+                                            .lookup(ICacheData.class)
+                                            .toCacheAmount();
                             setSize(size);
                             int progress = 0;
                             updateProgressMessage("Downloading card images...");
-                            card = new CardJpaController(((DataBaseCardStorage) Lookup.getDefault().lookup(IDataBaseCardStorage.class)).getEntityManagerFactory()).findCard(card.getCardPK());
-                            LOG.log(Level.FINE, "Processing card: {0}", card.getName());
+                            card
+                                    = new CardJpaController(((DataBaseCardStorage) Lookup.getDefault().lookup(IDataBaseCardStorage.class)).getEntityManagerFactory()).findCard(card.getCardPK());
+                            LOG.log(Level.INFO, "Processing card: {0}", card.getName());
                             if (card.getCardSetList().isEmpty()) {
-                                LOG.log(Level.SEVERE, "No card sets defined for card: {0}", card.getName());
+                                LOG.log(Level.SEVERE,
+                                        "No card sets defined for card: {0}",
+                                        card.getName());
                             } else {
                                 for (CardSet cs : card.getCardSetList()) {
-                                    String message = MessageFormat.format("Processing card: {0} for set: {1}", card.getName(), cs.getName());
-                                    LOG.log(Level.FINE, message);
+                                    String message
+                                            = MessageFormat.format("Processing card: "
+                                                    + "{0} for set: {1}",
+                                                    card.getName(), cs.getName());
+                                    LOG.log(Level.INFO, message);
                                     updateProgressMessage(message);
                                     try {
-                                        URL url = createRemoteImageURL((ICard) card, Editions.getInstance().getEditionByName(cs.getName()));
+                                        URL url = createRemoteImageURL((ICard) card,
+                                                Editions.getInstance().getEditionByName(cs.getName()));
                                         getCardImage(card, cs, url, isLoadingEnabled(), true);
                                     } catch (CannotDetermineSetAbbriviation e) {
-                                        LOG.log(Level.SEVERE, MessageFormat.format("Looks like the set: {0} is not properly created. It is missing the abbreviation", cs.getName()), e);
+                                        LOG.log(Level.SEVERE,
+                                                MessageFormat.format("Looks like the set: "
+                                                        + "{0} is not properly created. "
+                                                        + "It is missing the abbreviation",
+                                                        cs.getName()), e);
                                         return;
                                     } catch (IOException e) {
                                         LOG.log(Level.SEVERE, null, e);
@@ -149,7 +182,14 @@ public class MTGCardCache extends AbstractCardCache {
                                     }
                                 }
                                 progress++;
-                                reportProgress(progress);
+                                if (progress <= size) {
+                                    reportProgress(progress);
+                                } else {
+                                    LOG.log(Level.WARNING,
+                                            "Error on total work calculation. "
+                                            + "Size: {0} Progress: {1}",
+                                            new Object[]{size, progress});
+                                }
                                 try {
                                     Thread.sleep(100);
                                 } catch (InterruptedException ex) {
@@ -199,7 +239,7 @@ public class MTGCardCache extends AbstractCardCache {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (!loading) {
+            if (!isLoading()) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -214,7 +254,7 @@ public class MTGCardCache extends AbstractCardCache {
                             }
                         }
                         //Get all cards
-                        LOG.log(Level.FINE, "Adding cards to the download queue");
+                        LOG.log(Level.INFO, "Adding cards to the download queue");
                         for (ICardSet set : getGame().getGameCardSets()) {
                             for (Iterator it = set.getCards().iterator(); it.hasNext();) {
                                 Card card = (Card) it.next();
@@ -222,7 +262,7 @@ public class MTGCardCache extends AbstractCardCache {
                                 try {
                                     if (!cardImageExists(card, set)) {
                                         //Add it to the queue
-                                        LOG.log(Level.FINE,
+                                        LOG.log(Level.INFO,
                                                 "Added card: {0} to the image queue.",
                                                 card.getName());
                                         Lookup.getDefault().lookup(ICacheData.class).add(card);
@@ -239,10 +279,12 @@ public class MTGCardCache extends AbstractCardCache {
                                 }
                             }
                         }
-                        LOG.log(Level.FINE, "Done adding cards to the download queue");
+                        LOG.log(Level.FINE, 
+                                "Done adding cards to the download queue");
                         timer.restart();
                     }
-                }, MessageFormat.format("{0} download thread", getGame().getName())).start();
+                }, MessageFormat.format("{0} download thread", 
+                        getGame().getName())).start();
             }
             timer.restart();
         }
@@ -264,9 +306,9 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     public String getManaIconPath(String mana) {
-        return MessageFormat.format("{0}{1}Mana{2}{3}.jpg", getGamePath(), 
-                System.getProperty("file.separator"), 
-                System.getProperty("file.separator"), 
+        return MessageFormat.format("{0}{1}Mana{2}{3}.jpg", getGamePath(),
+                System.getProperty("file.separator"),
+                System.getProperty("file.separator"),
                 mana.replaceAll("[{}/]", ""));
     }
 
@@ -281,7 +323,9 @@ public class MTGCardCache extends AbstractCardCache {
             URL setIconURL = new URL(url);
             return downloadImageFromURL(setIconURL, dest, !dest.exists());
         } catch (MalformedURLException ex) {
-            LOG.log(Level.SEVERE, MessageFormat.format("Errors with the icon URL at URL: {0}", parser.getIconURL()), ex);
+            LOG.log(Level.SEVERE,
+                    MessageFormat.format("Errors with the icon URL at URL: {0}",
+                            parser.getIconURL()), ex);
             return null;
         }
     }
@@ -297,7 +341,10 @@ public class MTGCardCache extends AbstractCardCache {
             URL setIconURL = new URL(url);
             return downloadImageFromURL(setIconURL, dest, !dest.exists());
         } catch (MalformedURLException ex) {
-            LOG.log(Level.SEVERE, MessageFormat.format("Errors with the icon URL for set: {0} at URL: {1}", set.getName(), parser.getIconURL()), ex);
+            LOG.log(Level.SEVERE,
+                    MessageFormat.format("Errors with the icon URL for set: "
+                            + "{0} at URL: {1}", set.getName(),
+                            parser.getIconURL()), ex);
             return null;
         }
     }
@@ -310,7 +357,9 @@ public class MTGCardCache extends AbstractCardCache {
             manaIconURL = createManaImageURL(mana);
             return downloadImageFromURL(manaIconURL, dest, !dest.exists());
         } catch (MalformedURLException ex) {
-            LOG.log(Level.SEVERE, MessageFormat.format("Errors with the icon URL for mana: {0} at URL: {1}", mana, manaIconURL), ex);
+            LOG.log(Level.SEVERE,
+                    MessageFormat.format("Errors with the icon URL for mana: "
+                            + "{0} at URL: {1}", mana, manaIconURL), ex);
             return null;
         }
     }
