@@ -25,7 +25,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netbeans.run.params.ide/>
-        <netbeans.run.params>${netbeans.run.params.ide}</netbeans.run.params>
+        <netbeans.run.params>--branding ${brandingToken} -J-Xms24m -J-Xmx512m</netbeans.run.params>
         <all.clusters>${project.build.directory}/${brandingToken}</all.clusters>
     </properties>
 
@@ -126,6 +126,11 @@
             <artifactId>MTG</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>net.sourceforge.javydreamercsw</groupId>
+            <artifactId>SynamicD</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -162,7 +167,6 @@
                                 <id>extra</id>
                                 <goals>
                                     <goal>autoupdate</goal>
-                                    <goal>webstart-app</goal>
                                     <goal>build-installers</goal>
                                 </goals>
                             </execution>
