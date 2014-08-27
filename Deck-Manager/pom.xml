@@ -9,7 +9,6 @@
         <version>0.3-SNAPSHOT</version>
     </parent>
     
-    <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
     <artifactId>Deck-Manager-Client</artifactId>
     <packaging>pom</packaging>
 
