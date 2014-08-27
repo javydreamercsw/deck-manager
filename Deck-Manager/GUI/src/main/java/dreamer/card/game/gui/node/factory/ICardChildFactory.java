@@ -43,7 +43,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
 
     private final ICardSet set;
     private static final Logger LOG = Logger.getLogger(ICardChildFactory.class.getName());
-    private List<ICard> cards = new ArrayList<ICard>();
+    private List<ICard> cards = new ArrayList<>();
     private ICardGame game;
     private ClassPool pool = ClassPool.getDefault();
     private Loader cl;
@@ -89,7 +89,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
                     }
                 }
                 LOG.log(Level.INFO, "DB query for set: {1} took: {0} hits: {2}",
-                        new Object[]{Tool.elapsedTime(start), 
+                        new Object[]{Tool.elapsedTime(start),
                             set.getName(), cards.size()});
                 start = System.currentTimeMillis();
                 Collections.sort(cards, new Comparator<ICard>() {
@@ -98,7 +98,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
                         return o1.getName().compareTo(o2.getName());
                     }
                 });
-                LOG.log(Level.INFO, "Sorting cards: {0}", 
+                LOG.log(Level.INFO, "Sorting cards: {0}",
                         Tool.elapsedTime(start));
             }
         });
@@ -125,15 +125,9 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
     protected Node createNodeForKey(ICard card) {
         ICardNode node = null;
         try {
-            node = new ICardNode(card, createBean(card), 
+            node = new ICardNode(card, createBean(card),
                     set.getCardGame().getName());
-        } catch (IllegalArgumentException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (InvocationTargetException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (IllegalAccessException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (IntrospectionException ex) {
+        } catch (IllegalArgumentException | InvocationTargetException | IllegalAccessException | IntrospectionException ex) {
             Exceptions.printStackTrace(ex);
         }
         return node == null ? new AbstractNode(Children.LEAF) : node;
@@ -148,9 +142,7 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
             for (String c : game.getColumns()) {
                 try {
                     addGetterAndSetter(cc, getColumnName(c));
-                } catch (CannotCompileException ex) {
-                    Exceptions.printStackTrace(ex);
-                } catch (NotFoundException ex) {
+                } catch (CannotCompileException | NotFoundException ex) {
                     Exceptions.printStackTrace(ex);
                 }
             }
@@ -163,17 +155,11 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
                 bean.getClass().getMethod("set" + getColumnName(col),
                         String.class).invoke(bean,
                                 Lookup.getDefault()
-                                        .lookup(IDataBaseCardStorage.class)
-                                        .getCardAttribute(card,
+                                .lookup(IDataBaseCardStorage.class)
+                                .getCardAttribute(card,
                                         getColumnName(col)));
             }
-        } catch (ClassNotFoundException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (NoSuchMethodException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (SecurityException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (InstantiationException ex) {
+        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException ex) {
             Exceptions.printStackTrace(ex);
         }
         return bean;
