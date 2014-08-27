@@ -8,9 +8,9 @@
     </parent>
     <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
     <artifactId>Deck-Manager</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Deck-Manager</name>
+    <name>Deck Manager</name>
     <modules>
         <module>Deck-Manager</module>
     </modules>

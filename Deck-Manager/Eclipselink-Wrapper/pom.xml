@@ -4,10 +4,9 @@
     <parent>
         <artifactId>Deck-Manager-Client</artifactId>
         <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.3-SNAPSHOT</version>
     </parent>
 
-    <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
     <artifactId>Eclipselink-Wrapper</artifactId>
     <packaging>nbm</packaging>
 

@@ -6,9 +6,9 @@
         <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
         <version>0.3-SNAPSHOT</version>
     </parent>
-    <artifactId>GUI</artifactId>
+    <artifactId>Core</artifactId>
+    <name>Deck Manager Core</name>
     <packaging>nbm</packaging>
-    <name>Deck Manager GUI</name>
     <build>
         <plugins>
             <plugin>
@@ -16,7 +16,10 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <moduleType>eager</moduleType>
+                    <publicPackages>
+                        <publicPackage>com.reflexit.*</publicPackage>
+                        <publicPackage>dreamer.card.game.*</publicPackage>
+                    </publicPackages>
                 </configuration>
             </plugin>
             <plugin>
@@ -36,31 +39,41 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-progress</artifactId>
+            <version>${netbeans.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <artifactId>org-openide-util</artifactId>
-            <version>${netbeans.version}</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <artifactId>org-openide-util-lookup</artifactId>
             <groupId>org.netbeans.api</groupId>
             <type>jar</type>
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
-            <artifactId>org-openide-awt</artifactId>
-            <groupId>org.netbeans.api</groupId>
+            <groupId>net.sourceforge.javydreamercsw</groupId>
+            <artifactId>Ouput-Handler</artifactId>
+            <version>1.5.1</version>
             <type>jar</type>
-            <version>${netbeans.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-swing-outline</artifactId>
-            <version>${netbeans.version}</version>
-            <type>jar</type>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>Card-Game-Library</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-modules</artifactId>
+            <version>${netbeans.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>Eclipselink-Wrapper</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-dialogs</artifactId>
             <version>${netbeans.version}</version>
             <type>jar</type>
         </dependency>
@@ -71,43 +84,21 @@
             <type>jar</type>
         </dependency>
         <dependency>
-            <artifactId>org-openide-nodes</artifactId>
-            <groupId>org.netbeans.api</groupId>
-            <type>jar</type>
-            <version>${netbeans.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-modules-settings</artifactId>
-            <version>${netbeans.version}</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <artifactId>org-openide-explorer</artifactId>
-            <groupId>org.netbeans.api</groupId>
-            <type>jar</type>
-            <version>${netbeans.version}</version>
-        </dependency>
-        <dependency>
-            <artifactId>org-openide-dialogs</artifactId>
-            <groupId>org.netbeans.api</groupId>
-            <type>jar</type>
-            <version>${netbeans.version}</version>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>Card-Game-Library</artifactId>
+            <artifactId>Joda-Time-Wrapper</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>Core</artifactId>
-            <version>${project.version}</version>
+            <artifactId>org-openide-util-lookup</artifactId>
+            <groupId>org.netbeans.api</groupId>
+            <type>jar</type>
+            <version>${netbeans.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>Java-Assist-Wrapper</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.181</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
     <properties>

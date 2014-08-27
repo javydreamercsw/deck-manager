@@ -62,7 +62,8 @@ import org.openide.windows.TopComponent;
     //General
     "general.set=Set"
 })
-public final class GameTopComponent extends TopComponent implements ExplorerManager.Provider {
+public final class GameTopComponent extends TopComponent implements
+        ExplorerManager.Provider {
 
     private final ExplorerManager em = new ExplorerManager();
     private ICardGame game = null;
@@ -212,15 +213,17 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
             } else {
                 game = games.toArray(new ICardGame[games.size()])[0];
             }
-            LOG.log(Level.INFO, "Time getting available games: {0}", Tool.elapsedTime(start));
-            LOG.log(Level.INFO, "Loading game: {0}", game.getName());
-            start = System.currentTimeMillis();
-            try {
-                loadGame();
-            } catch (DBException ex) {
-                LOG.log(Level.SEVERE, "Error loading game!", ex);
+            if (game != null) {
+                LOG.log(Level.INFO, "Time getting available games: {0}", Tool.elapsedTime(start));
+                LOG.log(Level.INFO, "Loading game: {0}", game.getName());
+                start = System.currentTimeMillis();
+                try {
+                    loadGame();
+                } catch (DBException ex) {
+                    LOG.log(Level.SEVERE, "Error loading game!", ex);
+                }
+                LOG.log(Level.INFO, "Time loading game: {0}", Tool.elapsedTime(start));
             }
-            LOG.log(Level.INFO, "Time loading game: {0}", Tool.elapsedTime(start));
             initialized = true;
         }
     }
@@ -308,14 +311,19 @@ public final class GameTopComponent extends TopComponent implements ExplorerMana
             if (o instanceof ICardNode) {
                 ICardNode node = (ICardNode) o;
                 String columnName = columns.get(i).toLowerCase(Locale.getDefault()).replaceAll("_", "");
-                if (columnName.equals("name")) {
-                    result = node.getCard().getName();
-                } else if (columnName.equals("cardid")) {
-                    result = node.getCard().getCardId();
-                } else if (columnName.equals("set")) {
-                    result = node.getCard().getSetName();
-                } else {
-                    result = node.getAttribute(getColumnName(i));
+                switch (columnName) {
+                    case "name":
+                        result = node.getCard().getName();
+                        break;
+                    case "cardid":
+                        result = node.getCard().getCardId();
+                        break;
+                    case "set":
+                        result = node.getCard().getSetName();
+                        break;
+                    default:
+                        result = node.getAttribute(getColumnName(i));
+                        break;
                 }
                 for (ICardAttributeFormatter formatter : game.getGameCardAttributeFormatterImplementations()) {
                     if (result instanceof String) {
