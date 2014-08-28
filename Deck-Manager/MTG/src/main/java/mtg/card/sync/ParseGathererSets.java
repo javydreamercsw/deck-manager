@@ -69,7 +69,7 @@ public class ParseGathererSets extends AbstractParseGathererPage {
                     continue;
                 }
                 name = name.replaceAll("&quot;", "\"");
-                LOG.log(Level.INFO, "Parsed set: {0}", name);
+                LOG.log(Level.FINE, "Parsed set: {0}", name);
                 allParsed.add(name);
                 if (!Editions.getInstance().containsName(name)) {
                     Edition ed = Editions.getInstance().addEdition(name, null);
