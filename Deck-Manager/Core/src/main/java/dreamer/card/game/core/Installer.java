@@ -33,33 +33,25 @@ import org.openide.windows.WindowSystemListener;
 public class Installer extends ModuleInstall implements ActionListener,
         DataBaseStateListener, WindowSystemListener {
 
-    private static final Logger LOG = 
-            Logger.getLogger(Installer.class.getName());
-    private final ArrayList<GameUpdateAction> updaters = 
-            new ArrayList<>();
+    private static final Logger LOG
+            = Logger.getLogger(Installer.class.getName());
+    private final ArrayList<GameUpdateAction> updaters
+            = new ArrayList<>();
     final ArrayList<Thread> runnables = new ArrayList<>();
     private Timer timer;
     private final int period = 30000, pause = 10000;
-    private final HashMap<String, String> dbProperties = 
-            new HashMap<>();
+    private final HashMap<String, String> dbProperties
+            = new HashMap<>();
     private long start;
     private boolean waitDBInit = true;
 
     @Override
     public void restored() {
         //Create game cache dir
-        File cacheDir = Places.getCacheSubdirectory("Deck Manager");
-        dbProperties.put(PersistenceUnitProperties.JDBC_URL, 
-                MessageFormat.format("jdbc:h2:file:{0}/data/card_manager", 
-                        cacheDir.getAbsolutePath()));
-        dbProperties.put(PersistenceUnitProperties.TARGET_DATABASE, 
-                "org.eclipse.persistence.platform.database.H2Platform");
-        dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD, "test");
         dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, "org.h2.Driver");
-        dbProperties.put(PersistenceUnitProperties.JDBC_USER, "deck_manager");
         OutputHandler.select("Output");
-        File cardCacheDir = new File(MessageFormat.format("{0}{1}cache", 
-                Places.getCacheSubdirectory("Deck Manager").getAbsolutePath(), 
+        File cardCacheDir = new File(MessageFormat.format("{0}{1}cache",
+                Places.getCacheSubdirectory("Deck Manager").getAbsolutePath(),
                 System.getProperty("file.separator")));
         //Create game cache dir
         if (!cardCacheDir.exists()) {
@@ -86,8 +78,8 @@ public class Installer extends ModuleInstall implements ActionListener,
                         start = System.currentTimeMillis();
                         Lookup.getDefault().lookup(ClassLoader.class)
                                 .loadClass(dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
-                        LOG.log(Level.FINE, 
-                                "Succesfully loaded driver: {0}", 
+                        LOG.log(Level.FINE,
+                                "Succesfully loaded driver: {0}",
                                 dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
                         Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
                         while (waitDBInit) {
@@ -165,7 +157,7 @@ public class Installer extends ModuleInstall implements ActionListener,
         //Code to be done after the db is ready
         LOG.log(Level.FINE, "Database initialized");
         OutputHandler.output("Output", "Database initialized");
-        LOG.log(Level.FINE, "Initializing database took: {0}", 
+        LOG.log(Level.FINE, "Initializing database took: {0}",
                 Tool.elapsedTime(start));
         LOG.log(Level.FINE, "Initializing games...");
         Runnable task;
@@ -179,8 +171,8 @@ public class Installer extends ModuleInstall implements ActionListener,
                     updaters.add(new GameUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task, 
-                            MessageFormat.format("{0} game updater", 
+                    runnables.add(new Thread(task,
+                            MessageFormat.format("{0} game updater",
                                     game.getName())));
                 }
             }
@@ -195,8 +187,8 @@ public class Installer extends ModuleInstall implements ActionListener,
                     updaters.add(new CacheUpdateAction((IProgressAction) task));
                 } else {
                     //No progress information available
-                    runnables.add(new Thread(task, 
-                            MessageFormat.format("{0} cache updater", 
+                    runnables.add(new Thread(task,
+                            MessageFormat.format("{0} cache updater",
                                     cache.getGameName())));
                 }
             }
