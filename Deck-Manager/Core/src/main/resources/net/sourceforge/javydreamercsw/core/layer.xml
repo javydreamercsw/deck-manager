@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Services">
+        <folder name="AutoupdateType">
+            <file name="Card_Game_Interface_Dev.instance">
+                <attr name="displayName" stringvalue="Card Game Interface Dev. Update Center"/>
+                <attr name="enabled" boolvalue="false"/>
+                <attr name="instanceCreate" methodvalue="org.netbeans.modules.autoupdate.updateprovider.AutoupdateCatalogFactory.createUpdateProvider"/>
+                <attr name="instanceOf" stringvalue="org.netbeans.spi.autoupdate.UpdateProvider"/>
+                <attr name="url" stringvalue="http://xinco.org:8080/hudson/job/Card%20Game%20Interface%20Module/lastSuccessfulBuild/artifact/Card%20Game%20Interface/build/updates/updates.xml"/>
+            </file>
+            <file name="Card_Game_Interface.instance">
+                <attr name="displayName" stringvalue="Card Game Interface Update Center"/>
+                <attr name="enabled" boolvalue="true"/>
+                <attr name="instanceCreate" methodvalue="org.netbeans.modules.autoupdate.updateprovider.AutoupdateCatalogFactory.createUpdateProvider"/>
+                <attr name="instanceOf" stringvalue="org.netbeans.spi.autoupdate.UpdateProvider"/>
+                <attr name="url" stringvalue="updates.xml"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Menu">
+        <file name="BuildProject_hidden"/>
+        <file name="Versioning_hidden"/>
+        <file name="GoTo_hidden"/>
+        <file name="Profile_hidden"/>
+        <file name="Refactoring_hidden"/>
+        <file name="RunProject_hidden"/>
+        <file name="Source_hidden"/>
+        <folder name="Edit_hidden"/>
+        <folder name="File_hidden"/>
+        <folder name="Navigate_hidden"/>
+        <folder name="Help">
+        </folder>
+        <folder name="Options">
+            <attr name="position" intvalue="100"/>
+        </folder>
+        <folder name="Tools">
+            <attr name="position" intvalue="200"/>
+            <file name="I18N_hidden"/>
+            <file name="JavaPlatformsCustomizerAction.shadow_hidden"/>
+            <file name="LibrariesCustomizerAction.shadow_hidden"/>
+            <file name="PaletteManager_hidden"/>
+            <file name="Separator1.instance_hidden"/>
+            <file name="ServerManagerAction3.shadow_hidden"/>
+            <file name="ToolsCustomizerAction.shadow_hidden"/>
+            <file name="VariablesCustomizerAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-apisupport-project-ui-platform-NbPlatformCustomizerAction.instance_hidden"/>
+            <file name="org-netbeans-modules-apisupport-project-ui-platform-NbPlatformCustomizerAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-favorites-templates-TemplatesAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-mobility-project-deployment-MobilityDeploymentManagerAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-mobility-project-ui-security-SecurityManagerAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-options-OptionsWindowAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-xml-catalog-CatalogAction.shadow_hidden"/>
+            <file name="org-openide-actions-ToolsAction.shadow_hidden"/>
+        </folder>
+        <folder name="View">
+            <attr name="position" intvalue="600"/>
+            <file name="Separator3.instance_hidden"/>
+            <file name="org-netbeans-core-actions-HTMLViewAction.shadow_hidden"/>
+            <file name="org-netbeans-core-multiview-EditorsAction.instance_hidden"/>
+            <file name="org-netbeans-core-windows-actions-ToolbarsListAction.instance_hidden"/>
+            <file name="org-netbeans-modules-editor-NbCodeFoldingAction.instance_hidden"/>
+            <file name="org-netbeans-modules-project-ui-SyncEditorWithViewsAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-versioning-ShowTextAnnotationsAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-versioning-diff-ShowDiffSidebarAction.shadow_hidden"/>
+            <file name="toggle-line-numbers.shadow_hidden"/>
+            <file name="toggle-toolbar.shadow_hidden"/>
+        </folder>
+        <folder name="Window">
+            <file name="KenaiAction.shadow_hidden"/>
+            <folder name="Output">
+                <file name="AnalyzerAction.shadow_hidden"/>
+                <file name="FindUsagesOpenAction.shadow_hidden"/>
+                <file name="GsfTestRunnerResultWindowOpenAction.shadow_hidden"/>
+                <file name="RefactoringPreviewOpenAction.shadow_hidden"/>
+                <file name="ResultViewOpenAction.shadow_hidden"/>
+                <file name="org-netbeans-modules-versioning-util-OpenVersioningOutputAction.shadow_hidden"/>
+            </folder>
+            <file name="Versioning_hidden"/>
+            <file name="WelcomeScreenAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Window/com-bbraun-core-WelcomeScreenAction.instance"/>
+            </file>
+            <file name="org-netbeans-modules-kenai-collab-chat-ChatAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-logical-tab-action.shadow_hidden"/>
+            <file name="org-netbeans-modules-project-ui-physical-tab-action.shadow_hidden"/>
+            </folder>
+        </folder>
+        <folder name="Toolbars">
+            <file name="Build_hidden"/>
+            <file name="Clipboard_hidden"/>
+            <file name="Debug_hidden"/>
+            <file name="File_hidden"/>
+            <folder name="Memory"/>
+            <file name="QuickSearch_hidden"/>
+            <file name="UndoRedo_hidden"/>
+        </folder>
+        <folder name="Databases">
+            <folder name="JDBCDrivers">
+                <file name="H2Driver.xml" url="H2Driver.xml"/>
+            </folder>
+            </folder>
+</filesystem>

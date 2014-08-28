@@ -51,7 +51,7 @@ public class MTGCardCache extends AbstractCardCache {
     private boolean loading = false;
 
     public MTGCardCache() throws DBException {
-        super(new MTGGame().getName());
+        super(new MTGGame());
     }
 
     @Override
@@ -259,23 +259,18 @@ public class MTGCardCache extends AbstractCardCache {
                             for (Iterator it = set.getCards().iterator(); it.hasNext();) {
                                 Card card = (Card) it.next();
                                 //Check if card's image has been downloaded or not
-                                try {
-                                    if (!cardImageExists(card, set)) {
-                                        //Add it to the queue
-                                        LOG.log(Level.FINE,
-                                                "Added card: {0} to the image queue.",
-                                                card.getName());
-                                        Lookup.getDefault().lookup(ICacheData.class).add(card);
-                                        break;
-                                    }
-                                    try {
-                                        Thread.sleep(100);
-                                    } catch (InterruptedException ex) {
-                                        Exceptions.printStackTrace(ex);
-                                    }
-                                } catch (CannotDetermineSetAbbriviation ex) {
-                                    LOG.log(Level.SEVERE, null, ex);
+                                if (!cardImageExists(card, set)) {
+                                    //Add it to the queue
+                                    LOG.log(Level.FINE,
+                                            "Added card: {0} to the image queue.",
+                                            card.getName());
+                                    Lookup.getDefault().lookup(ICacheData.class).add(card);
                                     break;
+                                }
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException ex) {
+                                    Exceptions.printStackTrace(ex);
                                 }
                             }
                         }
