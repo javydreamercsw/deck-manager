@@ -622,7 +622,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                 Exceptions.printStackTrace(ex);
             }
         }
-        for (ICardCache cache : new MTGGame().getCardCacheImplementations()) {
+        for (ICardCache cache : updater.getGame().getCardCacheImplementations()) {
             MTGCardCache c = (MTGCardCache) cache;
             while (c.isLoading()) {
                 try {
