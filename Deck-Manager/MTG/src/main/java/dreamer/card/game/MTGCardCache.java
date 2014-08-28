@@ -45,8 +45,8 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = ICardCache.class)
 public class MTGCardCache extends AbstractCardCache {
 
-    private static final Logger LOG = 
-            Logger.getLogger(MTGCardCache.class.getName());
+    private static final Logger LOG
+            = Logger.getLogger(MTGCardCache.class.getName());
     private CardImageLoader loader = null;
     private boolean loading = false;
 
@@ -55,12 +55,12 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     @Override
-    public URL createSetImageRemoteURL(String editionAbbr, String rarity) 
+    public URL createSetImageRemoteURL(String editionAbbr, String rarity)
             throws MalformedURLException {
         if (!MTGCardCache.isLoadingEnabled()) {
             return null;
         }
-        return ParseGathererNewVisualSpoiler.createSetImageURL(editionAbbr, 
+        return ParseGathererNewVisualSpoiler.createSetImageURL(editionAbbr,
                 rarity);
     }
 
@@ -73,15 +73,15 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     @Override
-    public URL createRemoteImageURL(ICard icard, Edition edtn) 
+    public URL createRemoteImageURL(ICard icard, Edition edtn)
             throws MalformedURLException, CannotDetermineSetAbbriviation {
         String edition = edtn.getName();
         String editionAbbr = Editions.getInstance().getAbbrByName(edition);
         if (editionAbbr == null) {
             throw new CannotDetermineSetAbbriviation(edtn);
         }
-        Integer cardId = 
-                Integer.valueOf(Lookup.getDefault()
+        Integer cardId
+                = Integer.valueOf(Lookup.getDefault()
                         .lookup(IDataBaseCardStorage.class)
                         .getCardAttribute(icard, "CardId"));
         LOG.log(Level.FINE, "Retrieving Card id: {0}", cardId);
@@ -90,7 +90,7 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     @Override
-    public boolean loadCardImageOffline(ICard icard, Edition edtn, boolean bln) 
+    public boolean loadCardImageOffline(ICard icard, Edition edtn, boolean bln)
             throws IOException, CannotDetermineSetAbbriviation {
         try {
             HashMap parameters = new HashMap();
@@ -111,7 +111,7 @@ public class MTGCardCache extends AbstractCardCache {
 
     @Override
     public String getGamePath() {
-        return getCacheLocationFile().getAbsolutePath() 
+        return getCacheLocationFile().getAbsolutePath()
                 + System.getProperty("file.separator") + getGameName();
     }
 
@@ -122,8 +122,8 @@ public class MTGCardCache extends AbstractCardCache {
         return loading;
     }
 
-    private class CardImageLoader extends UpdateRunnable 
-    implements ActionListener {
+    private class CardImageLoader extends UpdateRunnable
+            implements ActionListener {
 
         @Override
         public void updateLocal() {
@@ -143,14 +143,14 @@ public class MTGCardCache extends AbstractCardCache {
                             reportResumeProgress();
                             int size
                                     = Lookup.getDefault()
-                                            .lookup(ICacheData.class)
-                                            .toCacheAmount();
+                                    .lookup(ICacheData.class)
+                                    .toCacheAmount();
                             setSize(size);
                             int progress = 0;
                             updateProgressMessage("Downloading card images...");
                             card
                                     = new CardJpaController(((DataBaseCardStorage) Lookup.getDefault().lookup(IDataBaseCardStorage.class)).getEntityManagerFactory()).findCard(card.getCardPK());
-                            LOG.log(Level.INFO, "Processing card: {0}", card.getName());
+                            LOG.log(Level.FINE, "Processing card: {0}", card.getName());
                             if (card.getCardSetList().isEmpty()) {
                                 LOG.log(Level.SEVERE,
                                         "No card sets defined for card: {0}",
@@ -161,7 +161,7 @@ public class MTGCardCache extends AbstractCardCache {
                                             = MessageFormat.format("Processing card: "
                                                     + "{0} for set: {1}",
                                                     card.getName(), cs.getName());
-                                    LOG.log(Level.INFO, message);
+                                    LOG.log(Level.FINE, message);
                                     updateProgressMessage(message);
                                     try {
                                         URL url = createRemoteImageURL((ICard) card,
@@ -262,7 +262,7 @@ public class MTGCardCache extends AbstractCardCache {
                                 try {
                                     if (!cardImageExists(card, set)) {
                                         //Add it to the queue
-                                        LOG.log(Level.INFO,
+                                        LOG.log(Level.FINE,
                                                 "Added card: {0} to the image queue.",
                                                 card.getName());
                                         Lookup.getDefault().lookup(ICacheData.class).add(card);
@@ -279,11 +279,11 @@ public class MTGCardCache extends AbstractCardCache {
                                 }
                             }
                         }
-                        LOG.log(Level.FINE, 
+                        LOG.log(Level.FINE,
                                 "Done adding cards to the download queue");
                         timer.restart();
                     }
-                }, MessageFormat.format("{0} download thread", 
+                }, MessageFormat.format("{0} download thread",
                         getGame().getName())).start();
             }
             timer.restart();
