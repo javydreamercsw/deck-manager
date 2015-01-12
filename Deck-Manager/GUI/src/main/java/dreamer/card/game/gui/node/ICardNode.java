@@ -8,7 +8,6 @@ import dreamer.card.game.core.Tool;
 import java.awt.Image;
 import java.beans.IntrospectionException;
 import java.util.HashMap;
-import java.util.Iterator;
 import javax.swing.Action;
 import javax.swing.JFrame;
 import org.openide.nodes.BeanNode;
@@ -27,7 +26,7 @@ public class ICardNode extends BeanNode {
 
     private Action[] actions;
     private final String gameName;
-    private HashMap<String, String> attributes = new HashMap<String, String>();
+    private HashMap<String, String> attributes = new HashMap<>();
 
     public ICardNode(ICard card, Object bean,String gameName) throws IntrospectionException {
         super(bean, null, Lookups.singleton(card));
@@ -38,8 +37,7 @@ public class ICardNode extends BeanNode {
 
     @Override
     public Image getIcon(int type) {
-        for (Iterator<? extends ICardGame> it = Lookup.getDefault().lookupAll(ICardGame.class).iterator(); it.hasNext();) {
-            ICardGame game = it.next();
+        for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
             if (game.getName().equals(gameName)) {
                 return Tool.loadImage(new JFrame(), game.getBackCardIcon()).getImage();
             }
