@@ -65,6 +65,7 @@ import org.openide.windows.TopComponent;
 public final class GameTopComponent extends TopComponent implements
         ExplorerManager.Provider {
 
+    private static final long serialVersionUID = 7512004430761421178L;
     private final ExplorerManager em = new ExplorerManager();
     private ICardGame game = null;
     private long start;
