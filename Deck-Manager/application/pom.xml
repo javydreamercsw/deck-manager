@@ -53,11 +53,6 @@
         -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>Deck-Manager-branding</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>Card-Game-Library</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -69,6 +64,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>MTG</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>Deck-Manager-branding</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
