@@ -343,7 +343,7 @@ public class ParseGathererNewVisualSpoiler {
 
     @NotNull
     public static URL createImageURL(int cardId, String editionAbbr) throws MalformedURLException {
-        return new URL(MessageFormat.format("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={0}&type=card", cardId));
+        return new URL(MessageFormat.format("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={0}&type=card", cardId).replaceAll(",", ""));
     }
 
     public static URL createSetImageURL(String editionAbbr, String rarity) {

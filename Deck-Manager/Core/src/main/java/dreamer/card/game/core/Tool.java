@@ -186,7 +186,7 @@ public final class Tool {
             Logger.getLogger(Tool.class.getSimpleName()).log(Level.FINE,
                     "Interrupted while loading Image. " + e, false);
         }
-        return new ImageIcon(image);
+        return image == null ? null : new ImageIcon(image);
     }
 
     // This method returns a buffered image with the contents of an image

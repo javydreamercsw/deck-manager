@@ -71,7 +71,6 @@ public final class CardViewerTopComponent extends TopComponent
         cardLabel = new javax.swing.JLabel();
 
         cardLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        org.openide.awt.Mnemonics.setLocalizedText(cardLabel, org.openide.util.NbBundle.getMessage(CardViewerTopComponent.class, "CardViewerTopComponent.cardLabel.text")); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -141,19 +140,21 @@ public final class CardViewerTopComponent extends TopComponent
                                                 ImageIO.read(
                                                         cache.getCardImage(card,
                                                                 cs,
-                                                                cache.createRemoteImageURL(card, Editions.getInstance().getEditionByName(cs.getName())), true, false)));
-                                icon.getImage().flush();
-                                cardLabel.setIcon(icon);
+                                                                cache.createRemoteImageURL(card, 
+                                                                        Editions.getInstance().getEditionByName(cs.getName())), true, false)));
+                                if (icon == null) {
+                                    //Image not there
+                                    cache.loadCardImageOffline(card, cs, true);
+                                } else {
+                                    icon.getImage().flush();
+                                    cardLabel.setIcon(icon);
+                                }
                             }
                             cardLabel.setText("");
                         }
                     } catch (MalformedURLException ex) {
                         LOG.log(Level.SEVERE, null, ex);
-                    } catch (CannotDetermineSetAbbriviation ex) {
-                        LOG.log(Level.SEVERE, null, ex);
-                    } catch (DBException ex) {
-                        LOG.log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
+                    } catch (CannotDetermineSetAbbriviation | DBException | IOException ex) {
                         LOG.log(Level.SEVERE, null, ex);
                     }
                 }
