@@ -6,7 +6,6 @@ import dreamer.card.game.gui.node.actions.Reloadable;
 import java.beans.IntrospectionException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +23,7 @@ import org.openide.util.lookup.InstanceContent;
 public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup.Provider {
 
     private static final Logger LOG = Logger.getLogger(IGameChildFactory.class.getName());
-    private ArrayList<ICardGame> games = new ArrayList<ICardGame>();
+    private ArrayList<ICardGame> games = new ArrayList<>();
     /**
      * The lookup for Lookup.Provider
      */
@@ -40,26 +39,18 @@ public class IGameChildFactory extends ChildFactory<ICardGame> implements Lookup
         // Create an AbstractLookup to expose InstanceContent contents...
         lookup = new AbstractLookup(instanceContent);
         // Add a "Reloadable" ability to this entity
-        instanceContent.add(new Reloadable() {
-            @Override
-            public void reload() throws Exception {
-                if (game == null) {
-                    LOG.log(Level.INFO, "Games found: {0}", games.size());
-                    for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
-                        if (!games.contains(game)) {
-                            games.add(game);
-                        }
+        instanceContent.add((Reloadable) () -> {
+            if (game == null) {
+                LOG.log(Level.INFO, "Games found: {0}", games.size());
+                for (ICardGame game1 : Lookup.getDefault().lookupAll(ICardGame.class)) {
+                    if (!games.contains(game1)) {
+                        games.add(game1);
                     }
-                } else {
-                    games.add(game);
                 }
-                Collections.sort(games, new Comparator<ICardGame>() {
-                    @Override
-                    public int compare(ICardGame o1, ICardGame o2) {
-                        return o1.getName().compareTo(o2.getName());
-                    }
-                });
+            } else {
+                games.add(game);
             }
+            Collections.sort(games, (ICardGame o1, ICardGame o2) -> o1.getName().compareTo(o2.getName()));
         });
     }
 
