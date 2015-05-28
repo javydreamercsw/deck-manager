@@ -60,39 +60,36 @@ public class Installer extends ModuleInstall implements ActionListener,
         AbstractCardCache.setCachingEnabled(true);
         AbstractCardCache.setLoadingEnabled(true);
         AbstractCardCache.setCacheDir(cardCacheDir);
-        WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
-            @Override
-            public void run() {
+        WindowManager.getDefault().invokeWhenUIReady(() -> {
+            try {
+                //Timer for inactivity background work
+                timer = new Timer(period, Installer.this);
+                timer.setInitialDelay(pause);
+                timer.start();
+                OutputHandler.output("Output", "Initializing database...");
+                Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                        .setDataBaseProperties(dbProperties);
+                //Start the database activities
+                LOG.log(Level.FINE, "Initializing database...");
                 try {
-                    //Timer for inactivity background work
-                    timer = new Timer(period, Installer.this);
-                    timer.setInitialDelay(pause);
-                    timer.start();
-                    OutputHandler.output("Output", "Initializing database...");
-                    Lookup.getDefault().lookup(IDataBaseCardStorage.class)
-                            .setDataBaseProperties(dbProperties);
-                    //Start the database activities
-                    LOG.log(Level.FINE, "Initializing database...");
-                    try {
-                        //Make sure to load the driver
-                        start = System.currentTimeMillis();
-                        Lookup.getDefault().lookup(ClassLoader.class)
-                                .loadClass(dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
-                        LOG.log(Level.FINE,
-                                "Succesfully loaded driver: {0}",
-                                dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
-                        Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
-                        while (waitDBInit) {
-                            Thread.sleep(100);
-                        }
-                    } catch (ClassNotFoundException | DBException | InterruptedException ex) {
-                        LOG.log(Level.SEVERE, null, ex);
-                        DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
-                                "Unable to connect to database. Please restart application", NotifyDescriptor.ERROR_MESSAGE));
+                    //Make sure to load the driver
+                    start = System.currentTimeMillis();
+                    Lookup.getDefault().lookup(ClassLoader.class)
+                            .loadClass(dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
+                    LOG.log(Level.FINE,
+                            "Succesfully loaded driver: {0}",
+                            dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
+                    Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
+                    while (waitDBInit) {
+                        Thread.sleep(100);
                     }
-                } catch (IllegalArgumentException | SecurityException ex) {
+                } catch (ClassNotFoundException | DBException | InterruptedException ex) {
                     LOG.log(Level.SEVERE, null, ex);
+                    DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
+                            "Unable to connect to database. Please restart application", NotifyDescriptor.ERROR_MESSAGE));
                 }
+            } catch (IllegalArgumentException | SecurityException ex) {
+                LOG.log(Level.SEVERE, null, ex);
             }
         });
     }

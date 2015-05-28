@@ -1,4 +1,4 @@
-package dreamer.card.game;
+package mtg.card.game;
 
 import com.reflexit.magiccards.core.CannotDetermineSetAbbriviation;
 import com.reflexit.magiccards.core.cache.AbstractCardCache;
@@ -84,7 +84,7 @@ public class MTGCardCache extends AbstractCardCache {
                 = Integer.valueOf(Lookup.getDefault()
                         .lookup(IDataBaseCardStorage.class)
                         .getCardAttribute(icard, "CardId"));
-        LOG.log(Level.FINE, "Retrieving Card id: {0}", cardId);
+        LOG.log(Level.INFO, "Retrieving Card id: {0}", cardId);
         return ParseGathererNewVisualSpoiler.createImageURL(
                 cardId, editionAbbr);
     }
@@ -246,7 +246,7 @@ public class MTGCardCache extends AbstractCardCache {
                         loading = true;
                         //Get mana icons
                         for (String m : mana) {
-                            LOG.log(Level.FINE, "Getting mana icon for: {0}", m);
+                            LOG.log(Level.INFO, "Getting mana icon for: {0}", m);
                             try {
                                 getManaIcon(m);
                             } catch (IOException ex) {
@@ -261,7 +261,7 @@ public class MTGCardCache extends AbstractCardCache {
                                 //Check if card's image has been downloaded or not
                                 if (!cardImageExists(card, set)) {
                                     //Add it to the queue
-                                    LOG.log(Level.FINE,
+                                    LOG.log(Level.INFO,
                                             "Added card: {0} to the image queue.",
                                             card.getName());
                                     Lookup.getDefault().lookup(ICacheData.class).add(card);
@@ -274,8 +274,10 @@ public class MTGCardCache extends AbstractCardCache {
                                 }
                             }
                         }
-                        LOG.log(Level.FINE,
-                                "Done adding cards to the download queue");
+                        LOG.log(Level.INFO,
+                                "Done adding cards to the download queue! ({0})", 
+                                Lookup.getDefault().lookup(ICacheData.class)
+                                        .toCacheAmount());
                         timer.restart();
                     }
                 }, MessageFormat.format("{0} download thread",

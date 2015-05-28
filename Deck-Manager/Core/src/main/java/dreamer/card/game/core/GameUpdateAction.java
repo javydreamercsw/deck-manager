@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
-import org.openide.util.TaskListener;
 
 /**
  *
@@ -36,16 +35,13 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
             runnable.addListener(this);
             ph = ProgressHandleFactory.createHandle(runnable.getActionName());
             theTask = RP.create(runnable);
-            theTask.addTaskListener(new TaskListener() {
-                @Override
-                public void taskFinished(org.openide.util.Task task) {
-                    //Make sure that we get rid of the ProgressHandle
-                    //when the task is finished
-                    if (!finished) {
-                        ph.finish();
-                    }
-                    LOG.log(Level.INFO, "Updating database took: {0}", Tool.elapsedTime(start));
+            theTask.addTaskListener((org.openide.util.Task task) -> {
+                //Make sure that we get rid of the ProgressHandle
+                //when the task is finished
+                if (!finished) {
+                    ph.finish();
                 }
+                LOG.log(Level.INFO, "Updating database took: {0}", Tool.elapsedTime(start));
             });
             //start the progresshandle the progress UI will show 500s after
             ph.start();
@@ -57,7 +53,7 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
     @Override
     public void reportProgress(int amount) {
         currentProgress = amount;
-        if (ph != null && determinate) {
+        if (ph != null && determinate && currentProgress > 0) {
             ph.progress(currentProgress);
         }
     }
@@ -87,7 +83,7 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
 
     @Override
     public void resume() {
-        if (ph != null) {
+        if (ph != null && currentProgress > 0) {
             ph.progress(currentProgress);
         }
     }

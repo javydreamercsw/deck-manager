@@ -169,6 +169,8 @@ public abstract class UpdateRunnable implements IProgressAction,
         } catch (DBException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
+        updateLocal();
+        updateRemote();
     }
 
     @Override

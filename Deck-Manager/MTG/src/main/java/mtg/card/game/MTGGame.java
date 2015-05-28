@@ -1,4 +1,4 @@
-package dreamer.card.game;
+package mtg.card.game;
 
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.DefaultCardGame;
