@@ -26,7 +26,7 @@ public class ICardNode extends BeanNode {
 
     private Action[] actions;
     private final String gameName;
-    private HashMap<String, String> attributes = new HashMap<>();
+    private final HashMap<String, String> attributes = new HashMap<>();
 
     public ICardNode(ICard card, Object bean,String gameName) throws IntrospectionException {
         super(bean, null, Lookups.singleton(card));
@@ -63,7 +63,7 @@ public class ICardNode extends BeanNode {
             return (Node.Cookie) ch;
         }
 
-        return super.getCookie(clazz);
+        return (Cookie) super.getLookup().lookup(clazz);
     }
 
     @Override
@@ -91,14 +91,11 @@ public class ICardNode extends BeanNode {
     }
 
     private void loadAttributes(final ICard card) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    attributes.putAll(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getAttributesForCard(card.getName()));
-                } catch (DBException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
+        new Thread(() -> {
+            try {
+                attributes.putAll(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getAttributesForCard(card.getName()));
+            } catch (DBException ex) {
+                Exceptions.printStackTrace(ex);
             }
         }, card.getName() + " attribute loader").start();
     }

@@ -39,18 +39,15 @@ public class Installer extends ModuleInstall implements
 
     @Override
     public void initialized() {
-        WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
-            @Override
-            public void run() {
-                TopComponent gameTC = 
-                        WindowManager.getDefault()
-                                .findTopComponent("GameTopComponent");
-                if (gameTC == null) {
-                    gameTC = new GameTopComponent();
-                }
-                gameTC.open();
-                gameTC.requestActive();
+        WindowManager.getDefault().invokeWhenUIReady(() -> {
+            TopComponent gameTC =
+                    WindowManager.getDefault()
+                            .findTopComponent("GameTopComponent");
+            if (gameTC == null) {
+                gameTC = new GameTopComponent();
             }
+            gameTC.open();
+            gameTC.requestActive();
         });
     }
 }
