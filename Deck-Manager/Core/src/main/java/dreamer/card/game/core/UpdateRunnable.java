@@ -176,7 +176,5 @@ public abstract class UpdateRunnable implements IProgressAction,
     @Override
     public void run() {
         updateLocal();
-        updateRemote();
-        reportDone();
     }
 }
