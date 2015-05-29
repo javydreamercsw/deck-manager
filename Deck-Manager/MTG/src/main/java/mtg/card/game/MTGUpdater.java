@@ -5,6 +5,7 @@ import com.reflexit.magiccards.core.cache.ICacheData;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
+import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
@@ -18,14 +19,17 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.persistence.EntityManagerFactory;
 import mtg.card.MagicCard;
 import mtg.card.sync.ParseGathererSets;
+import org.apache.commons.io.FileUtils;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
@@ -80,6 +84,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
 
     public MTGUpdater() {
         super(new MTGGame());
+        setCodeNameBase("net.sourceforge.javydreamercsw.deck.manager.MTG");
     }
 
     @Override
@@ -104,13 +109,15 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                         parameters.put("name", getGame().getName());
                         Game mtg = null;
                         try {
-                            mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).get(0);
+                            mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                                    .namedQuery("Game.findByName", parameters).get(0);
                         } catch (DBException ex) {
                             LOG.log(Level.SEVERE, null, ex);
                             dbError = true;
                         }
-                        List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findAll");
-                        LOG.log(Level.INFO, "{0} sets found in database:", temp.size());
+                        List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                                .namedQuery("CardSet.findAll");
+                        LOG.log(Level.INFO, "{0} sets found in database.", temp.size());
                         int i = 0;
                         if (LOG.isLoggable(Level.FINE)) {
                             for (Iterator it = temp.iterator(); it.hasNext();) {
@@ -126,7 +133,8 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                         for (Editions.Edition edition : editions) {
                             parameters.clear();
                             parameters.put("name", edition.getName());
-                            temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters);
+                            temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                                    .namedQuery("CardSet.findByName", parameters);
                             if (temp.isEmpty()) {
                                 if (!setsToLoad.contains(edition)) {
                                     LOG.log(Level.WARNING,
@@ -134,11 +142,6 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                             edition.getName());
                                     setsToLoad.add(edition);
                                 }
-                            }
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException ex) {
-                                Exceptions.printStackTrace(ex);
                             }
                         }
                         if (!setsToLoad.isEmpty()) {
@@ -165,7 +168,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                         if (result.isEmpty() || amount < urlAmount) {
                                             LOG.log(Level.INFO, "Adding set: {0} to processing list because {1}.",
                                                     new Object[]{edition.getName(), result.isEmpty()
-                                                        ? "it was not in the database" : "is missing pages in the database"});
+                                                                ? "it was not in the database" : "is missing pages in the database"});
                                             data.add(new SetUpdateData(edition.getName(), from, edition, urlAmount - amount));
                                         } else {
                                             LOG.log(Level.INFO,
@@ -175,11 +178,6 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                     } else {
                                         LOG.log(Level.SEVERE, "Database Error!");
                                         break;
-                                    }
-                                    try {
-                                        Thread.sleep(100);
-                                    } catch (InterruptedException ex) {
-                                        LOG.log(Level.SEVERE, null, ex);
                                     }
                                 }
                             } catch (DBException ex) {
@@ -199,16 +197,12 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                     if (!dbError) {
                                         SetUpdateData setData = it.next();
                                         Edition edition = setData.getEdition();
-                                        if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName(), new MTGGame())) {
+                                        if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName(),
+                                                new MTGGame())) {
                                             Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(mtg,
                                                     edition.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
                                             LOG.log(Level.INFO, "Created set: {0}", edition.getName());
                                         }
-                                    }
-                                    try {
-                                        Thread.sleep(100);
-                                    } catch (InterruptedException ex) {
-                                        Exceptions.printStackTrace(ex);
                                     }
                                 }
                                 for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();) {
@@ -221,11 +215,6 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                         createCardsForSet(setData.getUrl());
                                     } else {
                                         break;
-                                    }
-                                    try {
-                                        Thread.sleep(100);
-                                    } catch (InterruptedException ex) {
-                                        Exceptions.printStackTrace(ex);
                                     }
                                 }
                             }
@@ -283,6 +272,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                 break;
             }
         }
+        LOG.log(Level.INFO, "Created {0} pages for set!", i);
     }
 
     private boolean loadUrl(URL url) throws IOException, NonexistentEntityException {
@@ -435,7 +425,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                     LOG.log(Level.SEVERE, null, ex);
                     dbError = true;
                 }
-                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, new MTGGame())) {
+                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, (ICardGame) mtg)) {
                     LOG.log(Level.WARNING, "Is this a printing for card: {0} ID: {1} Set: {2}?",
                             new Object[]{card.getName(), id, edition});
                 }
@@ -598,7 +588,8 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
 
     public static void main(String[] args) {
         File cacheDir = new File(System.getProperty("user.dir") + "/target/cache");
-        System.out.println(cacheDir);
+        LOG.log(Level.INFO, "Setting cache directory at: {0}",
+                cacheDir.getAbsolutePath());
         AbstractCardCache.setCacheDir(cacheDir);
         MTGUpdater updater = new MTGUpdater();
         try {
@@ -614,8 +605,6 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                 Exceptions.printStackTrace(ex);
             }
         }
-        updater.updateLocal();
-        updater.updateRemote();
         while (Lookup.getDefault().lookup(ICacheData.class).toCacheAmount() > 0) {
             try {
                 Thread.sleep(100);
@@ -633,10 +622,42 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                 }
             }
         }
-    }
 
-    @Override
-    public void initialized() {
-        super.initialized(); //To change body of generated methods, choose Tools | Templates.
+        //Let's copy it to the resources folder. This is done to update the pre-packaged database.
+        File target = new File(System.getProperty("user.dir")
+                + System.getProperty("file.separator")
+                + "src"
+                + System.getProperty("file.separator")
+                + "main"
+                + System.getProperty("file.separator")
+                + "resources"
+                + System.getProperty("file.separator"));
+        if (target.isDirectory()) {
+            //Is a valid folder path, make sure to create any needed folders
+            target.mkdirs();
+            //Retrieve the database path
+            EntityManagerFactory emf = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                    .getEntityManagerFactory();
+            Map<String, Object> emfProperties = emf.getProperties();
+            String url = (String) emfProperties.get("javax.persistence.jdbc.url");
+            LOG.log(Level.INFO, "URL: {0}", url);
+            //This assumes no parameters after the actual path.
+            String path = url.substring(url.lastIndexOf(":") + 1,
+                    url.lastIndexOf("/"));
+            LOG.log(Level.INFO, "Path: {0}", Paths.get(path));
+            File db = new File(path);
+            if (db.isDirectory() && db.exists()) {
+                try {
+                    //Let's copy it
+                    FileUtils.copyDirectoryToDirectory(db, target);
+                    LOG.log(Level.INFO, "Data base copied to {0}",
+                            new Object[]{target.getAbsolutePath()});
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            } else {
+                LOG.log(Level.WARNING, "Unable to find: {0}", db.getAbsolutePath());
+            }
+        }
     }
 }

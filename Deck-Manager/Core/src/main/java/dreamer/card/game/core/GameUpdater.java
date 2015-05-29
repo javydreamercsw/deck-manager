@@ -40,12 +40,14 @@ public abstract class GameUpdater extends UpdateRunnable {
     protected boolean localUpdated = false;
     protected boolean remoteUpdated = false;
     protected boolean updating = false;
+    private String codeNameBase, dbFileName = "card_manager.mv.db";
 
     public GameUpdater(ICardGame game) {
         super(game);
     }
 
     @Override
+    //TODO: Still not working
     public void updateLocal() {
         synchronized (this) {
             while (updating) {
@@ -66,8 +68,8 @@ public abstract class GameUpdater extends UpdateRunnable {
             File dbDir = new File(MessageFormat.format("{0}{1}data",
                     cacheDir.getAbsolutePath(), System.getProperty("file.separator")));
             dbDir.mkdirs();
-            File db = InstalledFileLocator.getDefault().locate("card_manager.h2.db",
-                    "dreamer.card.game.mtg.lib", false);
+            File db = InstalledFileLocator.getDefault().locate(getDBFileName(),
+                    getCodeNameBase(), false);
             LOG.fine("Updating database...");
             EntityManagerFactory emf = null;
             try {
@@ -187,5 +189,33 @@ public abstract class GameUpdater extends UpdateRunnable {
                 }
             }
         }
+    }
+
+    /**
+     * @return the codeNameBase
+     */
+    public String getCodeNameBase() {
+        return codeNameBase;
+    }
+
+    /**
+     * @param codeNameBase the codeNameBase to set
+     */
+    public void setCodeNameBase(String codeNameBase) {
+        this.codeNameBase = codeNameBase;
+    }
+
+    /**
+     * @return the dbFileName
+     */
+    public String getDBFileName() {
+        return dbFileName;
+    }
+
+    /**
+     * @param dbFileName the dbFileName to set
+     */
+    public void setDBFileName(String dbFileName) {
+        this.dbFileName = dbFileName;
     }
 }
