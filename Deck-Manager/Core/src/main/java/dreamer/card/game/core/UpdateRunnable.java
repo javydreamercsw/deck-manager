@@ -1,4 +1,4 @@
-﻿package dreamer.card.game.core;
+package dreamer.card.game.core;
 
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
