@@ -34,7 +34,6 @@ import javax.swing.Timer;
 import mtg.card.sync.ParseGathererMTGIcon;
 import mtg.card.sync.ParseGathererNewVisualSpoiler;
 import mtg.card.sync.ParseGathererSetIcons;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -46,7 +45,7 @@ import org.openide.util.lookup.ServiceProvider;
 public class MTGCardCache extends AbstractCardCache {
 
     private static final Logger LOG
-            = Logger.getLogger(MTGCardCache.class.getName());
+            = Logger.getLogger(MTGCardCache.class.getSimpleName());
     private CardImageLoader loader = null;
     private boolean loading = false;
 
@@ -166,7 +165,7 @@ public class MTGCardCache extends AbstractCardCache {
                                     try {
                                         URL url = createRemoteImageURL((ICard) card,
                                                 Editions.getInstance().getEditionByName(cs.getName()));
-                                        getCardImage(card, cs, url, isLoadingEnabled(), true);
+                                        getCardImage(card, cs, url, isLoadingEnabled(), false);
                                     } catch (CannotDetermineSetAbbriviation e) {
                                         LOG.log(Level.SEVERE,
                                                 MessageFormat.format("Looks like the set: "
@@ -189,11 +188,6 @@ public class MTGCardCache extends AbstractCardCache {
                                             "Error on total work calculation. "
                                             + "Size: {0} Progress: {1}",
                                             new Object[]{size, progress});
-                                }
-                                try {
-                                    Thread.sleep(100);
-                                } catch (InterruptedException ex) {
-                                    Exceptions.printStackTrace(ex);
                                 }
                             }
                         }
@@ -267,11 +261,6 @@ public class MTGCardCache extends AbstractCardCache {
                                     Lookup.getDefault().lookup(ICacheData.class).add(card);
                                     break;
                                 }
-                                try {
-                                    Thread.sleep(100);
-                                } catch (InterruptedException ex) {
-                                    Exceptions.printStackTrace(ex);
-                                }
                             }
                         }
                         LOG.log(Level.INFO,
@@ -328,6 +317,7 @@ public class MTGCardCache extends AbstractCardCache {
     }
 
     @Override
+    //TODO: Icon is not downloaded properly
     public Image getSetIcon(ICardSet set) throws IOException {
         ParseGathererSetIcons parser = new ParseGathererSetIcons(set);
         parser.load();
@@ -336,7 +326,7 @@ public class MTGCardCache extends AbstractCardCache {
             File dest = new File(path);
             String url = parser.getIconURL();
             URL setIconURL = new URL(url);
-            return downloadImageFromURL(setIconURL, dest, !dest.exists());
+            return downloadImageFromURL(setIconURL, dest, true);
         } catch (MalformedURLException ex) {
             LOG.log(Level.SEVERE,
                     MessageFormat.format("Errors with the icon URL for set: "
