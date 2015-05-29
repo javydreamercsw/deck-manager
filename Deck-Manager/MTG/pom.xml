@@ -56,6 +56,11 @@
             <artifactId>Core</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -66,6 +71,18 @@
                 <extensions>true</extensions>
                 <configuration>
                     <moduleType>eager</moduleType>
+                    <nbmResources>                     
+                        <nbmResource>
+                            <directory>${basedir}/resources</directory>
+                            <targetPath>resources</targetPath>
+                            <includes>
+                                <include>*.db</include>
+                            </includes>
+                            <excludes>
+                                <exclude>*trace*</exclude>
+                            </excludes>
+                        </nbmResource>
+                    </nbmResources> 
                 </configuration>
             </plugin>
 

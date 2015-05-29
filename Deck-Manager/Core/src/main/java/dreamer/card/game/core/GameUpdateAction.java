@@ -2,6 +2,7 @@ package dreamer.card.game.core;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.netbeans.api.progress.ProgressHandle;
@@ -19,7 +20,7 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
     protected IProgressAction runnable;
     protected ProgressHandle ph;
     private static final Logger LOG = Logger.getLogger(GameUpdateAction.class.getName());
-    protected int currentProgress = 0;
+    protected int currentProgress = 0, size = 0;
     protected boolean finished = false;
     private boolean determinate = false;
 
@@ -70,6 +71,7 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
     public void reportSize(int size) {
         if (ph != null) {
             ph.switchToDeterminate(size);
+            this.size = size;
             determinate = true;
         }
     }
@@ -84,7 +86,11 @@ public class GameUpdateAction implements UpdateProgressListener, ActionListener 
     @Override
     public void resume() {
         if (ph != null && currentProgress > 0) {
-            ph.progress(currentProgress);
+            if (currentProgress > size) {
+                LOG.warning(Arrays.toString(Thread.currentThread().getStackTrace()));
+            } else {
+                ph.progress(currentProgress);
+            }
         }
     }
 
