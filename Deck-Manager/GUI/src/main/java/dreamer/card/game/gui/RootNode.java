@@ -27,4 +27,11 @@ public class RootNode extends AbstractNode {
     public boolean canDestroy() {
         return false;
     }
+
+    /**
+     * @return the childFactory
+     */
+    public ChildFactory<ICardGame> getChildFactory() {
+        return childFactory;
+    }
 }

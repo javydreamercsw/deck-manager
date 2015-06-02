@@ -264,9 +264,9 @@ public class MTGCardCache extends AbstractCardCache {
                             }
                         }
                         LOG.log(Level.INFO,
-                                "Done adding cards to the download queue! ({0})", 
+                                "Done adding cards to the download queue! ({0})",
                                 Lookup.getDefault().lookup(ICacheData.class)
-                                        .toCacheAmount());
+                                .toCacheAmount());
                         timer.restart();
                     }
                 }, MessageFormat.format("{0} download thread",
@@ -284,7 +284,8 @@ public class MTGCardCache extends AbstractCardCache {
     public static URL createManaImageURL(String symbol) {
         String manaName = symbol.replaceAll("[{}/]", "");
         try {
-            return new URL(MessageFormat.format("http://gatherer.wizards.com/Handlers/Image.ashx?size=small&name={0}&type=symbol", manaName));
+            return new URL(MessageFormat.format(
+                    "http://gatherer.wizards.com/Handlers/Image.ashx?size=small&name={0}&type=symbol", manaName));
         } catch (MalformedURLException e) {
             LOG.log(Level.WARNING, null, e);
             return null;
@@ -319,21 +320,24 @@ public class MTGCardCache extends AbstractCardCache {
     @Override
     //TODO: Icon is not downloaded properly
     public Image getSetIcon(ICardSet set) throws IOException {
+        LOG.log(Level.INFO, "Getting set icon for: {0}", set.getName());
         ParseGathererSetIcons parser = new ParseGathererSetIcons(set);
         parser.load();
         try {
             String path = getSetIconPath(set);
             File dest = new File(path);
             String url = parser.getIconURL();
-            URL setIconURL = new URL(url);
-            return downloadImageFromURL(setIconURL, dest, true);
+            if (url != null) {
+                URL setIconURL = new URL(url);
+                return downloadImageFromURL(setIconURL, dest, false);
+            }
         } catch (MalformedURLException ex) {
             LOG.log(Level.SEVERE,
                     MessageFormat.format("Errors with the icon URL for set: "
                             + "{0} at URL: {1}", set.getName(),
                             parser.getIconURL()), ex);
-            return null;
         }
+        return null;
     }
 
     public Image getManaIcon(String mana) throws IOException {
