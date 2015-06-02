@@ -5,7 +5,6 @@ import com.reflexit.magiccards.core.cache.ICacheData;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
-import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
@@ -416,16 +415,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
             if (id.equals(setId)) {
                 addCardToSet(card, edition, rarity, type);
             } else {
-                HashMap parameters = new HashMap();
-                parameters.put("name", getGame().getName());
-                Game mtg = null;
-                try {
-                    mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).get(0);
-                } catch (DBException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
-                    dbError = true;
-                }
-                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, (ICardGame) mtg)) {
+                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, new MTGGame())) {
                     LOG.log(Level.WARNING, "Is this a printing for card: {0} ID: {1} Set: {2}?",
                             new Object[]{card.getName(), id, edition});
                 }

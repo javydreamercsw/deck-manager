@@ -2,7 +2,8 @@ package dreamer.card.game.gui;
 
 import com.reflexit.magiccards.core.model.ICardGame;
 import java.awt.Component;
-import javax.swing.*;
+import javax.swing.JLabel;
+import javax.swing.JTable;
 import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
 
 /**

@@ -9,6 +9,7 @@ import java.beans.IntrospectionException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
@@ -50,12 +51,17 @@ public class ICardSetNode extends BeanNode {
                     break;
                 }
             }
-            return cache == null ? null : Tool.loadImage(new JFrame(),
-                    cache.getSetIcon(set)).getImage();
+            if (cache != null) {
+                ImageIcon loadImage = Tool.loadImage(new JFrame(),
+                        cache.getSetIcon(set));
+                if (loadImage != null) {
+                    return loadImage.getImage();
+                }
+            }
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
-            return null;
         }
+        return null;
     }
 
     @Override

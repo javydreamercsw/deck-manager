@@ -9,7 +9,6 @@ import dreamer.card.game.gui.node.actions.Reloadable;
 import java.beans.IntrospectionException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -27,21 +26,21 @@ import org.openide.util.lookup.InstanceContent;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public class ICardSetChildFactory extends ChildFactory<ICardSet>
+public final class ICardSetChildFactory extends ChildFactory<ICardSet>
         implements Lookup.Provider {
 
     private final ICardGame game;
     private static final Logger LOG
-            = Logger.getLogger(ICardSetChildFactory.class.getName());
-    private final List<ICardSet> sets = new ArrayList<ICardSet>();
+            = Logger.getLogger(ICardSetChildFactory.class.getSimpleName());
+    private final List<ICardSet> sets = new ArrayList<>();
     /**
      * The lookup for Lookup.Provider
      */
-    private Lookup lookup;
+    private final Lookup lookup;
     /**
      * The InstanceContent that keeps this entity's abilities
      */
-    private InstanceContent instanceContent;
+    private final InstanceContent instanceContent;
 
     public ICardSetChildFactory(final ICardGame game) {
         this.game = game;
@@ -50,28 +49,20 @@ public class ICardSetChildFactory extends ChildFactory<ICardSet>
         // Create an AbstractLookup to expose InstanceContent contents...
         lookup = new AbstractLookup(instanceContent);
         // Add a "Reloadable" ability to this entity
-        instanceContent.add(new Reloadable() {
-            @Override
-            public void reload() throws Exception {
-                synchronized (sets) {
-                    long start = System.currentTimeMillis();
-                    for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(getGame()).iterator(); it.hasNext();) {
-                        ICardSet set = (ICardSet) it.next();
-                        if (!sets.contains(set)) {
-                            sets.add(set);
-                        }
+        instanceContent.add((Reloadable) () -> {
+            synchronized (sets) {
+                long start = System.currentTimeMillis();
+                for (Iterator it = Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(getGame()).iterator(); it.hasNext();) {
+                    ICardSet set = (ICardSet) it.next();
+                    if (!sets.contains(set)) {
+                        sets.add(set);
                     }
-                    LOG.log(Level.INFO, "DB query for Game: {1} took: {0} hits: {2}",
-                            new Object[]{Tool.elapsedTime(start), game.getName(), sets.size()});
-                    start = System.currentTimeMillis();
-                    Collections.sort(sets, new Comparator<ICardSet>() {
-                        @Override
-                        public int compare(ICardSet o1, ICardSet o2) {
-                            return o1.getName().compareTo(o2.getName());
-                        }
-                    });
-                    LOG.log(Level.INFO, "Sorting sets: {0}", Tool.elapsedTime(start));
                 }
+                LOG.log(Level.INFO, "DB query for Game: {1} took: {0} hits: {2}",
+                        new Object[]{Tool.elapsedTime(start), game.getName(), sets.size()});
+                start = System.currentTimeMillis();
+                Collections.sort(sets, (ICardSet o1, ICardSet o2) -> o1.getName().compareTo(o2.getName()));
+                LOG.log(Level.INFO, "Sorting sets: {0}", Tool.elapsedTime(start));
             }
         });
     }

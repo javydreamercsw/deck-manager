@@ -11,5 +11,5 @@ public interface Reloadable {
      *
      * @throws Exception if an error happens.
      */
-    public void reload() throws Exception;
+    void reload() throws Exception;
 }
