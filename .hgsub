@@ -1,4 +1,4 @@
-Deck-Manager/SynamicD = http://bitbucket.org/javydreamercsw/synamicd-module
-CGI = https://bitbucket.org/javydreamercsw/card-game-interface
-simple-marauroa-java = https://bitbucket.org/javydreamercsw/simple-marauroa-java
+Deck-Manager/SynamicD = ssh://hg@bitbucket.org/javydreamercsw/synamicd-module
+CGI = ssh://hg@bitbucket.org/javydreamercsw/card-game-interface
+simple-marauroa-java = ssh://hg@bitbucket.org/javydreamercsw/simple-marauroa-java
 
