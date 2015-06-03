@@ -15,6 +15,7 @@ import com.reflexit.magiccards.core.storage.DataBaseCardStorage;
 import com.reflexit.magiccards.core.storage.database.Card;
 import com.reflexit.magiccards.core.storage.database.CardSet;
 import com.reflexit.magiccards.core.storage.database.controller.CardJpaController;
+import dreamer.card.game.core.Tool;
 import dreamer.card.game.core.UpdateRunnable;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -30,11 +31,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.Timer;
 import mtg.card.sync.ParseGathererMTGIcon;
 import mtg.card.sync.ParseGathererNewVisualSpoiler;
 import mtg.card.sync.ParseGathererSetIcons;
 import org.openide.util.Lookup;
+import org.openide.util.Utilities;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -308,7 +311,10 @@ public class MTGCardCache extends AbstractCardCache {
             File dest = new File(path);
             String url = parser.getIconURL();
             URL setIconURL = new URL(url);
-            return downloadImageFromURL(setIconURL, dest, !dest.exists());
+            //This is .ico, need to convert it to another format
+            downloadImageFromURL(setIconURL, dest, !dest.exists());
+            Tool.convertIcontoBMP(dest, dest);
+            return (new ImageIcon(Utilities.toURI(dest).toURL(), "icon")).getImage();
         } catch (MalformedURLException ex) {
             LOG.log(Level.SEVERE,
                     MessageFormat.format("Errors with the icon URL at URL: {0}",
@@ -330,6 +336,9 @@ public class MTGCardCache extends AbstractCardCache {
             if (url != null) {
                 URL setIconURL = new URL(url);
                 return downloadImageFromURL(setIconURL, dest, false);
+            } else {
+                LOG.log(Level.WARNING, "Unable to retrieve icon URL for {0}",
+                        set.getName());
             }
         } catch (MalformedURLException ex) {
             LOG.log(Level.SEVERE,

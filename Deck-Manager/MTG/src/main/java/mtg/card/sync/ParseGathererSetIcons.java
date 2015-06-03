@@ -1,6 +1,10 @@
 package mtg.card.sync;
 
+import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICardSet;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
+import com.reflexit.magiccards.core.storage.database.CardSet;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
@@ -8,6 +12,9 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import mtg.card.MagicException;
+import mtg.card.game.MTGGame;
+import org.openide.util.Exceptions;
+import org.openide.util.Lookup;
 
 /**
  *
@@ -18,7 +25,7 @@ public class ParseGathererSetIcons extends AbstractParseGathererPage {
     private final ICardSet set;
     private String iconURL = null;
     private static final Logger LOG
-            = Logger.getLogger(ParseGathererSetIcons.class.getName());
+            = Logger.getLogger(ParseGathererSetIcons.class.getSimpleName());
 
     public ParseGathererSetIcons(ICardSet set) {
         this.set = set;
@@ -26,14 +33,17 @@ public class ParseGathererSetIcons extends AbstractParseGathererPage {
 
     @Override
     protected void loadHtml(String html) {
-        Pattern iconPattern = Pattern.compile(".*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?(?:[a-z][a-z]+).*?((?:[a-z][a-z]+))");
+        String pattern = "(?<=set=)([A-Z0-9]*[0-9A-Z][_]*[A-Z0-9]*[0-9A-Z]*)(?=\\&)";
+        Pattern iconPattern = Pattern.compile(pattern);
         html = html.replaceAll("\r?\n", " ");
         Matcher matcher = iconPattern.matcher(html);
         if (matcher.find()) {
             String match = matcher.group();
+            LOG.fine(match);
             iconURL = createSetImageURL(match, "C").toString();
         } else {
-            LOG.log(Level.SEVERE, "Unable to match pattern {1} to: {0}", new Object[]{html, iconPattern});
+            LOG.log(Level.SEVERE, "Unable to match pattern {0}", 
+                    new Object[]{iconPattern});
         }
     }
 
@@ -61,5 +71,19 @@ public class ParseGathererSetIcons extends AbstractParseGathererPage {
      */
     public String getIconURL() {
         return iconURL;
+    }
+
+    public static void main(String[] args) {
+        ICardCache cache = Lookup.getDefault().lookup(ICardCache.class);
+        if (cache != null) {
+            for (Object o : Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(new MTGGame())) {
+                try {
+                    CardSet cs = (CardSet) o;
+                    cache.getSetIcon(cs);
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        }
     }
 }
