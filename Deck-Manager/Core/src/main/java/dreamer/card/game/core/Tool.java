@@ -273,6 +273,7 @@ public final class Tool {
 
     /**
      * Convert icon to bmp file.
+     *
      * @param source icon file
      * @param dest destination file
      * @return true if converted.
@@ -281,8 +282,9 @@ public final class Tool {
         boolean result = false;
         try {
             java.util.List<BufferedImage> x = ICODecoder.read(source);
-            BMPEncoder.write(x.get(0), dest);
-            result = true;
+            if (result = x.size() > 0) {
+                BMPEncoder.write(x.get(0), dest);
+            }
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
