@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
@@ -13,9 +14,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
+import net.sf.image4j.codec.bmp.BMPEncoder;
+import net.sf.image4j.codec.ico.ICODecoder;
 import org.joda.time.Interval;
 import org.joda.time.Period;
 import org.openide.modules.InstalledFileLocator;
+import org.openide.util.Exceptions;
 import org.openide.util.Utilities;
 
 /**
@@ -265,5 +269,23 @@ public final class Tool {
         // Get the image's color model
         ColorModel cm = pg.getColorModel();
         return cm == null ? false : cm.hasAlpha();
+    }
+
+    /**
+     * Convert icon to bmp file.
+     * @param source icon file
+     * @param dest destination file
+     * @return true if converted.
+     */
+    public static boolean convertIcontoBMP(File source, File dest) {
+        boolean result = false;
+        try {
+            java.util.List<BufferedImage> x = ICODecoder.read(source);
+            BMPEncoder.write(x.get(0), dest);
+            result = true;
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        return result;
     }
 }

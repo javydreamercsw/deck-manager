@@ -100,6 +100,12 @@
             <artifactId>Card-Game-Library</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>net.sf.image4j</groupId>
+            <artifactId>image4j</artifactId>
+            <version>1.0</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

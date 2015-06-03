@@ -89,6 +89,9 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
     @Override
     public void updateRemote() {
         synchronized (this) {
+            for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+                System.out.println(ste.toString());
+            }
             super.updateRemote();
             if (!remoteUpdated) {
                 if (!dbError) {
@@ -223,7 +226,9 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                             .lookup(IDataBaseCardStorage.class).getSetsForGame(mtg)) {
                                         CardSet cs = (CardSet) o;
                                         for (ICardCache cache : getGame().getCardCacheImplementations()) {
-                                            cache.getSetIcon((ICardSet) cs);
+                                            if (!new File(cache.getSetIconPath((ICardSet) cs)).exists()) {
+                                                cache.getSetIcon((ICardSet) cs);
+                                            }
                                         }
                                     }
                                 }
@@ -577,7 +582,8 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
     }
 
     public static void main(String[] args) {
-        File cacheDir = new File(System.getProperty("user.dir") + "/target/cache");
+        File cacheDir = new File(System.getProperty("user.dir") 
+                + "/target/cache");
         LOG.log(Level.INFO, "Setting cache directory at: {0}",
                 cacheDir.getAbsolutePath());
         AbstractCardCache.setCacheDir(cacheDir);
