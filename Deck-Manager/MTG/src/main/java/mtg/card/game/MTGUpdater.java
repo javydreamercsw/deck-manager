@@ -89,9 +89,6 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
     @Override
     public void updateRemote() {
         synchronized (this) {
-            for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-                System.out.println(ste.toString());
-            }
             super.updateRemote();
             if (!remoteUpdated) {
                 if (!dbError) {
