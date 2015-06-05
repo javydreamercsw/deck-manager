@@ -17,15 +17,15 @@ import org.openide.util.Lookup;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public abstract class UpdateRunnable implements IProgressAction, 
+public abstract class UpdateRunnable implements IProgressAction,
         DataBaseStateListener {
 
     private int size, progress = 0;
-    private final ArrayList<UpdateProgressListener> listeners = 
-            new ArrayList<>();
+    private final ArrayList<UpdateProgressListener> listeners
+            = new ArrayList<>();
     private final ICardGame game;
-    private static final Logger LOG = 
-            Logger.getLogger(UpdateRunnable.class.getName());
+    private static final Logger LOG
+            = Logger.getLogger(UpdateRunnable.class.getName());
 
     public UpdateRunnable(ICardGame game) {
         this.game = game;
@@ -136,7 +136,7 @@ public abstract class UpdateRunnable implements IProgressAction,
     }
 
     public List<Object> namedQuery(String query,
-            HashMap<String, Object> parameters, EntityManagerFactory emf) 
+            HashMap<String, Object> parameters, EntityManagerFactory emf)
             throws DBException {
         Query q;
         EntityManager localEM = emf.createEntityManager();
