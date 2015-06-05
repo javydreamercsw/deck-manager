@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.util.TaskListener;
 
 /**
  *
@@ -24,17 +23,13 @@ public class CacheUpdateAction extends GameUpdateAction {
             final long start = System.currentTimeMillis();
             runnable.addListener(this);
             theTask = RP.create(runnable);
-            theTask.addTaskListener(new TaskListener() {
-
-                @Override
-                public void taskFinished(org.openide.util.Task task) {
-                    //Make sure that we get rid of the ProgressHandle
-                    //when the task is finished
-                    if (!finished && ph != null) {
-                        ph.finish();
-                    }
-                    LOG.log(Level.INFO, "Updating cache took: {0}", Tool.elapsedTime(start));
+            theTask.addTaskListener((org.openide.util.Task task) -> {
+                //Make sure that we get rid of the ProgressHandle
+                //when the task is finished
+                if (!finished && ph != null) {
+                    ph.finish();
                 }
+                LOG.log(Level.INFO, "Updating cache took: {0}", Tool.elapsedTime(start));
             });
             //this actually start the task
             theTask.schedule(0);
