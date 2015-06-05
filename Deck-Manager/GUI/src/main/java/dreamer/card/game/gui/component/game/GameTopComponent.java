@@ -132,6 +132,7 @@ public final class GameTopComponent extends TopComponent implements
      */
     private void loadGame() throws DBException {
         if (game != null) {
+            game.getUpdateRunnable().run();
             if (gameFactory == null) {
                 gameFactory = new IGameChildFactory(game);
             }

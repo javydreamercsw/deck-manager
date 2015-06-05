@@ -27,22 +27,27 @@ public class ICardNode extends BeanNode {
     private Action[] actions;
     private final String gameName;
     private final HashMap<String, String> attributes = new HashMap<>();
+    private Image image = null;
 
-    public ICardNode(ICard card, Object bean,String gameName) throws IntrospectionException {
+    public ICardNode(ICard card, Object bean, String gameName) throws IntrospectionException {
         super(bean, null, Lookups.singleton(card));
         setDisplayName(card.getName());
         this.gameName = gameName;
         loadAttributes(card);
+        //Retrieve icon in advance
+        getIcon(0);
     }
 
     @Override
     public Image getIcon(int type) {
-        for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
-            if (game.getName().equals(gameName)) {
-                return Tool.loadImage(new JFrame(), game.getBackCardIcon()).getImage();
+        if (image == null) {
+            for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
+                if (game.getName().equals(gameName)) {
+                    image = Tool.loadImage(new JFrame(), game.getBackCardIcon()).getImage();
+                }
             }
         }
-        return null;
+        return image;
     }
 
     @Override

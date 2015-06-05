@@ -6,14 +6,20 @@ import dreamer.card.game.core.Tool;
 import dreamer.card.game.gui.node.factory.ICardChildFactory;
 import java.awt.Image;
 import java.beans.IntrospectionException;
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.Utilities;
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -21,10 +27,12 @@ import org.openide.util.lookup.Lookups;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-public class ICardSetNode extends BeanNode {
+public final class ICardSetNode extends BeanNode {
 
     private final ICardSet set;
-    private static final Logger LOG = Logger.getLogger(ICardSetNode.class.getName());
+    private static final Logger LOG
+            = Logger.getLogger(ICardSetNode.class.getName());
+    private Image image = null;
 
     public ICardSetNode(ICardSet set, ICardChildFactory childFactory)
             throws IntrospectionException {
@@ -32,6 +40,8 @@ public class ICardSetNode extends BeanNode {
                 Lookups.singleton(set));
         setDisplayName(set.getName());
         this.set = set;
+        //Retrieve icon in advance
+        getIcon(0);
     }
 
     /**
@@ -43,25 +53,39 @@ public class ICardSetNode extends BeanNode {
 
     @Override
     public Image getIcon(int type) {
-        try {
-            ICardCache cache = null;
-            for (ICardCache c : Lookup.getDefault().lookupAll(ICardCache.class)) {
-                if (c.getGameName().equals(set.getCardGame().getName())) {
-                    cache = c;
-                    break;
+        if (image == null) {
+            ICardCache cache = Lookup.getDefault().lookup(ICardCache.class);
+            if (cache == null) {
+                DialogDisplayer.getDefault().notify(
+                        new NotifyDescriptor.Message(
+                                "Unable to find cache!",
+                                NotifyDescriptor.WARNING_MESSAGE));
+            } else {
+                //Try to get from local files
+                File imageFile = new File(cache.getSetIconPath(set));
+                if (imageFile.exists()) {
+                    try {
+                        //The file is there, lets' load it!
+                        image = (new ImageIcon(Utilities.toURI(imageFile).toURL(),
+                                "icon")).getImage();
+                    } catch (MalformedURLException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                } else {
+                    //File not there, load from internet.
+                    try {
+                        ImageIcon loadImage = Tool.loadImage(new JFrame(),
+                                cache.getSetIcon(set));
+                        if (loadImage != null) {
+                            image = loadImage.getImage();
+                        }
+                    } catch (IOException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
                 }
             }
-            if (cache != null) {
-                ImageIcon loadImage = Tool.loadImage(new JFrame(),
-                        cache.getSetIcon(set));
-                if (loadImage != null) {
-                    return loadImage.getImage();
-                }
-            }
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
         }
-        return null;
+        return image;
     }
 
     @Override
