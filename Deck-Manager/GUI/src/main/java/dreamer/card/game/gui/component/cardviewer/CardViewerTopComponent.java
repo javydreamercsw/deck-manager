@@ -140,7 +140,7 @@ public final class CardViewerTopComponent extends TopComponent
                                                 ImageIO.read(
                                                         cache.getCardImage(card,
                                                                 cs,
-                                                                cache.createRemoteImageURL(card, 
+                                                                cache.createRemoteImageURL(card,
                                                                         Editions.getInstance().getEditionByName(cs.getName())), true, false)));
                                 if (icon == null) {
                                     //Image not there

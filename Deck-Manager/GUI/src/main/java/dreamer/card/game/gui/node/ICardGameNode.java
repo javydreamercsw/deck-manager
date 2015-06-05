@@ -18,13 +18,16 @@ import org.openide.util.lookup.Lookups;
 public class ICardGameNode extends BeanNode {
 
     private final ICardGame game;
+    private Image image = null;
 
     public ICardGameNode(ICardGame game, ICardSetChildFactory childFactory)
             throws IntrospectionException {
-        super(game, Children.create(childFactory, false), 
+        super(game, Children.create(childFactory, false),
                 Lookups.singleton(game));
         setDisplayName(game.getName());
         this.game = game;
+        //Retrieve icon in advance
+        getIcon(0);
     }
 
     /**
@@ -36,9 +39,12 @@ public class ICardGameNode extends BeanNode {
 
     @Override
     public Image getIcon(int type) {
-        Image gameIcon = getGame().getGameIcon();
-        return gameIcon == null ? null : Tool.loadImage(new JFrame(), 
-                gameIcon).getImage();
+        if (image == null) {
+            Image gameIcon = getGame().getGameIcon();
+            image = gameIcon == null ? null : Tool.loadImage(new JFrame(),
+                    gameIcon).getImage();
+        }
+        return image;
     }
 
     @Override
