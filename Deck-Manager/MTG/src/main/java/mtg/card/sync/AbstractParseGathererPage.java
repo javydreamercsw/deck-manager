@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
 
 public abstract class AbstractParseGathererPage {
 
@@ -19,14 +22,22 @@ public abstract class AbstractParseGathererPage {
     private String html;
 
     public void load() throws IOException {
-        URL url = new URL(getUrl());
-        InputStream openStream = url.openStream();
-        BufferedReader st
-                = new BufferedReader(new InputStreamReader(openStream, UTF_8));
-        String tempHtml = CardFileUtils.readFileAsString(st);
-        st.close();
-        setHtml(tempHtml);
-        loadHtml();
+        try {
+            URL url = new URL(getUrl());
+            InputStream openStream = url.openStream();
+            BufferedReader st
+                    = new BufferedReader(new InputStreamReader(openStream, UTF_8));
+            String tempHtml = CardFileUtils.readFileAsString(st);
+            st.close();
+            setHtml(tempHtml);
+            loadHtml();
+        } catch (UnknownHostException ex) {
+            //No connection the internet?
+            DialogDisplayer.getDefault().notify(
+                    new NotifyDescriptor.Message(ex.getLocalizedMessage()+
+                            " Please check your internet connection!",
+                    NotifyDescriptor.WARNING_MESSAGE));
+        }
     }
 
     protected abstract void loadHtml(String html);
