@@ -23,10 +23,13 @@ import java.util.logging.Logger;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import org.eclipse.persistence.config.PersistenceUnitProperties;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.Places;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.RequestProcessor;
 
 /**
  *
@@ -66,7 +69,8 @@ public abstract class GameUpdater extends UpdateRunnable {
             File cacheDir = Places.getCacheSubdirectory("Deck Manager");
             //Check if database is present, if not copy the default database (to avoid long initial update that was 45 minutes long on my test)
             File dbDir = new File(MessageFormat.format("{0}{1}data",
-                    cacheDir.getAbsolutePath(), System.getProperty("file.separator")));
+                    cacheDir.getAbsolutePath(), 
+                    System.getProperty("file.separator")));
             dbDir.mkdirs();
             File db = InstalledFileLocator.getDefault().locate(getDBFileName(),
                     getCodeNameBase(), false);
@@ -180,14 +184,28 @@ public abstract class GameUpdater extends UpdateRunnable {
     @Override
     public void updateRemote() {
         synchronized (this) {
-            while (updating) {
-                //Wait for update to end
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    Exceptions.printStackTrace(ex);
+            long start = System.currentTimeMillis();
+            RequestProcessor RP = new RequestProcessor("Updating", 1, false);
+            ProgressHandle ph = ProgressHandleFactory.createHandle(
+                    "Updating Database. Please wait. This can take a long time.");
+            RequestProcessor.Task theTask = RP.create(() -> {
+                while (updating) {
+                    //Wait for update to end
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
                 }
-            }
+            });
+            theTask.addTaskListener((org.openide.util.Task task) -> {
+                //Make sure that we get rid of the ProgressHandle
+                //when the task is finished
+                if (!updating && ph != null) {
+                    ph.finish();
+                }
+                LOG.log(Level.INFO, "Updating cache took: {0}", Tool.elapsedTime(start));
+            });
         }
     }
 
