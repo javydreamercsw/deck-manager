@@ -34,9 +34,10 @@ public abstract class AbstractParseGathererPage {
         } catch (UnknownHostException ex) {
             //No connection the internet?
             DialogDisplayer.getDefault().notify(
-                    new NotifyDescriptor.Message(ex.getLocalizedMessage()+
-                            " Please check your internet connection!",
-                    NotifyDescriptor.WARNING_MESSAGE));
+                    new NotifyDescriptor.Message("Unable to connect to: "
+                            + ex.getLocalizedMessage()
+                            + " Please check your internet connection!",
+                            NotifyDescriptor.WARNING_MESSAGE));
         }
     }
 
