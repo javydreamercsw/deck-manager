@@ -3,6 +3,7 @@ package mtg.card;
 import com.reflexit.magiccards.core.model.CardImpl;
 import com.reflexit.magiccards.core.model.ICardField;
 import com.reflexit.magiccards.core.model.ICardModifiable;
+import com.reflexit.magiccards.core.model.ICardType;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -671,4 +672,9 @@ public class MagicCard extends CardImpl implements IMagicCard, ICardModifiable {
         return new MagicCardComparator().compare(this, o);
     }
     private static final Logger LOG = Logger.getLogger(MagicCard.class.getName());
+
+    @Override
+    public ICardType getCardType() {
+        return null;
+    }
 }

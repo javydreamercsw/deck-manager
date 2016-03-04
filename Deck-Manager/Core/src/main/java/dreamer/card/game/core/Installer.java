@@ -1,6 +1,5 @@
 package dreamer.card.game.core;
 
-import com.dreamer.outputhandler.OutputHandler;
 import com.reflexit.magiccards.core.cache.AbstractCardCache;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.ICardGame;
@@ -12,17 +11,18 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Timer;
-import org.eclipse.persistence.config.PersistenceUnitProperties;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.modules.ModuleInstall;
 import org.openide.modules.Places;
 import org.openide.util.Lookup;
 import org.openide.util.NbPreferences;
+import org.openide.util.RequestProcessor;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -40,16 +40,12 @@ public class Installer extends ModuleInstall implements ActionListener,
     final ArrayList<Thread> runnables = new ArrayList<>();
     private Timer timer;
     private final int period = 30000, pause = 10000;
-    private final HashMap<String, String> dbProperties
-            = new HashMap<>();
     private long start;
     private boolean waitDBInit = true;
 
     @Override
     public void restored() {
         //Create game cache dir
-        dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER, "org.h2.Driver");
-        OutputHandler.select("Output");
         File cardCacheDir = new File(MessageFormat.format("{0}{1}cache",
                 Places.getCacheSubdirectory("Deck Manager").getAbsolutePath(),
                 System.getProperty("file.separator")));
@@ -61,36 +57,45 @@ public class Installer extends ModuleInstall implements ActionListener,
         AbstractCardCache.setLoadingEnabled(true);
         AbstractCardCache.setCacheDir(cardCacheDir);
         WindowManager.getDefault().invokeWhenUIReady(() -> {
-            try {
-                //Timer for inactivity background work
-                timer = new Timer(period, Installer.this);
-                timer.setInitialDelay(pause);
-                timer.start();
-                OutputHandler.output("Output", "Initializing database...");
-                Lookup.getDefault().lookup(IDataBaseCardStorage.class)
-                        .setDataBaseProperties(dbProperties);
-                //Start the database activities
-                LOG.log(Level.FINE, "Initializing database...");
+            start = System.currentTimeMillis();
+            RequestProcessor RP = new RequestProcessor("Updating", 1, false);
+            ProgressHandle ph = ProgressHandleFactory.createHandle(
+                    "Updating Database. Please wait. This can take a long time.");
+            ph.start();
+            RequestProcessor.Task theTask = RP.create(() -> {
                 try {
-                    //Make sure to load the driver
-                    start = System.currentTimeMillis();
-                    Lookup.getDefault().lookup(ClassLoader.class)
-                            .loadClass(dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
-                    LOG.log(Level.FINE,
-                            "Succesfully loaded driver: {0}",
-                            dbProperties.get(PersistenceUnitProperties.JDBC_DRIVER));
-                    Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
-                    while (waitDBInit) {
-                        Thread.sleep(100);
+                    //Timer for inactivity background work
+                    timer = new Timer(period, Installer.this);
+                    timer.setInitialDelay(pause);
+                    timer.start();
+                    //Start the database activities
+                    LOG.log(Level.FINE, "Initializing database...");
+                    try {
+                        //Make sure to load the driver
+                        start = System.currentTimeMillis();
+                        Lookup.getDefault().lookup(IDataBaseCardStorage.class).initialize();
+                        while (waitDBInit) {
+                            Thread.sleep(100);
+                        }
+                    } catch (DBException | InterruptedException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                        DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
+                                "Unable to connect to database. Please restart application", 
+                                NotifyDescriptor.ERROR_MESSAGE));
                     }
-                } catch (ClassNotFoundException | DBException | InterruptedException ex) {
+                } catch (IllegalArgumentException | SecurityException ex) {
                     LOG.log(Level.SEVERE, null, ex);
-                    DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(
-                            "Unable to connect to database. Please restart application", NotifyDescriptor.ERROR_MESSAGE));
                 }
-            } catch (IllegalArgumentException | SecurityException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            }
+            });
+            theTask.addTaskListener((org.openide.util.Task task) -> {
+                //Make sure that we get rid of the ProgressHandle
+                //when the task is finished
+                if (ph != null) {
+                    ph.finish();
+                }
+                LOG.log(Level.INFO, "Updating remote took: {0}", Tool.elapsedTime(start));
+            });
+            theTask.schedule(0);
         });
     }
 
@@ -98,14 +103,12 @@ public class Installer extends ModuleInstall implements ActionListener,
     public boolean closing() {
         super.closing();
         try {
-            OutputHandler.output("Output", "Shutting background tasks...");
             for (GameUpdateAction updater : updaters) {
                 updater.shutdown();
             }
             for (Thread runnable : runnables) {
                 runnable.interrupt();
             }
-            OutputHandler.output("Output", "Done!");
             Lookup.getDefault().lookup(IDataBaseCardStorage.class).close();
             return true;
         } catch (Exception e) {
@@ -140,9 +143,7 @@ public class Installer extends ModuleInstall implements ActionListener,
                     break;
                 }
             }
-            OutputHandler.output("Output", "Executing after update code...");
             //TODO: Code to be executed after all updates are complete
-            OutputHandler.output("Output", "Done!");
         }
         return ready;
     }
@@ -153,12 +154,10 @@ public class Installer extends ModuleInstall implements ActionListener,
         waitDBInit = false;
         //Code to be done after the db is ready
         LOG.log(Level.FINE, "Database initialized");
-        OutputHandler.output("Output", "Database initialized");
         LOG.log(Level.FINE, "Initializing database took: {0}",
                 Tool.elapsedTime(start));
         LOG.log(Level.FINE, "Initializing games...");
         Runnable task;
-        OutputHandler.output("Output", "Starting game updaters...");
         for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
             new GameInitializationAction(game).actionPerformed(null);
             task = game.getUpdateRunnable();
@@ -174,8 +173,6 @@ public class Installer extends ModuleInstall implements ActionListener,
                 }
             }
         }
-        OutputHandler.output("Output", "Done!");
-        OutputHandler.output("Output", "Starting cache updaters...");
         for (ICardCache cache : Lookup.getDefault().lookupAll(ICardCache.class)) {
             task = cache.getCacheTask();
             if (task != null) {
@@ -196,7 +193,6 @@ public class Installer extends ModuleInstall implements ActionListener,
         for (Thread runnable : runnables) {
             runnable.start();
         }
-        OutputHandler.output("Output", "Done!");
     }
 
     @Override

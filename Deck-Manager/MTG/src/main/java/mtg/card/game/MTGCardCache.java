@@ -282,6 +282,16 @@ public class MTGCardCache extends AbstractCardCache {
         public void initialized() {
             //Nothing to do
         }
+
+        @Override
+        public void defaultUpdateLocal() {
+            //Nothing
+        }
+
+        @Override
+        public void defaultUpdateRemote() {
+            //Nothing
+        }
     }
 
     public static URL createManaImageURL(String symbol) {

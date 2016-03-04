@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 /**
@@ -26,6 +27,9 @@ public abstract class UpdateRunnable implements IProgressAction,
     private final ICardGame game;
     private static final Logger LOG
             = Logger.getLogger(UpdateRunnable.class.getName());
+    protected boolean localUpdated = false, localUpdating = false;
+    protected boolean remoteUpdated = false, remoteUpdating = false;
+    protected boolean updating = false;
 
     public UpdateRunnable(ICardGame game) {
         this.game = game;
@@ -34,13 +38,14 @@ public abstract class UpdateRunnable implements IProgressAction,
     }
 
     /**
-     * Does a local update to initialize from the plug-in
+     * Does a local update to initialize from the plug-in. This is to be
+     * implemented on each game.
      */
     public abstract void updateLocal();
 
     /**
      * Does a remote update to initialize from a remote place like the Internet
-     * or database.
+     * or database. This is to be implemented on each game.
      */
     public abstract void updateRemote();
 
@@ -169,12 +174,44 @@ public abstract class UpdateRunnable implements IProgressAction,
         } catch (DBException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        updateLocal();
-        updateRemote();
+        //Update locally
+        localUpdating = true;
+        defaultUpdateLocal();
+        while (localUpdating) {
+            //Wait for update to end
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        //Update remotely
+        remoteUpdating = true;
+        defaultUpdateRemote();
+        while (remoteUpdating) {
+            //Wait for update to end
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
     }
 
     @Override
     public void run() {
         reportDone();
     }
+
+    /**
+     * Default tasks to be done locally. Usually not implemented by each game.
+     * It must call updateLocal.
+     */
+    public abstract void defaultUpdateLocal();
+
+    /**
+     * Default tasks to be done remotely. Usually not implemented by each game.
+     * It must call updateRemote.
+     */
+    public abstract void defaultUpdateRemote();
 }

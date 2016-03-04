@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
-        <version>7</version>
+        <version>9</version>
     </parent>
     <groupId>net.sourceforge.javydreamercsw.deck.manager</groupId>
     <artifactId>Deck-Manager</artifactId>
@@ -30,4 +30,43 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
     </repositories>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>nbm-maven-plugin</artifactId>
+                    <version>4.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.4.0</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>install-image4j-jar</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>mvn</executable>
+                    <arguments>
+                        <argument>install:install-file</argument>
+                        <argument>-Dfile=${basedir}\repo\net\sf\image4j\0.7.1\image4j.jar</argument>
+                        <argument>-DgroupId=net.sf.image4j</argument>
+                        <argument>-DartifactId=image4j</argument>
+                        <argument>-Dversion=0.7.1</argument>
+                        <argument>-Dpackaging=jar</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
