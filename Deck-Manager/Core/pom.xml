@@ -50,12 +50,6 @@
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
-            <groupId>net.sourceforge.javydreamercsw</groupId>
-            <artifactId>Ouput-Handler</artifactId>
-            <version>1.5.1</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-modules</artifactId>
             <version>${netbeans.version}</version>
@@ -90,21 +84,26 @@
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.4.187</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>Card-Game-Library</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>net.sf.image4j</groupId>
             <artifactId>image4j</artifactId>
-            <version>1.0</version>
+            <version>0.7.1</version>
             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>H2</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
     <properties>

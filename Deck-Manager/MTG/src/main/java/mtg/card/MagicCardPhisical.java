@@ -381,12 +381,10 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
                     tag = tag.substring(1);
                     value = removeTag(value, tag);
                     add = true;
+                } else if (add) {
+                    addTag(value, tag);
                 } else {
-                    if (add) {
-                        addTag(value, tag);
-                    } else {
-                        value = MessageFormat.format("{0},", tag);
-                    }
+                    value = MessageFormat.format("{0},", tag);
                 }
             }
             this.special = value;
@@ -466,4 +464,9 @@ public class MagicCardPhisical extends CardImpl implements IMagicCard, ICardCoun
         return new MagicCardComparator().compare(this, o);
     }
     private static final Logger LOG = Logger.getLogger(MagicCardPhisical.class.getName());
+
+    @Override
+    public ICardType getCardType() {
+        return null;
+    }
 }

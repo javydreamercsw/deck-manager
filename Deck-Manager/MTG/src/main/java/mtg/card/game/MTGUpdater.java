@@ -1,11 +1,15 @@
 package mtg.card.game;
 
+import com.reflexit.magiccards.core.CannotDetermineSetAbbriviation;
 import com.reflexit.magiccards.core.cache.AbstractCardCache;
 import com.reflexit.magiccards.core.cache.ICacheData;
 import com.reflexit.magiccards.core.cache.ICardCache;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Editions.Edition;
+import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardSet;
+import com.reflexit.magiccards.core.model.ICardType;
+import com.reflexit.magiccards.core.model.IGame;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.DataBaseStateListener;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
@@ -14,6 +18,7 @@ import com.reflexit.magiccards.core.storage.database.*;
 import com.reflexit.magiccards.core.storage.database.controller.CardSetJpaController;
 import com.reflexit.magiccards.core.storage.database.controller.exceptions.NonexistentEntityException;
 import dreamer.card.game.core.GameUpdater;
+import dreamer.card.game.core.ThreadCompleteListener;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,14 +26,17 @@ import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import mtg.card.MagicCard;
 import mtg.card.sync.ParseGathererSets;
 import org.apache.commons.io.FileUtils;
+import org.netbeans.api.progress.ProgressHandle;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
@@ -38,39 +46,42 @@ import org.openide.util.lookup.ServiceProvider;
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
 @ServiceProvider(service = DataBaseStateListener.class)
-public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
+public class MTGUpdater extends GameUpdater implements DataBaseStateListener,
+        ThreadCompleteListener {
 
     private String currentSet = "";
-    private static final Pattern countPattern
+    private static final Pattern COUNT
             = Pattern.compile("SEARCH:<p class=\"termdisplay\">  <span id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_searchTermDisplay\".*><i>.*</i>  \\((\\d+)\\)</span>");
-    private static final Pattern lastPagePattern
+    private static final Pattern LAST
             = Pattern.compile("\\Q<span style=\"visibility:hidden;\">&nbsp;&gt;</span></div>");
-    private static final Pattern spanPattern
+    private static final Pattern SPAN
             = Pattern.compile("class=[^>]*>(.*)</span>");
-    private static final Pattern divPattern
+    private static final Pattern DIV
             = Pattern.compile("class=[^>]*>(.*?)</div>");
-    private static final Pattern idPattern
+    private static final Pattern ID
             = Pattern.compile("href=.*/Card/Details.aspx\\?multiverseid=(\\d+)");
-    private static final Pattern setPattern
+    private static final Pattern SET
             = Pattern.compile("title=\"(.*) \\((.*)\\)\" src=.*set=(\\w+)");
-    private static final Pattern namePattern
+    private static final Pattern NAME
             = Pattern.compile(".*>(.*)</a></span>");
-    private static final Pattern powPattern
+    private static final Pattern POW
             = Pattern.compile("\\((\\d+/)?(\\d+)\\)");
     private static String LONG_MINUS;
     private final static Charset UTF_8 = Charset.forName("utf-8");
-    private final static Map manaMap = new LinkedHashMap();
+    private final static Map MANAMAP = new LinkedHashMap();
     private static final Logger LOG
             = Logger.getLogger(MTGUpdater.class.getSimpleName());
     protected final String source
             = "http://gatherer.wizards.com/Pages/Search/Default.aspx?set=%5b%22";
+    private int updateCount = 0;
+    private ProgressHandle ph;
 
     static {
-        manaMap.put("\\Q{500}", "{0.5}");
-        manaMap.put("\\{(\\d)([BUGRW])\\}", "{$1/$2}");
-        manaMap.put("\\{([BUGRW])([BUGRW])\\}", "{$1/$2}");
-        manaMap.put("\\Q{tap}", "{T}");
-        manaMap.put("\\Q{untap}", "{Q}");
+        MANAMAP.put("\\Q{500}", "{0.5}");
+        MANAMAP.put("\\{(\\d)([BUGRW])\\}", "{$1/$2}");
+        MANAMAP.put("\\{([BUGRW])([BUGRW])\\}", "{$1/$2}");
+        MANAMAP.put("\\Q{tap}", "{T}");
+        MANAMAP.put("\\Q{untap}", "{Q}");
     }
 
     static {
@@ -89,7 +100,6 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
     @Override
     public void updateRemote() {
         synchronized (this) {
-            super.updateRemote();
             if (!remoteUpdated) {
                 if (!dbError) {
                     updating = true;
@@ -100,7 +110,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                         Collection<Editions.Edition> editions
                                 = Editions.getInstance().getEditions();
                         ArrayList<SetUpdateData> data
-                                = new ArrayList<SetUpdateData>();
+                                = new ArrayList<>();
                         //This section updates from the internet
                         //Get the sets
                         updateProgressMessage("Gathering stats before start processing...");
@@ -128,7 +138,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                         }
                         //Chek to see if there's something new to update.
                         ArrayList<Editions.Edition> setsToLoad
-                                = new ArrayList<Editions.Edition>();
+                                = new ArrayList<>();
                         for (Editions.Edition edition : editions) {
                             parameters.clear();
                             parameters.put("name", edition.getName());
@@ -198,9 +208,11 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                                         Edition edition = setData.getEdition();
                                         if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition.getName(),
                                                 new MTGGame())) {
-                                            Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(mtg,
+                                            ICardSet set = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(mtg,
                                                     edition.getName(), edition.getMainAbbreviation(), edition.getReleaseDate());
                                             LOG.log(Level.INFO, "Created set: {0}", edition.getName());
+                                            MTGCardCache cache = new MTGCardCache();
+                                            cache.getSetIcon(set);
                                         }
                                     }
                                 }
@@ -244,6 +256,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
             }
         }
         updating = false;
+        remoteUpdating = false;
     }
 
     @Override
@@ -258,7 +271,8 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
      * @throws MalformedURLException
      * @throws IOException
      */
-    protected void createCardsForSet(String from) throws MalformedURLException, IOException {
+    protected void createCardsForSet(String from) throws MalformedURLException,
+            IOException {
         LOG.log(Level.INFO, "Retrieving from url: {0}", from);
         int i = 0;
         boolean lastPage = false;
@@ -324,7 +338,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
         String line;
         int amount = 0;
         while ((line = st.readLine()) != null) {
-            Matcher cm = countPattern.matcher(line);
+            Matcher cm = COUNT.matcher(line);
             if (cm.find()) {
                 amount = Integer.parseInt(cm.group(1));
                 break;
@@ -340,7 +354,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
         boolean lastPage = false;
         boolean cards = false;
         while ((state == 0 && (line = st.readLine()) != null) || (state == 1) && !dbError) {
-            if (lastPagePattern.matcher(line).find()) {
+            if (LAST.matcher(line).find()) {
                 lastPage = true;
             }
             if (line.matches(".*class=\"cardItem .*")) {
@@ -390,42 +404,41 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
         // split by td
         String[] rows = line.split("<td");
         String[] fields = rows[2].split("<span|<div");
-        String id = getMatch(idPattern, fields[3]);
+        String id = getMatch(ID, fields[3]);
         card.setId(id);
-        card.setName(getMatch(namePattern, fields[3]));
-        String cost = getMatch(spanPattern, fields[4]);
+        card.setName(getMatch(NAME, fields[3]));
+        String cost = getMatch(SPAN, fields[4]);
         card.setCost(cost);
-        String type = getMatch(spanPattern, fields[6]);
+        String type = getMatch(SPAN, fields[6]);
         String powerCombo = type;
-        String pow = getMatch(powPattern, powerCombo, 1).replaceFirst("/", "");
-        String tou = getMatch(powPattern, powerCombo, 2);
+        String pow = getMatch(POW, powerCombo, 1).replaceFirst("/", "");
+        String tou = getMatch(POW, powerCombo, 2);
         type = type.replaceAll("\\(.*", "").trim();
         card.setType(type);
-        String text = fixText(getMatch(divPattern, fields[7]));
+        String text = fixText(getMatch(DIV, fields[7]));
         card.setOracleText(text);
         card.setPower(pow);
         card.setToughness(tou);
         String[] sets = rows[3].split("<a onclick");
         for (String temp : sets) {
-            String edition = getMatch(setPattern, temp, 1);
-            String rarity = getMatch(setPattern, temp, 2);
-            String setId = getMatch(idPattern, temp, 1);
+            String edition = getMatch(SET, temp, 1);
+            String rarity = getMatch(SET, temp, 2);
+            String setId = getMatch(ID, temp, 1);
             if (edition.length() <= 1) {
                 continue;
             }
             edition = edition.trim();
             if (id.equals(setId)) {
                 addCardToSet(card, edition, rarity, type);
-            } else {
-                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, new MTGGame())) {
-                    LOG.log(Level.WARNING, "Is this a printing for card: {0} ID: {1} Set: {2}?",
-                            new Object[]{card.getName(), id, edition});
-                }
+            } else if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, new MTGGame())) {
+                LOG.log(Level.WARNING, "Is this a printing for card: {0} ID: {1} Set: {2}?",
+                        new Object[]{card.getName(), id, edition});
             }
         }
     }
 
-    private Card addCardToSet(MagicCard card, String edition, String rarity, String type) throws DBException {
+    private Card addCardToSet(MagicCard card, String edition, String rarity,
+            String type) throws DBException {
         Card c = null;
         if (!dbError) {
             HashMap parameters = new HashMap();
@@ -435,13 +448,17 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
             card.setRarity(rarity.trim());
             parameters.clear();
             parameters.put("name", card.getSetName());
-            CardSet set = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters).get(0);
+            CardSet set = (CardSet) Lookup.getDefault()
+                    .lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName",
+                    parameters).get(0);
             //Handle card type, it might be new
             parameters.put("name", type);
             try {
-                result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardType.findByName", parameters);
+                result = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                        .namedQuery("CardType.findByName", parameters);
                 if (result.isEmpty()) {
-                    ct = (CardType) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardType(type);
+                    ct = (CardType) Lookup.getDefault()
+                            .lookup(IDataBaseCardStorage.class).createCardType(type);
                 } else {
                     ct = (CardType) result.get(0);
                 }
@@ -452,7 +469,8 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
             Game mtg;
             parameters.clear();
             parameters.put("name", getGame().getName());
-            mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).get(0);
+            mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                    .namedQuery("Game.findByName", parameters).get(0);
             ICardSet temp = null;
             for (ICardSet x : mtg.getCardSetList()) {
                 if (x.getName().equals(set.getName())) {
@@ -461,10 +479,12 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                 }
             }
             //Create the card
-            if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardExists(card.getName(), temp)) {
+            if (Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                    .cardExists(card.getName(), temp)) {
                 parameters.clear();
                 parameters.put("name", card.getName());
-                c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
+                c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                        .namedQuery("Card.findByName", parameters).get(0);
             } else {
                 try {
                     c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(ct,
@@ -478,7 +498,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
             if (c != null) {
                 //Add the card attributes
                 try {
-                    HashMap<String, String> attributes = new HashMap<String, String>();
+                    HashMap<String, String> attributes = new HashMap<>();
                     attributes.put("Rarity", card.getRarity());
                     attributes.put("Cost", card.getCost());
                     attributes.put("Color Type", card.getColorType());
@@ -489,7 +509,8 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                     attributes.put("Toughness", card.getToughness());
                     attributes.put("Type", card.getType());
                     attributes.put("CardId", "" + card.getCardId());
-                    IDataBaseCardStorage storage = Lookup.getDefault().lookup(IDataBaseCardStorage.class);
+                    IDataBaseCardStorage storage
+                            = Lookup.getDefault().lookup(IDataBaseCardStorage.class);
                     //This only adds it if it doesn't exist
                     storage.addAttributesToCard(c, attributes);
                     //Add the card to the set
@@ -506,12 +527,24 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                 }
             }
             if (updateCache) {
-                parameters.clear();
-                parameters.put("name", card.getName());
-                c = (Card) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
-                //Add to caching list
-                c.setSetName(edition);
-                Lookup.getDefault().lookup(ICacheData.class).add(c);
+                try {
+                    parameters.clear();
+                    parameters.put("name", card.getName());
+                    c = (Card) Lookup.getDefault()
+                            .lookup(IDataBaseCardStorage.class)
+                            .namedQuery("Card.findByName", parameters).get(0);
+                    //Add to caching list
+                    c.setSetName(edition);
+                    Lookup.getDefault().lookup(ICacheData.class).add(c);
+                    if (temp != null) {
+                        MTGCardCache cache = new MTGCardCache();
+                        cache.getCardImage(c, temp, cache.createRemoteImageURL(c,
+                                Editions.getInstance().getEditionByName(temp.getName())),
+                                true, false);
+                    }
+                } catch (IOException | CannotDetermineSetAbbriviation ex) {
+                    Exceptions.printStackTrace(ex);
+                }
             }
             increaseProgress();
         }
@@ -555,9 +588,9 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
         str = str.replaceAll("&quot;", "\"");
         if (str.contains("img")) {
             str = str.replaceAll("<img [^<]*name=([^&]*)&[^>]*/>", "{$1}");
-            for (Iterator iterator = manaMap.keySet().iterator(); iterator.hasNext();) {
+            for (Iterator iterator = MANAMAP.keySet().iterator(); iterator.hasNext();) {
                 String alt = (String) iterator.next();
-                String to = (String) manaMap.get(alt);
+                String to = (String) MANAMAP.get(alt);
                 str = str.replaceAll(alt, to);
             }
         }
@@ -579,7 +612,7 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
     }
 
     public static void main(String[] args) {
-        File cacheDir = new File(System.getProperty("user.dir") 
+        File cacheDir = new File(System.getProperty("user.dir")
                 + "/target/cache");
         LOG.log(Level.INFO, "Setting cache directory at: {0}",
                 cacheDir.getAbsolutePath());
@@ -652,5 +685,141 @@ public class MTGUpdater extends GameUpdater implements DataBaseStateListener {
                 LOG.log(Level.WARNING, "Unable to find: {0}", db.getAbsolutePath());
             }
         }
+    }
+
+    @Override
+    public void loadDefaultCards(ProgressHandle ph) throws DBException {
+        try {
+            updateCount = 0;
+            EntityManagerFactory emf
+                    = Persistence.createEntityManagerFactory("MTGPU");
+            CardSetJpaController controller = new CardSetJpaController(emf);
+            IDataBaseCardStorage storage
+                    = Lookup.getDefault().lookup(IDataBaseCardStorage.class);
+            String gameName = new MTGGame().getName();
+            IGame game;
+            if (!storage.gameExists(gameName)) {
+                game = storage.createGame(new MTGGame().getName());
+            } else {
+                game = storage.getGame(gameName);
+            }
+            List<CardSet> sets = controller.findCardSetEntities();
+            int amount = 0;
+            //Calculate work
+            for (final CardSet cs : sets) {
+                amount += cs.getCardList().size();
+            }
+            ph.start(sets.size());
+            ph.switchToDeterminate(amount);
+            for (final CardSet cs : sets) {
+                copySet(cs, storage, game, ph);
+//                SetCopyThread ct = new SetCopyThread(cs, storage, game, ph);
+//                ct.addListener(this);
+//                ct.start();
+            }
+            localUpdating = false;
+        } catch (DBException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }
+
+    private void copySet(CardSet cs, IDataBaseCardStorage storage,
+            IGame game, ProgressHandle ph) {
+        try {
+            LOG.log(Level.FINE, "Processing set: {0}",
+                    new Object[]{cs.getName()});
+            ph.progress("Processing set: " + cs.getName());
+            ICardSet ncs = storage.createCardSet(game, cs.getName(),
+                    cs.getAbbreviation(),
+                    cs.getReleased());
+            for (Card c : cs.getCardList()) {
+                ICardType ct;
+                if (storage.cardTypeExists(c.getCardType().getName())) {
+                    ct = storage.getCardType(c.getCardType().getName());
+                } else {
+                    ct = storage.createCardType(c.getCardType().getName());
+                }
+                ICard card = storage.createCard(ct, c.getName(),
+                        c.getText(), ncs);
+                //Add attributes
+                HashMap<String, String> attributes = new HashMap<>();
+                for (CardHasCardAttribute chca : c.getCardHasCardAttributeList()) {
+                    attributes.put(chca.getCardAttribute().getName(),
+                            chca.getValue());
+                }
+                storage.addAttributesToCard(card, attributes);
+                ph.progress(updateCount++);
+                LOG.log(Level.FINE, "Copied card: {0} to set: {1}",
+                        new Object[]{c.getName(), ncs.getName()});
+            }
+            LOG.log(Level.INFO, "Done copying set: {0}",
+                    new Object[]{cs.getName()});
+        } catch (DBException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }
+
+    @Override
+    public void notifyOfThreadComplete(Thread thread) {
+        if (ph != null) {
+            ph.progress(updateCount++);
+        }
+    }
+
+    private abstract class NotifyingThread extends Thread {
+
+        private final Set<ThreadCompleteListener> listeners
+                = new CopyOnWriteArraySet<>();
+
+        public final void addListener(final ThreadCompleteListener listener) {
+            listeners.add(listener);
+        }
+
+        public final void removeListener(final ThreadCompleteListener listener) {
+            listeners.remove(listener);
+        }
+
+        private void notifyListeners() {
+            for (ThreadCompleteListener listener : listeners) {
+                listener.notifyOfThreadComplete(this);
+            }
+        }
+
+        @Override
+        public final void run() {
+            try {
+                doRun();
+            } finally {
+                notifyListeners();
+            }
+        }
+
+        public abstract void doRun();
+    }
+
+    private class SetCopyThread extends NotifyingThread {
+
+        private final CardSet cs;
+        private final IDataBaseCardStorage storage;
+        private final IGame game;
+        private final ProgressHandle ph;
+
+        public SetCopyThread(final CardSet cs, IDataBaseCardStorage storage,
+                IGame game, ProgressHandle ph) {
+            this.cs = cs;
+            this.storage = storage;
+            this.game = game;
+            this.ph = ph;
+        }
+
+        @Override
+        public void doRun() {
+            copySet(cs, storage, game, ph);
+        }
+    }
+
+    @Override
+    public void updateLocal() {
+        //Nothing?
     }
 }

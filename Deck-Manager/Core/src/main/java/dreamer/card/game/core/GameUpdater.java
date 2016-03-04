@@ -1,32 +1,15 @@
 package dreamer.card.game.core;
 
-import com.reflexit.magiccards.core.model.Editions;
-import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.ICardSet;
-import com.reflexit.magiccards.core.model.ICardType;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
-import com.reflexit.magiccards.core.storage.database.Card;
-import com.reflexit.magiccards.core.storage.database.CardHasCardAttribute;
-import com.reflexit.magiccards.core.storage.database.CardSet;
-import com.reflexit.magiccards.core.storage.database.Game;
-import java.io.File;
-import java.text.MessageFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.modules.InstalledFileLocator;
-import org.openide.modules.Places;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.RequestProcessor;
@@ -40,9 +23,6 @@ public abstract class GameUpdater extends UpdateRunnable {
     private static final Logger LOG
             = Logger.getLogger(GameUpdater.class.getName());
     protected boolean dbError = false;
-    protected boolean localUpdated = false;
-    protected boolean remoteUpdated = false;
-    protected boolean updating = false;
     private String codeNameBase, dbFileName = "card_manager.mv.db";
 
     public GameUpdater(ICardGame game) {
@@ -50,162 +30,67 @@ public abstract class GameUpdater extends UpdateRunnable {
     }
 
     @Override
-    //TODO: Still not working
-    public void updateLocal() {
+    public void defaultUpdateLocal() {
         synchronized (this) {
-            while (updating) {
-                //Wait for update to end
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            }
-        }
-        if (!localUpdated) {
-            updating = true;
-            //This section updates from the deployed database
-            //Create game cache dir
-            File cacheDir = Places.getCacheSubdirectory("Deck Manager");
-            //Check if database is present, if not copy the default database (to avoid long initial update that was 45 minutes long on my test)
-            File dbDir = new File(MessageFormat.format("{0}{1}data",
-                    cacheDir.getAbsolutePath(), 
-                    System.getProperty("file.separator")));
-            dbDir.mkdirs();
-            File db = InstalledFileLocator.getDefault().locate(getDBFileName(),
-                    getCodeNameBase(), false);
-            LOG.fine("Updating database...");
-            EntityManagerFactory emf = null;
-            try {
-                if (db != null && db.exists()) {
-                    //Connect to the module's DB
-                    String dbName = db.getName();
-                    if (dbName.indexOf(".") > 0) {
-                        dbName = dbName.substring(0, dbName.indexOf("."));
-                    }
-                    LOG.log(Level.INFO, "Database located at: {0}",
-                            db.getParentFile().getAbsolutePath());
-                    final Map<String, String> dbProperties
-                            = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
-                            .getConnectionSettings();
-                    dbProperties.put(PersistenceUnitProperties.JDBC_URL,
-                            MessageFormat.format("jdbc:h2:file:{0}{1}{2};AUTO_SERVER=TRUE",
-                                    db.getParentFile().getAbsolutePath(),
-                                    System.getProperty("file.separator"), dbName));
-                    dbProperties.put(PersistenceUnitProperties.TARGET_DATABASE,
-                            "org.eclipse.persistence.platform.database.H2Platform");
-                    dbProperties.put(PersistenceUnitProperties.JDBC_PASSWORD,
-                            "test");
-                    dbProperties.put(PersistenceUnitProperties.JDBC_DRIVER,
-                            "org.h2.Driver");
-                    dbProperties.put(PersistenceUnitProperties.JDBC_USER,
-                            "deck_manager");
-                    emf = Persistence.createEntityManagerFactory("Card_Game_InterfacePU",
-                            dbProperties);
-                    HashMap parameters = new HashMap();
-                    parameters.put("name", getGame().getName());
-                    Game game = (Game) namedQuery("Game.findByName", parameters, emf).get(0);
-                    if (game.getCardSetList().size() > Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(game).size()) {
-                        for (Iterator<CardSet> it = game.getCardSetList().iterator(); it.hasNext();) {
-                            if (!dbError) {
-                                ICardSet set = it.next();
-                                LOG.log(Level.FINE, "Checkig set: {0}", set.getName());
-                                if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(set.getName(), getGame())) {
-                                    Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardSet(game, set.getName(), Editions.getInstance().getEditionByName(set.getName()).getMainAbbreviation(), new Date());
-                                }
-                                LOG.log(Level.FINE, "{0} cards to check!", set.getCards().size());
-                                for (Iterator it2 = set.getCards().iterator(); it2.hasNext();) {
-                                    ICard card = (ICard) it2.next();
-                                    ICardType cardType = ((Card) card).getCardType();
-                                    if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardTypeExists(cardType.getName(), getGame())) {
-                                        cardType = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCardType(cardType.getName());
-                                        LOG.log(Level.FINE, "Added card type: {0}", cardType.getName());
-                                    } else {
-                                        LOG.log(Level.FINE, "Card type: {0} already exists!", cardType.getName());
-                                        parameters.clear();
-                                        parameters.put("name", cardType.getName());
-                                        cardType = (ICardType) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardType.findByName", parameters).get(0);
-                                    }
-                                    Game g;
-                                    parameters.clear();
-                                    parameters.put("name", getGame().getName());
-                                    g = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Game.findByName", parameters).get(0);
-                                    ICardSet target = null;
-                                    for (ICardSet cs : g.getCardSetList()) {
-                                        if (cs.getName().equals(set.getName())) {
-                                            target = cs;
-                                            break;
-                                        }
-                                    }
-                                    if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardExists(card.getName(), target)) {
-                                        List<CardHasCardAttribute> attributes = ((Card) card).getCardHasCardAttributeList();
-                                        card = Lookup.getDefault().lookup(IDataBaseCardStorage.class).createCard(cardType, card.getName(), ((Card) card).getText(), set);
-                                        LOG.log(Level.FINE, "Added card: {0}", card.getName());
-                                        for (CardHasCardAttribute attr : attributes) {
-                                            if (Lookup.getDefault().lookup(IDataBaseCardStorage.class).getCardAttribute(card, attr.getCardAttribute().getName()) == null) {
-                                                Lookup.getDefault().lookup(IDataBaseCardStorage.class).addAttributeToCard(card, attr.getCardAttribute().getName(), attr.getValue());
-                                                LOG.log(Level.FINE, "Added attribute: {0} with value: {1}!", new Object[]{attr.getCardAttribute().getName(), attr.getValue()});
-                                            }
-                                        }
-                                    } else {
-                                        parameters.clear();
-                                        parameters.put("name", card.getName());
-                                        card = (ICard) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("Card.findByName", parameters).get(0);
-                                        LOG.log(Level.FINE, "Card: {0} already exists!", card.getName());
-                                    }
-                                    if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).setHasCard(set, card)) {
-                                        parameters.clear();
-                                        parameters.put("name", set.getName());
-                                        CardSet temp = (CardSet) Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", parameters).get(0);
-                                        Lookup.getDefault().lookup(IDataBaseCardStorage.class).addCardToSet(card, temp);
-                                        LOG.log(Level.FINE, "Added card: {0} to set {1}", new Object[]{card.getName(), temp.getName()});
-                                    } else {
-                                        LOG.log(Level.FINE, "Card set: {0} already has card {1}", new Object[]{set.getName(), card.getName()});
-                                    }
-                                }
-                            }
+            if (!localUpdated) {
+                long start = System.currentTimeMillis();
+                RequestProcessor RP = new RequestProcessor("Updating local", 1, false);
+                ProgressHandle ph = ProgressHandleFactory.createHandle(
+                        "Updating Local Database.");
+                RequestProcessor.Task theTask = RP.create(() -> {
+                    updating = true;
+                    localUpdating = true;
+                    try {
+                        List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                                .namedQuery("CardSet.findAll");
+                        LOG.log(Level.INFO, "{0} sets found in database.", temp.size());
+                        if (temp.isEmpty()) {
+                            //Load from the default database
+                            DialogDisplayer.getDefault().notifyLater(
+                                    new NotifyDescriptor.Message(
+                                            org.openide.util.NbBundle.getMessage(GameUpdater.class,
+                                                    "initial.load").replaceAll("[x]",
+                                                    getGame().getName()),
+                                            NotifyDescriptor.WARNING_MESSAGE));
+                            loadDefaultCards(ph);
                         }
+                        updateLocal();
+                    } catch (DBException ex) {
+                        Exceptions.printStackTrace(ex);
                     }
-                }
-            } catch (DBException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-                dbError = true;
-            } finally {
-                //Close connections
-                if (emf != null) {
-                    emf.close();
-                }
+                    localUpdated = true;
+                });
+                theTask.addTaskListener((org.openide.util.Task task) -> {
+                    //Make sure that we get rid of the ProgressHandle
+                    //when the task is finished
+                    ph.finish();
+                    LOG.log(Level.INFO, "Updating local took: {0}", Tool.elapsedTime(start));
+                });
+                theTask.schedule(0);
             }
-            localUpdated = true;
         }
-        updating = false;
     }
 
     @Override
-    public void updateRemote() {
+    public void defaultUpdateRemote() {
         synchronized (this) {
             long start = System.currentTimeMillis();
-            RequestProcessor RP = new RequestProcessor("Updating", 1, false);
+            RequestProcessor RP = new RequestProcessor("Updating remote", 1, false);
             ProgressHandle ph = ProgressHandleFactory.createHandle(
-                    "Updating Database. Please wait. This can take a long time.");
+                    "Updating from remote data. Please wait. This can take a long time.");
             RequestProcessor.Task theTask = RP.create(() -> {
-                while (updating) {
-                    //Wait for update to end
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
-                }
+                ph.start();
+                remoteUpdating = true;
+                updateRemote();
             });
             theTask.addTaskListener((org.openide.util.Task task) -> {
                 //Make sure that we get rid of the ProgressHandle
                 //when the task is finished
-                if (!updating && ph != null) {
-                    ph.finish();
-                }
-                LOG.log(Level.INFO, "Updating cache took: {0}", Tool.elapsedTime(start));
+                ph.finish();
+                LOG.log(Level.INFO, "Updating remote took: {0}",
+                        Tool.elapsedTime(start));
             });
+            theTask.schedule(0);
         }
     }
 
@@ -236,4 +121,12 @@ public abstract class GameUpdater extends UpdateRunnable {
     public void setDBFileName(String dbFileName) {
         this.dbFileName = dbFileName;
     }
+
+    /**
+     * Load the default cards
+     *
+     * @param ph Progress Handle to update status.
+     * @throws com.reflexit.magiccards.core.model.storage.db.DBException
+     */
+    public abstract void loadDefaultCards(ProgressHandle ph) throws DBException;
 }
