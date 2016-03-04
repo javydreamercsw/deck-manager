@@ -73,6 +73,7 @@
         <module>Joda-Time-Wrapper</module>
         <module>MTG</module>
         <module>GUI</module>
+        <module>H2</module>
     </modules>
 
     <properties>
