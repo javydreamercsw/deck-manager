@@ -34,7 +34,8 @@ public abstract class GameUpdater extends UpdateRunnable {
         synchronized (this) {
             if (!localUpdated) {
                 long start = System.currentTimeMillis();
-                RequestProcessor RP = new RequestProcessor("Updating local", 1, false);
+                RequestProcessor RP = new RequestProcessor("Updating local", 1,
+                        false);
                 ProgressHandle ph = ProgressHandleFactory.createHandle(
                         "Updating Local Database.");
                 RequestProcessor.Task theTask = RP.create(() -> {
@@ -43,7 +44,8 @@ public abstract class GameUpdater extends UpdateRunnable {
                     try {
                         List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
                                 .namedQuery("CardSet.findAll");
-                        LOG.log(Level.INFO, "{0} sets found in database.", temp.size());
+                        LOG.log(Level.INFO, "{0} sets found in database.",
+                                temp.size());
                         if (temp.isEmpty()) {
                             //Load from the default database
                             DialogDisplayer.getDefault().notifyLater(
@@ -59,14 +61,18 @@ public abstract class GameUpdater extends UpdateRunnable {
                         Exceptions.printStackTrace(ex);
                     }
                     localUpdated = true;
+                    localUpdating = false; 
                 });
                 theTask.addTaskListener((org.openide.util.Task task) -> {
                     //Make sure that we get rid of the ProgressHandle
                     //when the task is finished
                     ph.finish();
-                    LOG.log(Level.INFO, "Updating local took: {0}", Tool.elapsedTime(start));
+                    LOG.log(Level.INFO, "Updating local took: {0}",
+                            Tool.elapsedTime(start));
                 });
                 theTask.schedule(0);
+            }else{
+                localUpdating = false;
             }
         }
     }
