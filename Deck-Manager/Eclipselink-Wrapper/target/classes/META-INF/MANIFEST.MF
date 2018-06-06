@@ -1,0 +1,32 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Localizing-Bundle: net/sourceforge/javydreamercsw/deck/
+ manager/eclipselink/wrapper/Bundle.properties
+OpenIDE-Module-Specification-Version: 0.3
+OpenIDE-Module-Implementation-Version: 0.3-20180606
+AutoUpdate-Show-In-Client: false
+OpenIDE-Module-Build-Version: 201806061952
+OpenIDE-Module: net.sourceforge.javydreamercsw.deck.manager.Eclipselin
+ k.Wrapper
+OpenIDE-Module-Public-Packages: javax.persistence.**, commonj.sdo.**, 
+ org.eclipse.persistence.**
+OpenIDE-Module-Requires: org.openide.modules.ModuleFormat1
+OpenIDE-Module-Display-Category: net.sourceforge.javydreamercsw.deck.m
+ anager
+OpenIDE-Module-Name: Eclipselink Wrapper
+OpenIDE-Module-Short-Description: Sonatype helps open source projects 
+ to set up Maven repositories on https://oss.sonatype.org/
+OpenIDE-Module-Long-Description: Sonatype helps open source projects t
+ o set up Maven repositories on https://oss.sonatype.org/
+X-Class-Path: ext/net.sourceforge.javydreamercsw.deck.manager.Eclipsel
+ ink-Wrapper/org-eclipse-persistence/eclipselink.jar ext/net.sourcefor
+ ge.javydreamercsw.deck.manager.Eclipselink-Wrapper/org-eclipse-persis
+ tence/commonj.sdo.jar ext/net.sourceforge.javydreamercsw.deck.manager
+ .Eclipselink-Wrapper/javax-validation/validation-api.jar ext/net.sour
+ ceforge.javydreamercsw.deck.manager.Eclipselink-Wrapper/org-glassfish
+ /javax.json.jar ext/net.sourceforge.javydreamercsw.deck.manager.Eclip
+ selink-Wrapper/org-eclipse-persistence/javax.persistence.jar
+Maven-Class-Path: org.eclipse.persistence:eclipselink:2.7.1 org.eclips
+ e.persistence:commonj.sdo:2.1.1 javax.validation:validation-api:1.1.0
+ .Final org.glassfish:javax.json:1.0.4 org.eclipse.persistence:javax.p
+ ersistence:2.2.0
+

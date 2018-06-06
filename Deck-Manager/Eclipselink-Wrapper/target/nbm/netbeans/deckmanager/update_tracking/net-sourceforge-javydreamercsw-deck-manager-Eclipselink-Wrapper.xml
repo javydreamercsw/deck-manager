@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?><module codename="net.sourceforge.javydreamercsw.deck.manager.Eclipselink.Wrapper">
+    <module_version install_time="1528314764313" last="true" origin="installer" specification_version="0.3">
+        <file crc="1308650754" name="config/Modules/net-sourceforge-javydreamercsw-deck-manager-Eclipselink-Wrapper.xml"/>
+        <file crc="3009198276" name="modules/ext/net.sourceforge.javydreamercsw.deck.manager.Eclipselink-Wrapper/javax-validation/validation-api.jar"/>
+        <file crc="1059594920" name="modules/ext/net.sourceforge.javydreamercsw.deck.manager.Eclipselink-Wrapper/org-eclipse-persistence/commonj.sdo.jar"/>
+        <file crc="120408342" name="modules/ext/net.sourceforge.javydreamercsw.deck.manager.Eclipselink-Wrapper/org-eclipse-persistence/eclipselink.jar"/>
+        <file crc="3396677385" name="modules/ext/net.sourceforge.javydreamercsw.deck.manager.Eclipselink-Wrapper/org-eclipse-persistence/javax.persistence.jar"/>
+        <file crc="2238533751" name="modules/ext/net.sourceforge.javydreamercsw.deck.manager.Eclipselink-Wrapper/org-glassfish/javax.json.jar"/>
+        <file crc="1610967309" name="modules/net-sourceforge-javydreamercsw-deck-manager-Eclipselink-Wrapper.jar"/>
+        <file crc="554590708" name="update_tracking/net-sourceforge-javydreamercsw-deck-manager-Eclipselink-Wrapper.xml"/>
+    </module_version>
+</module>

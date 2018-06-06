@@ -1,0 +1,3 @@
+[submodule "card-game-interface"]
+	path = card-game-interface
+	url = git@github.com:javydreamercsw/card-game-interface.git

@@ -13,10 +13,11 @@
     <name>Deck Manager</name>
     <modules>
         <module>Deck-Manager</module>
+        <module>card-game-interface</module>
     </modules>
 
     <properties>
-        <netbeans.version>RELEASE80</netbeans.version>
+        <netbeans.version>RELEASE82</netbeans.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -28,6 +29,10 @@
         <repository>
             <id>Sonatype Snapshots</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+        <repository>
+            <id>NetBeans</id>
+            <url>http://bits.netbeans.org/maven2/</url>
         </repository>
     </repositories>
     <build>
@@ -44,7 +49,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.4.0</version>
+                <version>1.6.0</version>
                 <inherited>false</inherited>
                 <executions>
                     <execution>
