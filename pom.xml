@@ -17,7 +17,7 @@
     </modules>
 
     <properties>
-        <netbeans.version>RELEASE82</netbeans.version>
+        <netbeans.version>RELEASE80</netbeans.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -41,37 +41,9 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
-                    <version>4.1</version>
+                    <version>3.13.3</version>
                 </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
-                <inherited>false</inherited>
-                <executions>
-                    <execution>
-                        <id>install-image4j-jar</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <executable>mvn</executable>
-                    <arguments>
-                        <argument>install:install-file</argument>
-                        <argument>-Dfile=${basedir}\repo\net\sf\image4j\0.7.1\image4j.jar</argument>
-                        <argument>-DgroupId=net.sf.image4j</argument>
-                        <argument>-DartifactId=image4j</argument>
-                        <argument>-Dversion=0.7.1</argument>
-                        <argument>-Dpackaging=jar</argument>
-                    </arguments>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 </project>

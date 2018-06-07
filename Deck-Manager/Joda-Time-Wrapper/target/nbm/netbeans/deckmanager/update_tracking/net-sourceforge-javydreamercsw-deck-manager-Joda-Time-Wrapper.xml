@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><module codename="net.sourceforge.javydreamercsw.deck.manager.Joda.Time.Wrapper">
-    <module_version install_time="1528314765802" last="true" origin="installer" specification_version="0.3">
-        <file crc="1005167083" name="config/Modules/net-sourceforge-javydreamercsw-deck-manager-Joda-Time-Wrapper.xml"/>
-        <file crc="1771500926" name="modules/ext/net.sourceforge.javydreamercsw.deck.manager.Joda-Time-Wrapper/joda-time/joda-time.jar"/>
-        <file crc="3448753663" name="modules/net-sourceforge-javydreamercsw-deck-manager-Joda-Time-Wrapper.jar"/>
-        <file crc="3709340963" name="update_tracking/net-sourceforge-javydreamercsw-deck-manager-Joda-Time-Wrapper.xml"/>
-    </module_version>
-</module>

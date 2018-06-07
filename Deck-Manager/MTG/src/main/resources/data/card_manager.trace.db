@@ -1,0 +1,33 @@
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD" not found; SQL statement:
+SELECT id FROM card WHERE id <> id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_ATTRIBUTE" not found; SQL statement:
+SELECT id FROM card_attribute WHERE id <> id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_COLLECTION" not found; SQL statement:
+SELECT card_collection_type_id FROM card_collection WHERE card_collection_type_id <> card_collection_type_id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_COLLECTION_HAS_CARD" not found; SQL statement:
+SELECT card_collection_id FROM card_collection_has_card WHERE card_collection_id <> card_collection_id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_COLLECTION_TYPE" not found; SQL statement:
+SELECT id FROM card_collection_type WHERE id <> id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_HAS_CARD_ATTRIBUTE" not found; SQL statement:
+SELECT card_attribute_id FROM card_has_card_attribute WHERE card_attribute_id <> card_attribute_id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_SET" not found; SQL statement:
+SELECT game_id FROM card_set WHERE game_id <> game_id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_TYPE" not found; SQL statement:
+SELECT id FROM card_type WHERE id <> id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "GAME" not found; SQL statement:
+SELECT id FROM game WHERE id <> id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_SET_HAS_CARD" not found; SQL statement:
+SELECT card_card_type_id FROM card_set_has_card WHERE card_card_type_id <> card_card_type_id [42102-197]
+2018-06-07 13:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "CARD_ID" not found; SQL statement:
+SELECT tablename FROM card_id WHERE tablename <> tablename [42102-197]

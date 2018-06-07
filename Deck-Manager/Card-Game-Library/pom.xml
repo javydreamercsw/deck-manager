@@ -11,24 +11,12 @@
     <packaging>nbm</packaging>
 
     <name>Card Game Library</name>
+    
+    <properties>
+        <simple.marauroa.version>0.03.00-SNAPSHOT</simple.marauroa.version>
+    </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>net.sourceforge.javydreamercsw</groupId>
-            <artifactId>Card-Game-Interface</artifactId>
-            <version>1.2-SNAPSHOT</version>
-            <type>jar</type>
-            <exclusions>
-                <exclusion>
-            <artifactId>org-openide-util-lookup</artifactId>
-                    <groupId>org.codeartisans.thirdparties.swing</groupId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.eclipse.persistence</groupId>
-                    <artifactId>eclipselink</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>Eclipselink-Wrapper</artifactId>
@@ -42,7 +30,7 @@
         <dependency>
             <groupId>net.sourceforge.javydreamercsw</groupId>
             <artifactId>Card-Game-Interface-DataBase-Implementation</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>${simple.marauroa.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.h2database</groupId>
@@ -53,6 +41,11 @@
                     <artifactId>eclipselink</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.javydreamercsw</groupId>
+            <artifactId>Card-Game-Interface</artifactId>
+            <version>${simple.marauroa.version}</version>
         </dependency>
     </dependencies>
 
