@@ -38,7 +38,7 @@ public class Installer extends ModuleInstall implements ActionListener,
 
   private static final Logger LOG
           = Logger.getLogger(Installer.class.getName());
-  private final ArrayList<GameUpdateAction> updaters
+  private final ArrayList<GameUpdateAction> updateActions
           = new ArrayList<>();
   final ArrayList<Thread> runnables = new ArrayList<>();
   private Timer timer;
@@ -119,7 +119,7 @@ public class Installer extends ModuleInstall implements ActionListener,
     super.closing();
     try
     {
-      updaters.forEach((updater) ->
+      updateActions.forEach((updater) ->
       {
         updater.shutdown();
       });
@@ -155,7 +155,7 @@ public class Installer extends ModuleInstall implements ActionListener,
   private boolean afterUpdates()
   {
     boolean ready = true;
-    for (GameUpdateAction gua : updaters)
+    for (GameUpdateAction gua : updateActions)
     {
       if (!gua.finished)
       {
@@ -198,7 +198,7 @@ public class Installer extends ModuleInstall implements ActionListener,
         if (task instanceof IProgressAction)
         {
           //Properly created to display progress in the IDE
-          updaters.add(new GameUpdateAction((IProgressAction) task));
+          updateActions.add(new GameUpdateAction((IProgressAction) task));
         }
         else
         {
@@ -217,7 +217,7 @@ public class Installer extends ModuleInstall implements ActionListener,
         if (task instanceof IProgressAction)
         {
           //Properly created to display progress in the IDE
-          updaters.add(new CacheUpdateAction((IProgressAction) task));
+          updateActions.add(new CacheUpdateAction((IProgressAction) task));
         }
         else
         {
@@ -228,7 +228,7 @@ public class Installer extends ModuleInstall implements ActionListener,
         }
       }
     }
-    updaters.forEach((updater) ->
+    updateActions.forEach((updater) ->
     {
       updater.actionPerformed(null);
     });
