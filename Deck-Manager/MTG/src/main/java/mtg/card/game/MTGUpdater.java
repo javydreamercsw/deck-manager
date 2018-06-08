@@ -35,6 +35,7 @@ import org.netbeans.api.progress.ProgressHandle;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
+import org.openide.util.lookup.ServiceProviders;
 import org.openide.windows.IOProvider;
 import org.openide.windows.InputOutput;
 
@@ -68,7 +69,11 @@ import mtg.card.sync.ParseGathererSets;
  *
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
-@ServiceProvider(service = DataBaseStateListener.class)
+@ServiceProviders(
+{
+          @ServiceProvider(service = DataBaseStateListener.class)
+          ,@ServiceProvider(service = GameUpdater.class)
+})
 public final class MTGUpdater extends GameUpdater implements DataBaseStateListener,
         UpdateProgressListener
 {
