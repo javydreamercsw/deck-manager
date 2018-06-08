@@ -12,3 +12,7 @@ before_install:
   - git submodule update --init --recursive
 
 script: mvn clean install
+
+jdk:
+  - oraclejdk8
+  - openjdk8
