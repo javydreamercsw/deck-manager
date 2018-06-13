@@ -111,12 +111,4 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    
-    <repositories>
-        <repository>
-            <id>SourceForge</id>
-            <name>SourceForge</name>
-            <url>https://mvnrepository.com/artifact/</url>
-        </repository>
-    </repositories>
 </project>
