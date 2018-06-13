@@ -1,26 +1,28 @@
 package dreamer.card.game.gui.node;
 
-import com.reflexit.magiccards.core.cache.ICardCache;
-import com.reflexit.magiccards.core.model.ICardSet;
-import dreamer.card.game.core.Tool;
-import dreamer.card.game.gui.node.factory.ICardChildFactory;
-import java.awt.Image;
+import java.awt.*;
 import java.beans.IntrospectionException;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
+
+import javax.swing.*;
+
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.Utilities;
 import org.openide.util.lookup.Lookups;
+
+import com.reflexit.magiccards.core.cache.ICardCache;
+import com.reflexit.magiccards.core.model.ICardSet;
+
+import dreamer.card.game.core.Tool;
+import dreamer.card.game.gui.node.factory.ICardChildFactory;
 
 /**
  * Represents a ICardSet element within the system
@@ -69,7 +71,7 @@ public final class ICardSetNode extends BeanNode {
                         image = (new ImageIcon(Utilities.toURI(imageFile).toURL(),
                                 "icon")).getImage();
                     } catch (MalformedURLException ex) {
-                        Exceptions.printStackTrace(ex);
+                      LOG.log(Level.SEVERE, null, ex);
                     }
                 } else {
                     //File not there, load from internet.
@@ -83,7 +85,7 @@ public final class ICardSetNode extends BeanNode {
                         LOG.log(Level.SEVERE, null, ex);
                     }
                 }
-            }
+          }
         }
         return image;
     }

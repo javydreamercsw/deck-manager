@@ -92,13 +92,17 @@ public class MTGCardCache extends AbstractCardCache
     {
       throw new CannotDetermineSetAbbriviation(edtn);
     }
-    Integer cardId
-            = Integer.valueOf(Lookup.getDefault()
-                    .lookup(IDataBaseCardStorage.class)
-                    .getCardAttribute(icard, "CardId"));
-    LOG.log(Level.INFO, "Retrieving Card id: {0}", cardId);
-    return ParseGathererNewVisualSpoiler.createImageURL(
-            cardId, editionAbbr);
+    String id = Lookup.getDefault()
+            .lookup(IDataBaseCardStorage.class)
+            .getCardAttribute(icard, "CardId");
+    if (id != null)
+    {
+      Integer cardId = Integer.valueOf(id);
+      LOG.log(Level.INFO, "Retrieving Card id: {0}", cardId);
+      return ParseGathererNewVisualSpoiler.createImageURL(
+              cardId, editionAbbr);
+    }
+    return null;
   }
 
   @Override
@@ -200,7 +204,14 @@ public class MTGCardCache extends AbstractCardCache
                   {
                     URL url = createRemoteImageURL((ICard) card,
                             Editions.getInstance().getEditionByName(cs.getName()));
-                    getCardImage(card, cs, url, isLoadingEnabled(), false);
+                    if (url != null)
+                    {
+                      getCardImage(card, cs, url, isLoadingEnabled(), false);
+                      LOG.log(Level.WARNING,
+                              MessageFormat.format("Unable to get Image for set: "
+                                      + "{0}!",
+                                      cs.getName()));
+                    }
                   }
                   catch (CannotDetermineSetAbbriviation e)
                   {
@@ -429,6 +440,8 @@ public class MTGCardCache extends AbstractCardCache
       {
         LOG.log(Level.WARNING, "Unable to retrieve icon URL for {0}",
                 set.getName());
+        return Tool.loadImage(new JFrame(),
+                Lookup.getDefault().lookup(ICardGame.class).getGameIcon()).getImage();
       }
     }
     catch (MalformedURLException ex)
