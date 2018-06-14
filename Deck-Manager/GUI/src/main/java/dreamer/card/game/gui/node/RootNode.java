@@ -1,4 +1,4 @@
-package dreamer.card.game.gui;
+package dreamer.card.game.gui.node;
 
 import com.reflexit.magiccards.core.model.ICardGame;
 import org.openide.nodes.AbstractNode;

@@ -1,8 +1,8 @@
 package dreamer.card.game.gui.component.collectionwindow;
 
-import com.reflexit.magiccards.core.model.ICardGame;
 import java.util.Collection;
 import java.util.Iterator;
+
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -13,6 +13,8 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
 
+import com.reflexit.magiccards.core.model.ICardGame;
+
 /**
  * Top component which displays something.
  */
@@ -21,7 +23,8 @@ import org.openide.windows.TopComponent;
 @TopComponent.Description(preferredID = "CollectionWindowTopComponent",
         //iconBase="SET/PATH/TO/ICON/HERE",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS)
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, roles = "game_view")
+@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true,
+        roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.CollectionWindowTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(displayName = "#CTL_CollectionWindowAction",
@@ -34,7 +37,8 @@ import org.openide.windows.TopComponent;
 public final class CollectionWindowTopComponent extends TopComponent
         implements LookupListener {
 
-    private Lookup.Result<ICardGame> result = Utilities.actionsGlobalContext().lookupResult(ICardGame.class);
+  private final Lookup.Result<ICardGame> result
+          = Utilities.actionsGlobalContext().lookupResult(ICardGame.class);
 
     public CollectionWindowTopComponent() {
         initComponents();

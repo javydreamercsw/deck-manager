@@ -1,21 +1,24 @@
 package dreamer.card.game.gui.node;
 
-import com.reflexit.magiccards.core.model.ICard;
-import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.storage.db.DBException;
-import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
-import dreamer.card.game.core.Tool;
-import java.awt.Image;
+import java.awt.*;
 import java.beans.IntrospectionException;
 import java.util.HashMap;
-import javax.swing.Action;
-import javax.swing.JFrame;
+
+import javax.swing.*;
+
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
+
+import com.reflexit.magiccards.core.model.ICard;
+import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.storage.db.DBException;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
+
+import dreamer.card.game.core.Tool;
 
 /**
  * Represents a ICard element within the system
@@ -29,23 +32,24 @@ public class ICardNode extends BeanNode {
     private final HashMap<String, String> attributes = new HashMap<>();
     private Image image = null;
 
-    public ICardNode(ICard card, Object bean, String gameName) throws IntrospectionException {
+  public ICardNode(ICard card, Object bean, String gameName)
+          throws IntrospectionException
+  {
         super(bean, null, Lookups.singleton(card));
         setDisplayName(card.getName());
         this.gameName = gameName;
-        loadAttributes(card);
-        //Retrieve icon in advance
-        getIcon(0);
+      loadAttributes(card);
     }
 
     @Override
     public Image getIcon(int type) {
         if (image == null) {
-            for (ICardGame game : Lookup.getDefault().lookupAll(ICardGame.class)) {
-                if (game.getName().equals(gameName)) {
-                    image = Tool.loadImage(new JFrame(), game.getBackCardIcon()).getImage();
-                }
-            }
+          Lookup.getDefault().lookupAll(ICardGame.class).stream().filter((game)
+                  -> (game.getName().equals(gameName))).forEachOrdered((game) ->
+          {
+            image = Tool.loadImage(new JFrame(),
+                    game.getBackCardIcon()).getImage();
+          });
         }
         return image;
     }
@@ -98,7 +102,9 @@ public class ICardNode extends BeanNode {
     private void loadAttributes(final ICard card) {
         new Thread(() -> {
             try {
-                attributes.putAll(Lookup.getDefault().lookup(IDataBaseCardStorage.class).getAttributesForCard(card.getName()));
+              attributes.putAll(Lookup.getDefault()
+                      .lookup(IDataBaseCardStorage.class)
+                      .getAttributesForCard(card.getName()));
             } catch (DBException ex) {
                 Exceptions.printStackTrace(ex);
             }

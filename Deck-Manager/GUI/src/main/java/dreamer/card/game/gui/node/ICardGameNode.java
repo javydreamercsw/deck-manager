@@ -1,14 +1,18 @@
 package dreamer.card.game.gui.node;
 
-import com.reflexit.magiccards.core.model.ICardGame;
-import dreamer.card.game.core.Tool;
-import dreamer.card.game.gui.node.factory.ICardSetChildFactory;
-import java.awt.Image;
+import java.awt.*;
 import java.beans.IntrospectionException;
-import javax.swing.JFrame;
+
+import javax.swing.*;
+
 import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
 import org.openide.util.lookup.Lookups;
+
+import com.reflexit.magiccards.core.model.ICardGame;
+
+import dreamer.card.game.core.Tool;
+import dreamer.card.game.gui.node.factory.ICardSetChildFactory;
 
 /**
  * Represents a ICardGame element within the system
@@ -25,9 +29,7 @@ public class ICardGameNode extends BeanNode {
         super(game, Children.create(childFactory, false),
                 Lookups.singleton(game));
         setDisplayName(game.getName());
-        this.game = game;
-        //Retrieve icon in advance
-        getIcon(0);
+      this.game = game;
     }
 
     /**
