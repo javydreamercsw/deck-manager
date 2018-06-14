@@ -41,7 +41,9 @@ public final class ICardSetNode extends BeanNode {
         super(set, Children.create(childFactory, false),
                 Lookups.singleton(set));
         setDisplayName(set.getName());
-      this.set = set;
+        this.set = set;
+        //Retrieve icon in advance
+        getIcon(0);
     }
 
     /**

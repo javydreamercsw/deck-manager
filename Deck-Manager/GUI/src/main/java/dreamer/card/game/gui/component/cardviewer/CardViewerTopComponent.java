@@ -63,8 +63,7 @@ public final class CardViewerTopComponent extends TopComponent
     setToolTipText(Bundle.HINT_CardViewerTopComponent());
     putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
     putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
-    putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN,
-            Boolean.TRUE);
+    putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
     //Set up the listener stuff
     result.allItems();
     result.addLookupListener(CardViewerTopComponent.this);

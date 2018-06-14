@@ -1,14 +1,22 @@
 package dreamer.card.game.gui.component.game;
 
+import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
+import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.storage.db.DBException;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
+import dreamer.card.game.core.Tool;
+import dreamer.card.game.gui.DialogPanel;
+import dreamer.card.game.gui.ICardOutlineCellRenderer;
+import dreamer.card.game.gui.node.ICardNode;
+import dreamer.card.game.gui.node.factory.IGameChildFactory;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.event.*;
-import javax.swing.tree.*;
-
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.RowModel;
@@ -29,17 +37,6 @@ import org.openide.util.NbBundle;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 
-import com.reflexit.magiccards.core.model.ICardAttributeFormatter;
-import com.reflexit.magiccards.core.model.ICardGame;
-import com.reflexit.magiccards.core.model.storage.db.DBException;
-import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
-
-import dreamer.card.game.core.Tool;
-import dreamer.card.game.gui.DialogPanel;
-import dreamer.card.game.gui.ICardOutlineCellRenderer;
-import dreamer.card.game.gui.node.ICardNode;
-import dreamer.card.game.gui.node.factory.IGameChildFactory;
-
 /**
  * Top component which displays something.
  */
@@ -48,8 +45,7 @@ import dreamer.card.game.gui.node.factory.IGameChildFactory;
 @TopComponent.Description(preferredID = "GameTopComponent",
         //iconBase="SET/PATH/TO/ICON/HERE",
         persistenceType = TopComponent.PERSISTENCE_NEVER)
-@TopComponent.Registration(mode = "editor", openAtStartup = false,
-        roles = "game_view")
+@TopComponent.Registration(mode = "editor", openAtStartup = false, roles = "game_view")
 @ActionID(category = "Window", id = "dreamer.card.game.gui.GameTopComponent")
 @ActionReference(path = "Menu/Window" /*
  * , position = 333
@@ -168,11 +164,9 @@ public final class GameTopComponent extends TopComponent implements
                             true, NbBundle.getMessage(
                                     GameTopComponent.class,
                                     "general.set")));
-            LOG.log(Level.INFO, "Preparing outline: {0}",
-                    Tool.elapsedTime(start));
+            LOG.log(Level.INFO, "Preparing outline: {0}", Tool.elapsedTime(start));
             em.setRootContext(root);
-          associateLookup(ExplorerUtils.createLookup(getExplorerManager(),
-                  getActionMap()));
+            associateLookup(ExplorerUtils.createLookup(getExplorerManager(), getActionMap()));
         }
     }
 
@@ -180,8 +174,7 @@ public final class GameTopComponent extends TopComponent implements
         if (!initialized) {
             start = System.currentTimeMillis();
             LOG.info("Looking for available games...");
-          Collection<? extends ICardGame> games
-                  = Lookup.getDefault().lookupAll(ICardGame.class);
+            Collection<? extends ICardGame> games = Lookup.getDefault().lookupAll(ICardGame.class);
             if (games.isEmpty()) {
                 DialogDisplayer.getDefault().notify(
                         new NotifyDescriptor.Message(
@@ -225,8 +218,7 @@ public final class GameTopComponent extends TopComponent implements
                 game = games.toArray(new ICardGame[games.size()])[0];
             }
             if (game != null) {
-              LOG.log(Level.INFO, "Time getting available games: {0}",
-                      Tool.elapsedTime(start));
+                LOG.log(Level.INFO, "Time getting available games: {0}", Tool.elapsedTime(start));
                 LOG.log(Level.INFO, "Loading game: {0}", game.getName());
                 start = System.currentTimeMillis();
                 try {
@@ -234,8 +226,7 @@ public final class GameTopComponent extends TopComponent implements
                 } catch (DBException ex) {
                     LOG.log(Level.SEVERE, "Error loading game!", ex);
                 }
-              LOG.log(Level.INFO, "Time loading game: {0}",
-                      Tool.elapsedTime(start));
+                LOG.log(Level.INFO, "Time loading game: {0}", Tool.elapsedTime(start));
             }
             initialized = true;
         }
@@ -323,9 +314,7 @@ public final class GameTopComponent extends TopComponent implements
             Object result = null;
             if (o instanceof ICardNode) {
                 ICardNode node = (ICardNode) o;
-              String columnName
-                      = columns.get(i).toLowerCase(Locale.getDefault())
-                              .replaceAll("_", "");
+                String columnName = columns.get(i).toLowerCase(Locale.getDefault()).replaceAll("_", "");
                 switch (columnName) {
                     case "name":
                         result = node.getCard().getName();
@@ -340,9 +329,7 @@ public final class GameTopComponent extends TopComponent implements
                         result = node.getAttribute(getColumnName(i));
                         break;
                 }
-              for (ICardAttributeFormatter formatter
-                      : game.getGameCardAttributeFormatterImplementations())
-              {
+                for (ICardAttributeFormatter formatter : game.getGameCardAttributeFormatterImplementations()) {
                     if (result instanceof String) {
                         String string = (String) result;
                         result = formatter.format(string);

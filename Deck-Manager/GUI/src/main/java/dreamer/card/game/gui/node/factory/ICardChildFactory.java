@@ -4,22 +4,20 @@ import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
 import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
-
 import dreamer.card.game.core.Tool;
 import dreamer.card.game.gui.node.ICardNode;
 import dreamer.card.game.gui.node.actions.Reloadable;
-
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -28,7 +26,6 @@ import javassist.CtNewMethod;
 import javassist.Loader;
 import javassist.Modifier;
 import javassist.NotFoundException;
-
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -45,8 +42,7 @@ import org.openide.util.lookup.InstanceContent;
 public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Provider {
 
     private final ICardSet set;
-  private static final Logger LOG
-          = Logger.getLogger(ICardChildFactory.class.getName());
+    private static final Logger LOG = Logger.getLogger(ICardChildFactory.class.getName());
     private List<ICard> cards = new ArrayList<>();
     private ICardGame game;
     private ClassPool pool = ClassPool.getDefault();
@@ -54,11 +50,11 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
     /**
      * The lookup for Lookup.Provider
      */
-  private final Lookup lookup;
+    private Lookup lookup;
     /**
      * The InstanceContent that keeps this entity's abilities
      */
-  private final InstanceContent instanceContent;
+    private InstanceContent instanceContent;
 
     ICardChildFactory(final ICardSet set) {
         this.set = set;
@@ -68,41 +64,44 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
                 break;
             }
         }
-      AccessController.doPrivileged((PrivilegedAction) () ->
-      {
-        cl = new Loader(pool);
-        return null; // nothing to return
-      });
+        AccessController.doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                cl = new Loader(pool);
+                return null; // nothing to return
+            }
+        });
         // Create an InstanceContent to hold abilities...
         instanceContent = new InstanceContent();
         // Create an AbstractLookup to expose InstanceContent contents...
         lookup = new AbstractLookup(instanceContent);
         // Add a "Reloadable" ability to this entity
-        instanceContent.add((Reloadable) () ->
-      {
-        long start = System.currentTimeMillis();
-        for (Iterator it = Lookup.getDefault().lookup(
-                IDataBaseCardStorage.class).getCardsForSet(set)
-                .iterator(); it.hasNext();)
-        {
-          ICard card = (ICard) it.next();
-          if (!cards.contains(card))
-          {
-            cards.add(card);
-          }
-        }
-        LOG.log(Level.INFO, "DB query for set: {1} took: {0} hits: {2}",
-                new Object[]
-                {
-                  Tool.elapsedTime(start),
-                  set.getName(), cards.size()
+        instanceContent.add(new Reloadable() {
+            @Override
+            public void reload() throws Exception {
+                long start = System.currentTimeMillis();
+                for (Iterator it = Lookup.getDefault().lookup(
+                        IDataBaseCardStorage.class).getCardsForSet(set)
+                        .iterator(); it.hasNext();) {
+                    ICard card = (ICard) it.next();
+                    if (!cards.contains(card)) {
+                        cards.add(card);
+                    }
+                }
+                LOG.log(Level.INFO, "DB query for set: {1} took: {0} hits: {2}",
+                        new Object[]{Tool.elapsedTime(start),
+                            set.getName(), cards.size()});
+                start = System.currentTimeMillis();
+                Collections.sort(cards, new Comparator<ICard>() {
+                    @Override
+                    public int compare(ICard o1, ICard o2) {
+                        return o1.getName().compareTo(o2.getName());
+                    }
                 });
-        start = System.currentTimeMillis();
-        Collections.sort(cards, (ICard o1, ICard o2)
-                -> o1.getName().compareTo(o2.getName()));
-        LOG.log(Level.INFO, "Sorting cards: {0}",
-                Tool.elapsedTime(start));
-      });
+                LOG.log(Level.INFO, "Sorting cards: {0}",
+                        Tool.elapsedTime(start));
+            }
+        });
     }
 
     @Override
@@ -140,17 +139,13 @@ public class ICardChildFactory extends ChildFactory<ICard> implements Lookup.Pro
                 + game.getName().replaceAll(" ", "") + "Bean";
         if (pool.getOrNull(className) == null) {
             CtClass cc = pool.makeClass(className);
-          game.getColumns().forEach((c) ->
-          {
-            try
-            {
-              addGetterAndSetter(cc, getColumnName(c));
+            for (String c : game.getColumns()) {
+                try {
+                    addGetterAndSetter(cc, getColumnName(c));
+                } catch (CannotCompileException | NotFoundException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
             }
-            catch (CannotCompileException | NotFoundException ex)
-            {
-              Exceptions.printStackTrace(ex);
-            }
-          });
         }
         Object bean = null;
         try {
