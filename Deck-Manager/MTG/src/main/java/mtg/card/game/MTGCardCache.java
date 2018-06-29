@@ -19,6 +19,8 @@ import javax.swing.*;
 import org.openide.util.Lookup;
 import org.openide.util.Utilities;
 import org.openide.util.lookup.ServiceProvider;
+import org.openide.windows.IOProvider;
+import org.openide.windows.InputOutput;
 
 import com.reflexit.magiccards.core.CannotDetermineSetAbbriviation;
 import com.reflexit.magiccards.core.cache.AbstractCardCache;
@@ -54,6 +56,8 @@ public class MTGCardCache extends AbstractCardCache
           = Logger.getLogger(MTGCardCache.class.getSimpleName());
   private CardImageLoader loader = null;
   private boolean loading = false;
+  private final InputOutput console
+          = IOProvider.getDefault().getIO("Card Cache", true);
 
   public MTGCardCache() throws DBException
   {
@@ -98,7 +102,9 @@ public class MTGCardCache extends AbstractCardCache
     if (id != null)
     {
       Integer cardId = Integer.valueOf(id);
-      LOG.log(Level.INFO, "Retrieving Card id: {0}", cardId);
+      console.getOut().println(MessageFormat.format(
+              "Retrieving image for Card id: {0}",
+              cardId));
       return ParseGathererNewVisualSpoiler.createImageURL(
               cardId, editionAbbr);
     }
@@ -154,6 +160,7 @@ public class MTGCardCache extends AbstractCardCache
     @Override
     public void updateLocal()
     {
+      //Nothing to do.
     }
 
     @Override

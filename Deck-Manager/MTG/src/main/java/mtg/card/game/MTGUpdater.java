@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -70,10 +70,10 @@ import mtg.card.sync.ParseGathererSets;
  * @author Javier A. Ortiz Bultrón <javier.ortiz.78@gmail.com>
  */
 @ServiceProviders(
-{
+        {
           @ServiceProvider(service = DataBaseStateListener.class)
           ,@ServiceProvider(service = GameUpdater.class)
-})
+        })
 public final class MTGUpdater extends GameUpdater implements DataBaseStateListener,
         UpdateProgressListener
 {
@@ -102,10 +102,14 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
           = Logger.getLogger(MTGUpdater.class.getSimpleName());
   protected final String source
           = "http://gatherer.wizards.com/Pages/Search/Default.aspx?set=%5b%22";
-  private int updateCount = 0;
+  private AtomicInteger updateCount = new AtomicInteger();
   private ProgressHandle ph;
   private final InputOutput console
           = IOProvider.getDefault().getIO("Database Update", true);
+  private final AtomicBoolean pause = new AtomicBoolean(false);
+  private final ArrayList<SetUpdateData> data = new ArrayList<>();
+  private final HashMap parameters = new HashMap();
+  private final AtomicInteger progress = new AtomicInteger();
 
   static
   {
@@ -143,11 +147,11 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
   {
     synchronized (this)
     {
-      if (!remoteUpdated)
+      if (!remoteUpdated.get())
       {
-        if (!dbError)
+        if (!dbError.get())
         {
-          updating = true;
+          updating.set(true);
           //Now update from the internet
           try
           {
@@ -155,24 +159,12 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
             parser.load();
             Collection<Editions.Edition> editions
                     = Editions.getInstance().getEditions();
-            ArrayList<SetUpdateData> data
-                    = new ArrayList<>();
+            data.clear();
             //This section updates from the internet
             //Get the sets
             updateProgressMessage("Gathering stats before start processing...");
-            HashMap parameters = new HashMap();
+            parameters.clear();
             parameters.put("name", getGame().getName());
-            Game mtg = null;
-            try
-            {
-              mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class)
-                      .namedQuery("Game.findByName", parameters).get(0);
-            }
-            catch (DBException ex)
-            {
-              LOG.log(Level.SEVERE, null, ex);
-              dbError = true;
-            }
             List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
                     .namedQuery("CardSet.findAll");
             LOG.log(Level.FINE, "{0} sets found in database.", temp.size());
@@ -181,6 +173,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
             {
               for (Iterator it = temp.iterator(); it.hasNext();)
               {
+                processStatus();
                 CardSet cs = (CardSet) it.next();
                 LOG.log(Level.FINE,
                         (MessageFormat.format("{0} {1}", ++i,
@@ -188,23 +181,16 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
               }
             }
             //Chek to see if there's something new to update.
-            ArrayList<Editions.Edition> setsToLoad
-                    = new ArrayList<>();
+            ArrayList<Editions.Edition> setsToLoad = new ArrayList<>();
             for (Editions.Edition edition : editions)
             {
-              parameters.clear();
-              parameters.put("name", edition.getName());
-              temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
-                      .namedQuery("CardSet.findByName", parameters);
-              if (temp.isEmpty())
+              processStatus();
+              if (!setsToLoad.contains(edition))
               {
-                if (!setsToLoad.contains(edition))
-                {
-                  LOG.log(Level.FINE,
-                          "Unable to find set: {0}",
-                          edition.getName());
-                  setsToLoad.add(edition);
-                }
+                LOG.log(Level.FINE,
+                        "Unable to find set: {0}",
+                        edition.getName());
+                setsToLoad.add(edition);
               }
             }
             if (!setsToLoad.isEmpty())
@@ -214,7 +200,8 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
               {
                 for (Iterator iterator = setsToLoad.iterator(); iterator.hasNext();)
                 {
-                  if (!dbError)
+                  processStatus();
+                  if (!dbError.get())
                   {
                     Editions.Edition edition = (Editions.Edition) iterator.next();
                     String from = MessageFormat.format("{0}{1}%22%5d", source,
@@ -239,7 +226,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
                                       + "WHERE c.cardSetPK.gameId = :gameId",
                                       parameters).get(0);
                     }
-                    if (result.isEmpty() || amount < urlAmount)
+                    if (amount < urlAmount)
                     {
                       LOG.log(Level.FINE,
                               "Adding set: {0} to processing list because {1}.",
@@ -269,11 +256,12 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
               catch (DBException ex)
               {
                 LOG.log(Level.SEVERE, null, ex);
-                dbError = true;
+                dbError.set(true);
               }
               int totalPages = 0;
               for (SetUpdateData setData : data)
               {
+                processStatus();
                 totalPages += setData.getPagesInSet();
               }
               LOG.log(Level.FINE, "Pages to update: {0}", totalPages);
@@ -281,36 +269,41 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
               if (totalPages > 0)
               {
                 setSize(totalPages);
-                ExecutorService executor = Executors.newFixedThreadPool(50);
                 console.select();
-                MTGCardCache cache = new MTGCardCache();
                 for (Iterator<SetUpdateData> it = data.iterator(); it.hasNext();)
                 {
-                  if (!dbError)
+                  processStatus();
+                  if (!dbError.get())
                   {
                     SetUpdateData setData = it.next();
                     SetDownloadThread ct
                             = new SetDownloadThread(setData,
-                                    console, mtg, cache);
+                                    console,
+                                    (Game) getGame().getDBGame(),
+                                    Lookup.getDefault().lookup(MTGCardCache.class));
                     ct.addListener(this);
                     executor.execute(ct);
                   }
                   else
                   {
+                    updateProgressMessage("Database error prevented further processing!");
                     break;
                   }
                 }
               }
               try
               {
-                if (!dbError)
+                if (!dbError.get())
                 {
                   for (Object o : Lookup.getDefault()
-                          .lookup(IDataBaseCardStorage.class).getSetsForGame(mtg))
+                          .lookup(IDataBaseCardStorage.class)
+                          .getSetsForGame(getGame().getDBGame()))
                   {
+                    processStatus();
                     CardSet cs = (CardSet) o;
                     for (ICardCache cache : getGame().getCardCacheImplementations())
                     {
+                      processStatus();
                       if (!new File(cache.getSetIconPath((ICardSet) cs)).exists())
                       {
                         cache.getSetIcon((ICardSet) cs);
@@ -327,19 +320,19 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
           }
           catch (DBException ex)
           {
-            LOG.log(Level.SEVERE, null, ex);
-            dbError = true;
+            LOG.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+            dbError.set(true);
           }
           catch (IOException ex)
           {
             LOG.log(Level.SEVERE, null, ex);
           }
         }
-        remoteUpdated = true;
+        remoteUpdated.set(true);
       }
     }
-    updating = false;
-    remoteUpdating = false;
+    updating.set(false);
+    remoteUpdating.set(false);
   }
 
   @Override
@@ -372,11 +365,12 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
       catch (NonexistentEntityException ex)
       {
         LOG.log(Level.SEVERE, null, ex);
-        dbError = true;
+        dbError.set(true);
         break;
       }
     }
     LOG.log(Level.FINE, "Created {0} pages for set!", i);
+    updateProgressMessage("Created " + i + " pages for set!");
   }
 
   private boolean loadUrl(URL url) throws IOException, NonexistentEntityException
@@ -458,8 +452,10 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
     int state = 0;
     boolean lastPage = false;
     boolean cards = false;
-    while ((state == 0 && (line = st.readLine()) != null) || (state == 1) && !dbError)
+    while ((state == 0 && (line = st.readLine()) != null)
+            || (state == 1) && !dbError.get())
     {
+      processStatus();
       if (LAST.matcher(line).find())
       {
         lastPage = true;
@@ -495,24 +491,29 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
     {
       try
       {
-        LOG.log(Level.SEVERE, "Unable to retrieve pages from set: {0}", getCurrentSet());
+        LOG.log(Level.SEVERE, "Unable to retrieve pages from set: {0}",
+                getCurrentSet());
         //Delete it from database
         HashMap properties = new HashMap();
         properties.put("name", getCurrentSet());
-        List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class).namedQuery("CardSet.findByName", properties);
+        List result = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                .namedQuery("CardSet.findByName", properties);
         if (!result.isEmpty())
         {
           CardSet temp = (CardSet) result.get(0);
-          CardSetJpaController controller = new CardSetJpaController(((DataBaseCardStorage) Lookup.getDefault().lookup(IDataBaseCardStorage.class)).getEntityManagerFactory());
+          CardSetJpaController controller
+                  = new CardSetJpaController(((DataBaseCardStorage) Lookup.getDefault()
+                          .lookup(IDataBaseCardStorage.class))
+                          .getEntityManagerFactory());
           controller.destroy(temp.getCardSetPK());
         }
         return true;
       }
       catch (DBException ex)
       {
-        LOG.log(Level.SEVERE, null, ex);
-        dbError = true;
-        return true;
+        LOG.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+        dbError.set(true);
+        return false;
       }
     }
     return lastPage;
@@ -542,6 +543,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
     String[] sets = rows[3].split("<a onclick");
     for (String temp : sets)
     {
+      processStatus();
       String edition = getMatch(SET, temp, 1);
       String rarity = getMatch(SET, temp, 2);
       String setId = getMatch(ID, temp, 1);
@@ -553,8 +555,11 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
       if (id.equals(setId))
       {
         addCardToSet(card, edition, rarity, type);
+        updateProgressMessage("Added " + card.getName() + " to set: "
+                + edition);
       }
-      else if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class).cardSetExists(edition, new MTGGame()))
+      else if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+              .cardSetExists(edition, new MTGGame()))
       {
         LOG.log(Level.WARNING, "Is this a printing for card: {0} ID: {1} Set: {2}?",
                 new Object[]
@@ -565,13 +570,19 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
     }
   }
 
-  private Card addCardToSet(MagicCard card, String edition, String rarity,
+  private synchronized Card addCardToSet(MagicCard card, String edition, String rarity,
           String type) throws DBException
   {
     Card c = null;
-    if (!dbError)
+    if (!dbError.get())
     {
-      HashMap parameters = new HashMap();
+      String message = MessageFormat.format("Updating card: {0}",
+              card.getName());
+      console.getOut().println(message);
+      if (ph != null)
+      {
+        ph.progress(message);
+      }
       List<Object> result;
       CardType ct;
       card.setSetName(edition);
@@ -606,14 +617,10 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
         LOG.log(Level.SEVERE, null, ex);
         return null;
       }
-      Game mtg;
-      parameters.clear();
-      parameters.put("name", getGame().getName());
-      mtg = (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class)
-              .namedQuery("Game.findByName", parameters).get(0);
       ICardSet temp = null;
-      for (ICardSet x : mtg.getCardSetList())
+      for (ICardSet x : ((Game) getGame().getDBGame()).getCardSetList())
       {
+        processStatus();
         if (x.getName().equals(set.getName()))
         {
           temp = x;
@@ -662,24 +669,28 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
           attributes.put("CardId", "" + card.getCardId());
           IDataBaseCardStorage storage
                   = Lookup.getDefault().lookup(IDataBaseCardStorage.class);
-          //This only adds it if it doesn't exist
-          storage.addAttributesToCard(c, attributes);
-          //Add the card to the set
-          if (storage.cardExists(c.getName(), set))
+          synchronized (this)
           {
-            storage.updateCard(ct, c.getName(), c.getText(), set);
-          }
-          else
-          {
-            storage.addCardToSet(c, set);
-            updateCache = true;
+            //This only adds it if it doesn't exist
+            storage.addAttributesToCard(c, attributes);
+            if (storage.cardExists(c.getName(), set))
+            {
+              //Update card instead
+              storage.updateCard(ct, c.getName(), c.getText(), set);
+            }
+            else
+            {
+              //Add the card to the set
+              storage.addCardToSet(c, set);
+              updateCache = true;
+            }
           }
         }
         catch (DBException ex)
         {
           LOG.log(Level.SEVERE, "Error adding attributes to card: "
                   + card.getName(), ex);
-          dbError = true;
+          dbError.set(true);
           return null;
         }
       }
@@ -761,6 +772,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
       str = str.replaceAll("<img [^<]*name=([^&]*)&[^>]*/>", "{$1}");
       for (Iterator iterator = MANAMAP.keySet().iterator(); iterator.hasNext();)
       {
+        processStatus();
         String alt = (String) iterator.next();
         String to = (String) MANAMAP.get(alt);
         str = str.replaceAll(alt, to);
@@ -802,30 +814,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
       Exceptions.printStackTrace(ex);
       return;
     }
-    if (!Lookup.getDefault().lookup(IDataBaseCardStorage.class)
-            .gameExists(new MTGGame().getName()))
-    {
-      try
-      {
-        Lookup.getDefault().lookup(IDataBaseCardStorage.class)
-                .createGame(new MTGGame().getName());
-      }
-      catch (DBException ex)
-      {
-        Exceptions.printStackTrace(ex);
-      }
-    }
-    while (Lookup.getDefault().lookup(ICacheData.class).toCacheAmount() > 0)
-    {
-      try
-      {
-        Thread.sleep(100);
-      }
-      catch (InterruptedException ex)
-      {
-        Exceptions.printStackTrace(ex);
-      }
-    }
+    LOG.log(Level.INFO, "Waiting for cache...");
     updater.getGame().getCardCacheImplementations().stream().map((cache)
             -> (MTGCardCache) cache).forEachOrdered((c) ->
     {
@@ -841,6 +830,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
         }
       }
     });
+    LOG.log(Level.INFO, "Done!");
 
     //Let's copy it to the resources folder. This is done to update the pre-packaged database.
     File target = new File(System.getProperty("user.dir")
@@ -888,6 +878,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
         LOG.log(Level.WARNING, "Unable to find: {0}", db.getAbsolutePath());
       }
     }
+    System.exit(0);
   }
 
   @Override
@@ -895,7 +886,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
   {
     try
     {
-      updateCount = 0;
+      updateCount.set(0);
       EntityManagerFactory emf
               = Persistence.createEntityManagerFactory("Card_Game_InterfacePU");
       CardSetJpaController controller = new CardSetJpaController(emf);
@@ -916,13 +907,13 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
       //Calculate work
       amount = sets.stream().map((cs)
               -> cs.getCardList().size()).reduce(amount, Integer::sum);
-      ph.start(sets.size());
       ph.switchToDeterminate(amount);
       sets.forEach((cs) ->
       {
+        processStatus();
         copySet(cs, storage, game, ph);
       });
-      localUpdating = false;
+      localUpdating.set(false);
     }
     catch (DBException ex)
     {
@@ -940,12 +931,17 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
               {
                 cs.getName()
               });
-      ph.progress("Processing set: " + cs.getName());
+      if (ph != null)
+      {
+        ph.progress("Processing set: " + cs.getName());
+      }
+      updateProgressMessage("Processing set: " + cs.getName());
       ICardSet ncs = storage.createCardSet(game, cs.getName(),
               cs.getAbbreviation(),
               cs.getReleased());
       for (Card c : cs.getCardList())
       {
+        processStatus();
         ICardType ct;
         if (storage.cardTypeExists(c.getCardType().getName()))
         {
@@ -965,7 +961,12 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
                   chca.getValue());
         });
         storage.addAttributesToCard(card, attributes);
-        ph.progress(updateCount++);
+        if (ph != null)
+        {
+          ph.progress(updateCount.addAndGet(1));
+        }
+        updateProgressMessage("Copied card: "
+                + c.getName() + " to set " + ncs.getName());
         LOG.log(Level.FINE, "Copied card: {0} to set: {1}",
                 new Object[]
                 {
@@ -977,6 +978,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
               {
                 cs.getName()
               });
+      updateProgressMessage("Done copying set: " + ncs.getName());
     }
     catch (DBException ex)
     {
@@ -989,32 +991,139 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
   {
     if (ph != null)
     {
-      ph.progress(updateCount++);
+      ph.progress(updateCount.addAndGet(1));
     }
   }
 
   @Override
   public void changeMessage(String message)
   {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    if (ph != null)
+    {
+      ph.progress(message);
+    }
   }
 
   @Override
   public void suspend()
   {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    pause.set(true);
+    if (ph != null)
+    {
+      ph.suspend("Paused...");
+    }
   }
 
   @Override
   public void resume()
   {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    pause.set(false);
+    if (ph != null)
+    {
+      ph.progress("Resuming...");
+    }
   }
 
   @Override
   public void shutdown()
   {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    suspend();
+    if (ph != null)
+    {
+      ph.progress("Shutting down...");
+    }
+  }
+
+  private SetUpdateData getUpdateData(ICardSet set)
+  {
+    SetUpdateData setData = null;
+    //See if the set has been parsed already.
+    for (SetUpdateData entry : data)
+    {
+      if (entry.getName().equals(set.getName()))
+      {
+        setData = entry;
+        break;
+      }
+    }
+    return setData;
+  }
+
+  @Override
+  public void updateSet(ICardSet set)
+  {
+    try
+    {
+      //It might be parsed already
+      SetUpdateData setData = getUpdateData(set);
+
+      //If not parsed let's wait.
+      while (setData == null && updating.get())
+      {
+        try
+        {
+          Thread.sleep(100);
+          setData = getUpdateData(set);
+        }
+        catch (InterruptedException ex)
+        {
+          LOG.log(Level.WARNING, ex.getLocalizedMessage(), ex);
+        }
+      }
+      if (setData != null)
+      {
+        MTGCardCache cache = null;
+        for (ICardCache c : Lookup.getDefault().lookupAll(ICardCache.class))
+        {
+          if (c.getGameName().equals(getGame().getName()))
+          {
+            cache = (MTGCardCache) c;
+            break;
+          }
+        }
+        //We have the data, let's queue an update.
+        if (cache != null)
+        {
+          SetDownloadThread ct
+                  = new SetDownloadThread(setData,
+                          console,
+                          (Game) getGame().getDBGame(),
+                          cache);
+          ct.addListener(this);
+          executor.execute(ct);
+        }
+      }
+      else
+      {
+        LOG.log(Level.WARNING, "Unable to update: {0}. It was never parsed?",
+                set.getName());
+      }
+    }
+    catch (DBException ex)
+    {
+      LOG.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+    }
+  }
+
+  @Override
+  public void updateCard(ICard card)
+  {
+
+  }
+
+  private void processStatus()
+  {
+    while (pause.get())
+    {
+      try
+      {
+        Thread.sleep(100);
+      }
+      catch (InterruptedException ex)
+      {
+        LOG.log(Level.WARNING, ex.getLocalizedMessage(), ex);
+      }
+    }
   }
 
   private abstract class NotifyingThread extends Thread
@@ -1066,7 +1175,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
     private final MTGCardCache cache;
 
     public SetDownloadThread(SetUpdateData setData, InputOutput console,
-            IGame mtg, MTGCardCache cache)
+            Game mtg, MTGCardCache cache)
     {
       this.setData = setData;
       this.console = console;
@@ -1089,7 +1198,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
                   = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
                           .createCardSet(mtg,
                                   edition.getName(), edition.getMainAbbreviation(),
-                  edition.getReleaseDate());
+                                  edition.getReleaseDate());
           message = "Created set: " + edition.getName();
           LOG.log(Level.FINE, message);
           updateProgressMessage(message);
@@ -1105,7 +1214,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
       }
       catch (IOException | DBException ex)
       {
-        Exceptions.printStackTrace(ex);
+        LOG.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
       }
     }
   }

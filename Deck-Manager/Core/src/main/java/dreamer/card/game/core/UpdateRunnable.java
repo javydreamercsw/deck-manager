@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,9 +36,11 @@ public abstract class UpdateRunnable implements IProgressAction,
   private final ICardGame game;
   private static final Logger LOG
           = Logger.getLogger(UpdateRunnable.class.getName());
-  protected boolean localUpdated = false, localUpdating = false;
-  protected boolean remoteUpdated = false, remoteUpdating = false;
-  protected boolean updating = false;
+  protected AtomicBoolean localUpdated = new AtomicBoolean(false),
+          localUpdating = new AtomicBoolean(false);
+  protected AtomicBoolean remoteUpdated = new AtomicBoolean(false),
+          remoteUpdating = new AtomicBoolean(false);
+  protected AtomicBoolean updating = new AtomicBoolean(false);
 
   public UpdateRunnable(ICardGame game)
   {
@@ -214,9 +217,9 @@ public abstract class UpdateRunnable implements IProgressAction,
       LOG.log(Level.SEVERE, null, ex);
     }
     //Update locally
-    localUpdating = true;
+    localUpdating.set(true);
     defaultUpdateLocal();
-    while (localUpdating)
+    while (localUpdating.get())
     {
       //Wait for update to end
       try
@@ -229,9 +232,9 @@ public abstract class UpdateRunnable implements IProgressAction,
       }
     }
     //Update remotely
-    remoteUpdating = true;
+    remoteUpdating.set(true);
     defaultUpdateRemote();
-    while (remoteUpdating)
+    while (remoteUpdating.get())
     {
       //Wait for update to end
       try

@@ -4,6 +4,8 @@ import java.awt.event.*;
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,6 +47,7 @@ public class Installer extends ModuleInstall implements ActionListener,
   private final int period = 30000, pause = 10000;
   private long start;
   private boolean waitDBInit = true;
+  private final ExecutorService es = Executors.newCachedThreadPool();
 
   @Override
   public void restored()
@@ -123,10 +126,7 @@ public class Installer extends ModuleInstall implements ActionListener,
       {
         updater.shutdown();
       });
-      runnables.forEach((runnable) ->
-      {
-        runnable.interrupt();
-      });
+      es.shutdownNow();
       Lookup.getDefault().lookup(IDataBaseCardStorage.class).close();
       return true;
     }
@@ -234,7 +234,7 @@ public class Installer extends ModuleInstall implements ActionListener,
     });
     runnables.forEach((runnable) ->
     {
-      runnable.start();
+      es.execute(runnable);
     });
   }
 

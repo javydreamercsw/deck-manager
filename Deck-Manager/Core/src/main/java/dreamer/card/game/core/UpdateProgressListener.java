@@ -10,8 +10,7 @@ public interface UpdateProgressListener {
      * @param amount amount to report
      */
     public void reportProgress(int amount);
-    
-    
+
     /**
      * Report that the task is done
      */

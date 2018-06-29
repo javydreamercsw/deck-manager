@@ -10,7 +10,7 @@
     <artifactId>Deck-Manager</artifactId>
     <version>0.3-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Deck Manager</name>
+    <name>Deck Manager Parent</name>
     <modules>
         <module>Deck-Manager</module>
         <module>card-game-interface</module>

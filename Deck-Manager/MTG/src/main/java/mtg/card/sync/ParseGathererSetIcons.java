@@ -1,9 +1,5 @@
 package mtg.card.sync;
 
-import com.reflexit.magiccards.core.cache.ICardCache;
-import com.reflexit.magiccards.core.model.ICardSet;
-import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
-import com.reflexit.magiccards.core.storage.database.CardSet;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,10 +7,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import mtg.card.MagicException;
-import mtg.card.game.MTGGame;
+
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+
+import com.reflexit.magiccards.core.cache.ICardCache;
+import com.reflexit.magiccards.core.model.ICardSet;
+import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
+import com.reflexit.magiccards.core.storage.database.CardSet;
+
+import mtg.card.MagicException;
+import mtg.card.game.MTGGame;
 
 /**
  *
@@ -76,14 +79,19 @@ public class ParseGathererSetIcons extends AbstractParseGathererPage {
     public static void main(String[] args) {
         ICardCache cache = Lookup.getDefault().lookup(ICardCache.class);
         if (cache != null) {
-            for (Object o : Lookup.getDefault().lookup(IDataBaseCardStorage.class).getSetsForGame(new MTGGame())) {
-                try {
-                    CardSet cs = (CardSet) o;
-                    cache.getSetIcon(cs);
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
+          Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                  .getSetsForGame(new MTGGame()).forEach((o) ->
+          {
+            try
+            {
+              CardSet cs = (CardSet) o;
+              cache.getSetIcon(cs);
             }
+            catch (IOException ex)
+            {
+              Exceptions.printStackTrace(ex);
+            }
+          });
         }
     }
 }

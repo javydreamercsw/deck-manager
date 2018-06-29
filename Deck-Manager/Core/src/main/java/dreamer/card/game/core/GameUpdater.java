@@ -1,18 +1,22 @@
 package dreamer.card.game.core;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.DialogDisplayer;
-import org.openide.NotifyDescriptor;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.NbBundle;
 import org.openide.util.RequestProcessor;
 
+import com.reflexit.magiccards.core.model.ICard;
 import com.reflexit.magiccards.core.model.ICardGame;
+import com.reflexit.magiccards.core.model.ICardSet;
 import com.reflexit.magiccards.core.model.storage.db.DBException;
 import com.reflexit.magiccards.core.model.storage.db.IDataBaseCardStorage;
 
@@ -25,8 +29,9 @@ public abstract class GameUpdater extends UpdateRunnable
 
   private static final Logger LOG
           = Logger.getLogger(GameUpdater.class.getName());
-  protected boolean dbError = false;
+  protected AtomicBoolean dbError = new AtomicBoolean(false);
   private String codeNameBase, dbFileName = "card_manager.mv.db";
+  protected final ExecutorService executor = Executors.newFixedThreadPool(50);
 
   public GameUpdater(ICardGame game)
   {
@@ -38,7 +43,7 @@ public abstract class GameUpdater extends UpdateRunnable
   {
     synchronized (this)
     {
-      if (!localUpdated)
+      if (!localUpdated.get())
       {
         long start = System.currentTimeMillis();
         RequestProcessor RP = new RequestProcessor("Updating local", 1,
@@ -47,23 +52,21 @@ public abstract class GameUpdater extends UpdateRunnable
                 "Updating Local Database.");
         RequestProcessor.Task theTask = RP.create(() ->
         {
-          updating = true;
-          localUpdating = true;
+          updating.set(true);
+          localUpdating.set(true);
+          ph.start();
           try
           {
             List temp = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
                     .namedQuery("CardSet.findAll");
-            LOG.log(Level.INFO, "{0} sets found in database.",
+            LOG.log(Level.FINE, "{0} sets found in database.",
                     temp.size());
             if (temp.isEmpty())
             {
               //Load from the default database
-              DialogDisplayer.getDefault().notifyLater(
-                      new NotifyDescriptor.Message(
-                              org.openide.util.NbBundle.getMessage(GameUpdater.class,
-                                      "initial.load").replaceAll("[x]",
-                                              getGame().getName()),
-                              NotifyDescriptor.WARNING_MESSAGE));
+              updateProgressMessage(NbBundle.getMessage(GameUpdater.class,
+                      "initial.load").replaceAll("[x]",
+                              getGame().getName()));
               loadDefaultCards(ph);
             }
             updateLocal();
@@ -72,22 +75,23 @@ public abstract class GameUpdater extends UpdateRunnable
           {
             Exceptions.printStackTrace(ex);
           }
-          localUpdated = true;
-          localUpdating = false;
+          localUpdated.set(true);
+          localUpdating.set(false);
         });
         theTask.addTaskListener((org.openide.util.Task task) ->
         {
           //Make sure that we get rid of the ProgressHandle
           //when the task is finished
           ph.finish();
-          LOG.log(Level.INFO, "Updating local took: {0}",
+          LOG.log(Level.FINE, "Updating local took: {0}",
                   Tool.elapsedTime(start));
+          reportDone();
         });
         theTask.schedule(0);
       }
       else
       {
-        localUpdating = false;
+        localUpdating.set(false);
       }
     }
   }
@@ -104,7 +108,7 @@ public abstract class GameUpdater extends UpdateRunnable
       RequestProcessor.Task theTask = RP.create(() ->
       {
         ph.start();
-        remoteUpdating = true;
+        remoteUpdating.set(true);
         updateRemote();
       });
       theTask.addTaskListener((org.openide.util.Task task) ->
@@ -114,6 +118,7 @@ public abstract class GameUpdater extends UpdateRunnable
         ph.finish();
         LOG.log(Level.INFO, "Updating remote took: {0}",
                 Tool.elapsedTime(start));
+        remoteUpdating.set(false);
       });
       theTask.schedule(0);
     }
@@ -158,4 +163,18 @@ public abstract class GameUpdater extends UpdateRunnable
    * @throws com.reflexit.magiccards.core.model.storage.db.DBException
    */
   public abstract void loadDefaultCards(ProgressHandle ph) throws DBException;
+
+  /**
+   * Update a card set.
+   *
+   * @param set Set to update
+   */
+  public abstract void updateSet(ICardSet set);
+
+  /**
+   * Update card.
+   *
+   * @param card Card to update.
+   */
+  public abstract void updateCard(ICard card);
 }
