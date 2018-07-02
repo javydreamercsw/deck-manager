@@ -71,8 +71,8 @@ import mtg.card.sync.ParseGathererSets;
  */
 @ServiceProviders(
         {
-          @ServiceProvider(service = DataBaseStateListener.class)
-          ,@ServiceProvider(service = GameUpdater.class)
+          @ServiceProvider(service = DataBaseStateListener.class),
+          @ServiceProvider(service = GameUpdater.class)
         })
 public final class MTGUpdater extends GameUpdater implements DataBaseStateListener,
         UpdateProgressListener
@@ -102,7 +102,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
           = Logger.getLogger(MTGUpdater.class.getSimpleName());
   protected final String source
           = "http://gatherer.wizards.com/Pages/Search/Default.aspx?set=%5b%22";
-  private AtomicInteger updateCount = new AtomicInteger();
+  private final AtomicInteger updateCount = new AtomicInteger();
   private ProgressHandle ph;
   private final InputOutput console
           = IOProvider.getDefault().getIO("Database Update", true);
@@ -279,7 +279,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
                     SetDownloadThread ct
                             = new SetDownloadThread(setData,
                                     console,
-                                    (Game) getGame().getDBGame(),
+                                    (Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).getGame(getGame().getName()),
                                     Lookup.getDefault().lookup(MTGCardCache.class));
                     ct.addListener(this);
                     executor.execute(ct);
@@ -297,7 +297,7 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
                 {
                   for (Object o : Lookup.getDefault()
                           .lookup(IDataBaseCardStorage.class)
-                          .getSetsForGame(getGame().getDBGame()))
+                          .getSetsForGame((Game) Lookup.getDefault().lookup(IDataBaseCardStorage.class).getGame(getGame().getName())))
                   {
                     processStatus();
                     CardSet cs = (CardSet) o;
@@ -618,7 +618,10 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
         return null;
       }
       ICardSet temp = null;
-      for (ICardSet x : ((Game) getGame().getDBGame()).getCardSetList())
+      List<ICardSet> setsForGame
+              = Lookup.getDefault().lookup(IDataBaseCardStorage.class)
+                      .getSetsForGame(getGame());
+      for (ICardSet x : setsForGame)
       {
         processStatus();
         if (x.getName().equals(set.getName()))
@@ -1052,56 +1055,49 @@ public final class MTGUpdater extends GameUpdater implements DataBaseStateListen
   @Override
   public void updateSet(ICardSet set)
   {
-    try
-    {
-      //It might be parsed already
-      SetUpdateData setData = getUpdateData(set);
+    //It might be parsed already
+    SetUpdateData setData = getUpdateData(set);
 
-      //If not parsed let's wait.
-      while (setData == null && updating.get())
+    //If not parsed let's wait.
+    while (setData == null && updating.get())
+    {
+      try
       {
-        try
-        {
-          Thread.sleep(100);
-          setData = getUpdateData(set);
-        }
-        catch (InterruptedException ex)
-        {
-          LOG.log(Level.WARNING, ex.getLocalizedMessage(), ex);
-        }
+        Thread.sleep(100);
+        setData = getUpdateData(set);
       }
-      if (setData != null)
+      catch (InterruptedException ex)
       {
-        MTGCardCache cache = null;
-        for (ICardCache c : Lookup.getDefault().lookupAll(ICardCache.class))
-        {
-          if (c.getGameName().equals(getGame().getName()))
-          {
-            cache = (MTGCardCache) c;
-            break;
-          }
-        }
-        //We have the data, let's queue an update.
-        if (cache != null)
-        {
-          SetDownloadThread ct
-                  = new SetDownloadThread(setData,
-                          console,
-                          (Game) getGame().getDBGame(),
-                          cache);
-          ct.addListener(this);
-          executor.execute(ct);
-        }
-      }
-      else
-      {
-        LOG.log(Level.WARNING, "Unable to update: {0}. It was never parsed?",
-                set.getName());
+        LOG.log(Level.WARNING, ex.getLocalizedMessage(), ex);
       }
     }
-    catch (DBException ex)
+    if (setData != null)
     {
-      LOG.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+      MTGCardCache cache = null;
+      for (ICardCache c : Lookup.getDefault().lookupAll(ICardCache.class))
+      {
+        if (c.getGameName().equals(getGame().getName()))
+        {
+          cache = (MTGCardCache) c;
+          break;
+        }
+      }
+      //We have the data, let's queue an update.
+      if (cache != null)
+      {
+        SetDownloadThread ct
+                = new SetDownloadThread(setData,
+                        console,
+                        (Game) getGame(),
+                        cache);
+        ct.addListener(this);
+        executor.execute(ct);
+      }
+    }
+    else
+    {
+      LOG.log(Level.WARNING, "Unable to update: {0}. It was never parsed?",
+              set.getName());
     }
   }
 
