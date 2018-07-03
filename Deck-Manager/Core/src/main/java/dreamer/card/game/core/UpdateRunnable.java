@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +31,8 @@ public abstract class UpdateRunnable implements IProgressAction,
         DataBaseStateListener
 {
 
-  private int size, progress = 0;
+  private int size;
+  private final AtomicInteger progress = new AtomicInteger(0);
   private final ArrayList<UpdateProgressListener> listeners
           = new ArrayList<>();
   private final ICardGame game;
@@ -125,13 +127,13 @@ public abstract class UpdateRunnable implements IProgressAction,
    */
   public int getProgress()
   {
-    return progress;
+    return progress.get();
   }
 
   public void increaseProgress(int amount)
   {
-    progress += amount;
-    reportProgress(progress);
+    progress.addAndGet(amount);
+    reportProgress(progress.get());
   }
 
   public void increaseProgress()
