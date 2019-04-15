@@ -3,7 +3,7 @@ package mtg.card.sync.scryfall;
 /**
  * See: https://scryfall.com/docs/api for more details.
  *
- * @author Javier Ortiz Bultron <javierortiz@pingidentity.com>
+ * @author Javier Ortiz Bultron <javier.ortiz.78@gmail.com>
  */
 public abstract class AbstractScryfallAPI
 {
