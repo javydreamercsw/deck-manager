@@ -22,8 +22,8 @@ public class ParseScryfallSetsNGTest
     ParseScryfallSets parser = new ParseScryfallSets();
     parser.getSets();
 
-    Collection<Edition> newSets = parser.getNew();
-    Collection<String> allSets = parser.getAll();
+    Collection<Edition> newSets = parser.getNewSets();
+    Collection<String> allSets = parser.getAllSets();
     
     assertFalse(allSets.isEmpty());
     assertTrue(allSets.size() >= newSets.size());
