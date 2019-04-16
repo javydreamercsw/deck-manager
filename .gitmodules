@@ -1,3 +1,7 @@
 [submodule "card-game-interface"]
 	path = card-game-interface
 	url = https://github.com/javydreamercsw/card-game-interface.git
+[submodule "ScryfallAPIBinding"]
+	path = ScryfallAPIBinding
+	url = git@github.com:javydreamercsw/ScryfallAPIBinding.git
+        branch = enhancements
