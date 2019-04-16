@@ -1,4 +1,4 @@
-package mtg.card.sync.scryfall;
+package mtg.card.sync;
 
 /**
  * See: https://scryfall.com/docs/api for more details.
