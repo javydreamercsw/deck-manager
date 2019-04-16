@@ -14,6 +14,7 @@
     <modules>
         <module>Deck-Manager</module>
         <module>card-game-interface</module>
+        <module>ScryfallAPIBinding</module>
     </modules>
 
     <properties>
