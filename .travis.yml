@@ -1,4 +1,18 @@
 language: java
+sudo: required
+
+group: edge
+
+addons:
+  apt:
+    packages:
+    - oracle-java8-installer
+
+dist: trusty
+
+jdk:
+  - oraclejdk11
+  - openjdk11
 
 # Use https (public access) instead of git for git-submodules. This modifies only Travis-CI behavior!
 
@@ -12,8 +26,4 @@ before_install:
   - git submodule update --init --recursive
 
 script: mvn clean install
-script: mvn sonar:sonar -Dsonar.organization=javydreamercsw-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=6e3a9d4d7b11e581b919b9ba1498f02ac35a3fa8
-
-jdk:
-  - oraclejdk8
-  - openjdk8
+script: mvn clean sonar:sonar -Dsonar.sources=src/main/java/ -Dsonar.java.binaries=target/classes -Dsonar.organization=javydreamercsw-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=6e3a9d4d7b11e581b919b9ba1498f02ac35a3fa8
